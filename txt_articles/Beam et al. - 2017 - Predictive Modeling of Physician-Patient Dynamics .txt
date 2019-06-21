@@ -1,0 +1,395 @@
+ 1
+Scientific RepoRts | 7:42282 | DOI: 10.1038/srep42282
+www.nature.com/scientificreports
+Predictive Modeling of Physician-
+Patient Dynamics That Influence 
+Sleep Medication Prescriptions  
+and Clinical Decision-Making
+Andrew L. Beam1,*, Uri Kartoun2,3,4,*, Jennifer K. Pai5, Arnaub K. Chatterjee5, 
+Timothy P. Fitzgerald6, Stanley Y. Shaw2,3,* & Isaac S. Kohane1,*
+Insomnia remains under-diagnosed and poorly treated despite its high economic and social costs. 
+Though previous work has examined how patient characteristics affect sleep medication prescriptions, 
+the role of physician characteristics that influence this clinical decision remains unclear. We sought 
+to understand patient and physician factors that influence sleep medication prescribing patterns by 
+analyzing Electronic Medical Records (EMRs) including the narrative clinical notes as well as codified 
+data. Zolpidem and trazodone were the most widely prescribed initial sleep medication in a cohort of 
+1,105 patients. Some providers showed a historical preference for one medication, which was highly 
+predictive of their future prescribing behavior. Using a predictive model (AUC = 0.77), physician 
+preference largely determined which medication a patient received (OR = 3.13; p = 3 × 10−37). 
+In addition to the dominant effect of empirically determined physician preference, discussion of 
+depression in a patient’s note was found to have a statistically significant association with receiving a 
+prescription for trazodone (OR = 1.38, p = 0.04). EMR data can yield insights into physician prescribing 
+behavior based on real-world physician-patient interactions.
+Insomnia remains under-diagnosed and poorly treated despite its high economic and social costs1. Prevalence 
+estimates for insomnia are reported to be as high as 40% depending on the specific study definition2. Studying 
+insomnia is complicated by an ambiguous clinical definition, as it is often considered both symptom and dis-
+ease. This nosological fluidity may result in incomplete or inconsistent documentation in traditional research 
+resources, such as the billing codes found in insurance claims databases, and further challenges efforts to under-
+stand the epidemiology and treatment of insomnia.
+Here we focus on pharmacologic treatment decision making using a fully data-driven probabilistic approach 
+to characterize insomnia and its comorbidities. The treatment of insomnia includes behavioral/psychological 
+interventions (stimulus control therapy, relaxation therapy, paradoxical intention, sleep restriction, cognitive 
+behavioral therapy) and/or pharmacotherapy (benzodiazepines, non-benzodiazepines, melatonin, antidepres-
+sants, anti-epileptics, and antipsychotics); however, a large number of these agents are used off-label due to their 
+sedative effects3,4. Current pharmacotherapy is associated with next-day sedation/somnolence, psychomotor 
+impairment, and cognitive impairment and common adverse effects associated with pharmacotherapy include 
+headache, drowsiness, fatigue, nausea, vomiting, paresthesia, incoordination, dizziness, hallucinations, and 
+ataxia3,4. As a result of these adverse effects, although treatment can improve mental quality of life, it may actually 
+decrease physical quality of life in patients with insomnia3,5.
+Many sleep-medications, such as zolpidem (Ambien) and eszopiclone (Lunesta), have been shown to be effec-
+tive for both transient and chronic insomnia management, but come with a long list of potential side effects 
+and warnings6,7. A popular alternative is off-label usage of the anti-depressant trazodone, which is perceived 
+to have fewer side effects but has less evidence of its effectiveness as a sleep aid8. How physicians decide which 
+1Department of Biomedical Informatics, Harvard Medical School, Boston MA, USA. 2Center for Systems Biology; 
+Center for Assessment Technology & Continuous Health (CATCH), Massachusetts General Hospital, Boston MA, USA. 
+3Harvard Medical School, Boston MA, USA. 4IBM Research, Cambridge MA, USA. 5Merck & Co., Inc., Boston, MA, USA. 
+6Merck & Co., Inc West Point, PA, USA. *These authors contributed equally to this work. Correspondence and requests 
+for materials should be addressed to A.L.B. (email: Andrew_Beam@hms.harvard.edu)
+Received: 06 September 2016
+Accepted: 08 January 2017
+Published: 09 February 2017
+OPEN
+ www.nature.com/scientificreports/
+2
+Scientific RepoRts | 7:42282 | DOI: 10.1038/srep42282
+of these medications to prescribe in response to insomnia remains poorly understood. Previous studies9,10 
+have sought to understand the patient characteristics that underlie the prescription patterns for patients with 
+insomnia. For example, one study11 found that patients experiencing depression were more likely to receive an 
+off-label antidepressant to treat their insomnia. The rationale is that the physician is responding to the patient’s 
+dual-state of depression and insomnia and that the anti-depressant could treat both. However, it is unclear to what 
+extent “physician-patient dynamics” (i.e. the characteristics of both physicians and patients) influence clinical 
+decision-making.
+In this study, we seek to understand the physician-patient dynamics that influence how sleep medications 
+are prescribed. Traditionally, physician prescribing behavior is studied using market surveys of physicians12 but 
+these are expensive and labor-intensive to undertake. Similarly, databases of prescriptions, insurance claims 
+or drug advertising12,13 are commonly analyzed but these provide a severely restricted, incomplete view into 
+the patient-physician encounter. Unique to our study is the perspective that both physician and patient factors 
+are important contributors to clinical decision-making. Electronic medical records (EMRs) present a valuable 
+resource to interrogate prescription patterns because both codified data (prescriptions, billing codes for insomnia 
+and comorbid diseases) and narrative data (physician office notes) may be analyzed. Furthermore, detailed data 
+about both the physician and patient can be linked in our analysis: the EMR used in this study provides identifiers 
+for each patient and physician during a clinical encounter. Using this linkage, we can decompose a clinical decision 
+to better understand patient-specific (e.g. conditions that are comorbid with insomnia) and physician-specific 
+(e.g. a historical preference for a given medication) attributes that drive clinical decision-making. Understanding 
+the duality of this physician-patient interaction is novel and unique to our study, and may be more broadly useful 
+for studies of medication prescribing patterns in conditions other than insomnia.
+We study the time period surrounding when a patient is diagnosed with insomnia and is given their first pre-
+scription for a sleep medication in the outpatient setting. Our central hypothesis is that the patient and provider 
+both bring elements to this encounter that may influence the final decision. Through a novel combination of 
+machine learning and natural language processing (NLP), we extracted information on the comorbid conditions 
+of the patient and the providers’ historical preference for a particular sleep medication, and weigh these two ele-
+ments against one another to gain a deeper understanding of how the decision was made.
+Results
+Distribution of Initial Medication Prescriptions. 
+We identified 1,105 patients (the START cohort) that 
+were receiving their first documented prescription for a sleep medication. Demographic and comorbidity char-
+acteristics for this cohort are presented in Supplementary Table 1. Diagnosis and procedure codes used to define 
+the comorbidities are presented in Supplementary Table 2.
+We extracted clinical narratives from the t0 time period shown in Fig. 1. These notes are from the 14-day win-
+dow (+ 
+/− 
+7 days) surrounding the encounter where the sleep medication was prescribed. The distribution of the 
+medication patients received as their initial sleep medication is summarized in Fig. 2.
+Trazodone was prescribed to roughly 57% of the patients in the START cohort, while zolpidem was prescribed 
+to nearly 38%. Zolpidem extended release and eszopiclone were both prescribed to fewer than 5% of patients in 
+this cohort. Since trazodone and zolpidem made up 90% of the prescriptions, we focused exclusively on these 
+two medications for the remainder of this investigation. Note: that these are mutually exclusive categories; each 
+patient in the START cohort received one and only one medication. Since age and gender could potentially influ-
+ence which medication a patient may receive, we first investigated if there were any differences we between these 
+two demographic variables. We found there were no differences in age (p = 
+ 0.74, t-test) or gender (p = 
+ 0.64, 
+Fisher’s exact test) between the trazodone and zolpidem populations.
+Historical Physician Preference for Trazodone vs. Zolpidem. 
+Next, using the historical prescribing 
+behaviors for the physicians in this cohort, we derived the trazodone preference (see Methods) for each provider 
+in the START cohort. Figure 3 displays the distribution of trazodone preference in our physician cohort. Note that 
+there is a small spike at 1, indicating that some physicians in this cohort exclusively prescribe trazodone.
+Figure 1. START cohort inclusion criteria: Patients receiving their first prescription for sleep medication 
+in response to a documented case of insomnia or a sleep disorder. For inclusion, a patient must have 
+an indication of insomnia (e.g., billing code or mention in a note) and have no previous record of a sleep 
+medication before t0 and receive another sleep medication in the subsequent 12-month period indicating 
+continued use.
+ www.nature.com/scientificreports/
+3
+Scientific RepoRts | 7:42282 | DOI: 10.1038/srep42282
+Prediction of Initial Sleep Medication. 
+Next, we combined the provider preference variable with the topic 
+variables extracted from the notes using Latent Dirichlet Allocation (LDA)14 and fit a logistic regression model 
+for a varying number of topics (K) as the number of topics is a tuning parameter in our model. We employed the 
+topic modeling approach to explicitly capture the distinct groups of patients as defined by the clinical narratives 
+of their doctors rather than an arbitrary categorization of patients by external experts. Each prescription has an 
+associated timestamp in the EMR. To avoid a model that over-fits, we computed a time-specific provider prefer-
+ence for each encounter. For instance, if a patient received a prescription on January 1st, 2010 the provider pref-
+erence was computed using only prescriptions that occurred before this date. For the values of K = 
+ {0, 5, 10, 15, 
+Figure 2. Distribution of the initial sleep medication prescriptions for the START cohort. Each bar 
+represents the fraction of patients that were prescribed a given medication. Trazodone was the mostly widely 
+prescribed with zolpidem being a popular second choice. Eszopiclone and zolpidem extended release (ER) were 
+distant third and fourth choices, respectively.
+Figure 3. Distribution of the provider preference, pi, for trazodone over zolpidem. Note the small spike at 
+pi = 1, indicating a small fraction of providers prefer trazodone exclusively.
+ www.nature.com/scientificreports/
+4
+Scientific RepoRts | 7:42282 | DOI: 10.1038/srep42282
+20}, we estimated the area under the receiver-operator curve (AUC) using 10 fold cross-validation. The estimates 
+from this process are shown in Table 1. We fit a model with the number of topics equal to 0 to estimate the value 
+added by incorporating the information from the notes relative to the provider preference. The top-performing 
+model was for K = 
+ 5, so we continued with this model for further analysis. Next, we examined the odds ratios and 
+p-values from the best model to see which variables were the most informative. This information is displayed in 
+Table 2.
+The variable for provider preference was the most significant variable in the model, measured both by the 
+effect size and p-value (OR = 3.13; p = 3 × 10−37). An OR > 1 for provider preference indicates that if a physician 
+has a higher historical preference for trazodone, there is a higher probability that he or she will prescribe a new 
+patient trazodone as their first sleep medication. Additionally, Topic 1 produced by LDA was found to have a 
+statistically significant odds-ratio (OR = 1.38, p = 
+ 0.04) for receiving trazodone. In Fig. 4, we have visualized the 
+top words for Topic 1, to better understand what this topic might be describing. The figure shows the top 30 words 
+that are specific to Topic 1. Several informative words appear including “depression”
+, “mood”
+, “psychiatric”
+, “men-
+tal”
+, “suicidal”
+, and “substance” indicating this topic most likely refers to depression and anxiety. Since this vari-
+able was found to be important, it could indicate that providers are responding partially to a depressed patient’s 
+clinical state and are prescribing them trazodone to treat both insomnia and depression. The AUC for this model 
+estimated using 10-fold cross-validation was 0.77, indicating the model contains significant explanatory power 
+for this clinical decision.
+Additionally, we fit a logistic regression model without the trazodone preference variable with K = 
+ 5 LDA top-
+ics and observed an AUC = 
+ 0.54 in 10-fold cross-validation. The topic indicating depression (Topic 1) was again 
+significant (OR = 1.4, p = 
+ 0.015) in this scenario when trazodone preference was omitted, though all other topics 
+again failed to achieve statistical significance. Taken together, the variable odds-ratios and model AUC indicate 
+that provider preference, relative to patient specific factors, is likely the major determining factor driving which 
+sleep medication a patient receives, though in some instances the provider may be responding to certain charac-
+teristics of the patient such as depression.
+Discussion
+There is a growing awareness that clinical decisions do not occur in a vacuum and are subject to numerous social 
+and psychological forces. For instance, a previous study found that provider prescribing habits can be influenced 
+by other physicians in their social network12. Another study found that some providers routinely prescribe a 
+reduced subset of available drugs relative to their peers, and that this reduced list most often contained drugs 
+that were heavily advertised15. These are representative studies of prescribing behavior in that they utilized mar-
+keting surveys12 or structured databases12,15. Commonly interrogated databases (e.g., prescriptions, claims, and 
+advertising) can indirectly reflect prescribing behavior, but lack the information needed to understand the clinical 
+decision-making process or patient opinions.
+In this study we a present new methodology for understanding the physician-patient dynamics that drive 
+clinical decisions. Using this perspective, we developed a machine-learning and NLP-based predictive model to 
+dissect the various physician-patient factors involved in sleep medication prescriptions. Further development 
+of this framework may be applied more broadly to medication prescribing patterns for other challenging con-
+ditions. Using this approach, we found that a provider’s historical preference of medication was the dominating 
+factor for determining which sleep medication a patient received. Nonetheless, there was a statistically significant 
+Number of Topics
+AUC(SD)
+Sensitivity (SD)
+Specificity (SD)
+0
+0.764 (0.055)
+0.769 (0.045)
+0.656 (0.570)
+5
+0.769 (0.057)
+0.759 (0.050)
+0.658 (0.090)
+10
+0.762 (0.040)
+0.755 (0.036)
+0.652 (0.069)
+15
+0.757 (0.035)
+0.750 (0.085)
+0.650 (0.062)
+20
+0.747 (0.063)
+0.751 (0.057)
+0.656 (0.064)
+Table 1.  Performance metrics for the logistic regression model for various values for the number of topics 
+extracted using LDA. AUC, Sensitivity, and Specificity are given with standard deviations (SD). The first row 
+(number of topics = 0) displays results from a logistic regression model fit using only the variable for provider 
+preference.
+Variable
+Odds Ratio
+p-value
+Intercept
+0.95
+0.46
+Provider Preference
+3.13
+3 × 10−37
+Topic 1
+1.38
+0.04
+Topic 2
+1.00
+0.97
+Topic 3
+1.22
+0.14
+Topic 4
+1.23
+0.24
+Table 2.  Odds ratios of each variable for the best cross-validated model containing provider preference 
+and the LDA topics.
+ www.nature.com/scientificreports/
+5
+Scientific RepoRts | 7:42282 | DOI: 10.1038/srep42282
+association with having a note discussing depression and the likelihood that a patient would receive trazodone. 
+There likely are clinical domains where either the differential efficacy and/or the education about the effectiveness 
+of alternative drugs, or patient-specific factors, leads to greater variation in drug prescription patterns for indi-
+vidual physicians. We believe this study could be of clinical significance as it sheds light on an area that is often 
+understudied (insomnia) and highlights an opportunity for further physician education on medication prescrip-
+tions for this patient population.
+Additionally, this study reinforces the importance of using both billing codes and unstructured notes for the 
+study of insomnia. Because insomnia is often incompletely documented, the billing code record may only par-
+tially identify patients experiencing insomnia. In our study, only 476 of the 1,105 patients in the START cohort 
+had at least one billing code for insomnia, thus we were able to identify additional 629 patients through the use 
+of the clinical notes. Taken together, these results suggest that analysis of structured and narrative EMR data can 
+illuminate specific aspects of physician and patient decision-making in a manner inaccessible to traditional study 
+methods, and enhance our understanding of physician-patient dynamics in healthcare.
+Methods
+Cohort Selection. 
+We analyzed a previously defined cohort of 314,292 patients at increased risk for meta-
+bolic syndrome who attended Massachusetts General Hospital (MGH) or Brigham and Women’s Hospital (BWH) 
+between 1992 and 201016. Patients in this cohort had at least one type 2 diabetes mellitus (T2DM) diagnosis code, 
+or a T2DM medication, or HGB A1C ≥ 6.5%, or plasma glucose ≥ 200 mg/dl.
+We selected for our study cohort a set of patients seen at Partners HealthCare system with either confirmed 
+diabetes or a suspicion of diabetes. We selected this group out of several other cohorts because A) the prevalence 
+of diabetes is so high in Boston that the numbers of such patients that we could obtain was high and B) patients 
+with diabetes manifest a range of co-morbidities related to both cardiovascular disease and cancer, such that we 
+would have a very rich set of medical conditions under which we could examine physician prescribing behavior. 
+Also because the treatment of diabetes and its complications involve a large number of sub-specialties as well 
+as primary doctors, we would have the ability to study the range of behaviors across a heterogeneous mix of 
+physicians.
+Figure 4. Visualization of top words from Topic 1. These are the top 20 words that are most associated with 
+Topic 1. Inspection reveals that this topic most likely describes depression and psychiatric disorders. The odds-
+ratio (OR = 1.38, p = 0.04) indicates that patients that have a note with this topic are more likely to be prescribed 
+trazodone, as the physician may be responding to both the insomnia and depression.
+ www.nature.com/scientificreports/
+6
+Scientific RepoRts | 7:42282 | DOI: 10.1038/srep42282
+From this population, we identified a cohort of patients that correspond to a clinical decision point involving a 
+prescription for a sleep medication that occurred in an outpatient setting. The cohort (Fig. 1), hereafter referred to 
+as the START cohort, consisted of patients receiving a medication prescription in response to a documented diag-
+nosis of insomnia. Patients in this cohort have at least one indication for insomnia in the form of an International 
+Classification of Diseases (9th Revision) (ICD-9) code (307.41, 307.42, 327.00, 327.01, 327.02, 327.09, 780.52) 
+or a mention of a sleep disorder in a note in the 12-month period before receiving their prescription for a sleep 
+medication. Expressions representing a sleep disorder include: “poor sleep,” “has trouble sleep,” “reduced sleep,” 
+“increased sleep,” “decreased sleep,” “excessive sleep,” “fragmented sleep,” “sleeplessness,” “sleep disruption,” or 
+“sleeps poorly.” Additionally, these patients must have had no prior entry for a sleep medication in their EMR, 
+which implied that these patients were receiving the first such prescription for a sleep medication. The START 
+cohort inclusion criteria are summarized in Fig. 1.
+Additionally, we developed a physician cohort composed of every physician that saw a patient in the START 
+cohort. In order to learn about the historical medication preferences of these physicians, we retrieved every pre-
+vious prescription written by the physician that was available in the EMR. In total there were 504 physicians 
+included in this group.
+Statistical Methodology. 
+We pulled the entire prescription history for every provider that saw a patient in 
+the START cohort. Next, we defined a provider specific preference for trazodone vs. zolpidem, pi, as:
+=
++
+p
+t
+t
+z
+i
+i
+i
+i
+where ti is the total number of prescriptions written by the provider for trazodone and zi is the total number of 
+prescriptions written by the provider for zolpidem. This quantity captured a provider’s relative preference for pre-
+scribing trazodone or zolpidem as a sleep medication; the minimum value of 0 indicated an exclusive preference 
+for zolpidem while the maximum value of 1 indicated an exclusive preference for trazodone.
+To summarize the information available in each note, we used a machine learning technique known as Latent 
+Dirichlet Allocation (LDA)17. LDA is a hierarchical Bayesian model that discovers topics in text documents by 
+clustering words that co-occur frequently together and then models each document as a distribution over these 
+discovered topics. LDA provides high-level and coherent summaries of the information and has been shown to 
+be an accurate representation of the content of clinical notes18. The topics discovered by LDA can have meanings 
+that are interpretable by humans19 (though is not always the case), making it an useful tool for modeling clinical 
+narratives. The number of topics to include in a model is a free parameter that must be chosen, similar to the 
+number of clusters in k-means clustering. We fit LDA models with K = 
+ {5, 10, 15, 20} topics for use in the next 
+modeling stage.
+Next, we used topic probabilities from LDA and provider preference as independent variables in a logis-
+tic regression model to predict which medication (trazodone or zolpidem) would be given as the initial sleep 
+medication. Specifically, for each patient note we have K probabilities representing the degree to which each 
+topic is present in the note and the historical provider preference up to the date of the encounter. Note that the 
+probabilities from LDA form a multinomial distribution over topics and thus sum to 1, so any one probability is 
+perfectly determined from the other K-1 probabilities (i.e. probability K is equal to 1 minus the sum of the other 
+(K-1 probabilities). This colinearity will produce an error when fitting a logistic regression model (due to a matrix 
+singularity) so without loss of generality, we drop the last topic K (i.e. set the regression coefficient for that topic 
+to 0) from the design matrix when fitting the logistic regression model. Under this scheme, coefficient for topic 
+K is absorbed into the intercept and will serve as the reference level for the remaining topics. This is similar to 
+how categorical variables are often represented where one level of the variable is set as the reference group. For 
+each value of K = 
+ {0,5, 10, 15, 20}, we estimated the area under the receiver-operator curve (AUC) using 10-fold 
+cross-validation. The topics were visualized with LDAvis20 and words were ranked according to their relevance as 
+defined in the LDAvis manuscript with lambda = 0.6.
+We defined p = 
+ 0.05 as the significance threshold. All programming was performed using the R statistical 
+language21.
+This study and all study methods including EHR cohort assembly, data extraction and analysis were approved 
+by the institutional review board (IRB) of Partners Healthcare.
+References
+1. Benca, R. M. Diagnosis and treatment of chronic insomnia: a review. Psychiatr. Serv (2014).
+2. Mai, E. & Buysse, D. J. Insomnia: Prevalence, Impact, Pathogenesis, Differential Diagnosis, and Evaluation. Sleep Med. Clin. 3, 
+167–174 (2008).
+3. Ioachimescu, Octavian C. & El-Solh, A. A. Pharmacotherapy of insomnia. Expert Opin. Pharmacother. 13, 1243–1260 (2012).
+4. Schutte-Rodin, S., Broch, L., Buysse, D., Dorsey, C. & Sateia, M. Clinical guideline for the evaluation and management of chronic 
+insomnia in adults. J. Clin. Sleep Med. 4, 487–504 (2008).
+5. Buscemi, N. et al. The efficacy and safety of exogenous melatonin for primary sleep disorders: A meta-analysis. J. Gen. Intern. Med. 
+20, 1151–1158 (2005).
+6. Hajak, G. & Bandelow, B. Safety and tolerance of zolpidem in the treatment of disturbed sleep: a post-marketing surveillance of 
+16944 cases. Int. Clin. Psychopharmacol. 13, 157–167 (1998).
+7. Monti, J. M. & Pandi-Perumal, S. R. Eszopiclone: its use in the treatment of insomnia. Neuropsychiatr. Dis. Treat. 3, 441 (2007).
+8. Mendelson, W. B. A review of the evidence for the efficacy and safety of trazodone in insomnia. J. Clin. Psychiatry 66, 469–476 
+(2005).
+9. Roehrs, T. & Roth, T. ‘Hypnotic’ prescription patterns in a large managed-care population. Sleep Med. 5, 463–466 (2004).
+10. Morlock, R. J., Tan, M. & Mitchell, D. Y. Patient characteristics and patterns of drug use for sleep complaints in the united states: 
+Analysis of national ambulatory medical survey data, 1997–2002. Clin. Ther. 28, 1044–1053 (2006).
+ www.nature.com/scientificreports/
+7
+Scientific RepoRts | 7:42282 | DOI: 10.1038/srep42282
+11. Leanne Lai, L., Tan, M. H. & Lai, Y. C. Prevalence and factors associated with off-label antidepressant prescriptions for insomnia. 
+Drug. Healthc. Patient Saf. 3, 27–36 (2011).
+12. Nair, H. S., Manchanda, P. & Bhatia, T. Asymmetric Social Interactions in Physician Prescription Behavior: The Role of Opinion 
+Leaders. J. Mark. Res. 47, 883–895 (2010).
+13. Lu, T. H., Lee, Y. Y., Lee, H. C. & Lin, Y. M. Doctor Shopping Behavior for Zolpidem Among Insomnia Patients in Taiwan: A 
+Nationwide Population-Based Study. Sleep, doi: 10.5665/sleep.4806 (2014).
+14. Blei, D. M., Ng, A. Y. & Jordan, M. I. Latent Dirichlet Allocation. J. Mach. Learn. Res. 3, 993–1022 (2012).
+15. Joyce, G. F., Carrera, M. P., Goldman, D. P. & Sood, N. Physician prescribing behavior and its impact on patient-level outcomes. Am. 
+J. Manag. Care 17, e462–71 (2011).
+16. Liao, K. P. et al. Development of phenotype algorithms using electronic medical records and incorporating natural language 
+processing. BMJ 350, h1885 (2015).
+17. Blei, D. M., Ng, A. Y. & Jordan, M. I. Latent dirichlet allocation. J. Mach. Learn. Res. 3, 993–1022 (2003).
+18. Halpern, Y., Horng, S., Nathanson, L. A., Shapiro, N. I. & Sontag, D. A comparison of dimensionality reduction techniques for 
+unstructured clinical text. In Icml 2012 workshop on clinical data analysis (2012).
+19. Chang, J., Gerrish, S., Wang, C., Boyd-Graber, J. L. & Blei, D. M. Reading tea leaves: How humans interpret topic models. In 
+Advances in neural information processing systems 288–296 (2009).
+20. Sievert, C. & Shirley, K. LDAvis: A method for visualizing and interpreting topics. Proc. Work. Interact. Lang. Learn. Vis. Interfaces 
+63–70 (2014).
+21. Ihaka, R. & Gentleman, R. R: a language for data analysis and graphics. J. Comput. Graph. Stat. 5, 299–314 (1996).
+Acknowledgements
+The authors have approved the final draft submitted. This work was supported by a research grant from Merck & 
+Co., Inc. I.K. was supported in part by NIH grant U54HG007963. S.S., I.K., T.F., A.C. and J.P. conceived the study 
+design.
+Author Contributions
+A.B. and U.K. performed statistical analysis. S.S. and I.K. performed supervision. All authors participated in 
+drafting and revision of the manuscript.
+Additional Information
+Supplementary information accompanies this paper at http://www.nature.com/srep
+Competing financial interests: The authors declare no competing financial interests.
+How to cite this article: Beam, A. L. et al. Predictive Modeling of Physician-Patient Dynamics That Influence 
+Sleep Medication Prescriptions and Clinical Decision-Making. Sci. Rep. 7, 42282; doi: 10.1038/srep42282 
+(2017).
+Publisher's note: Springer Nature remains neutral with regard to jurisdictional claims in published maps and 
+institutional affiliations.
+This work is licensed under a Creative Commons Attribution 4.0 International License. The images 
+or other third party material in this article are included in the article’s Creative Commons license, 
+unless indicated otherwise in the credit line; if the material is not included under the Creative Commons license, 
+users will need to obtain permission from the license holder to reproduce the material. To view a copy of this 
+license, visit http://creativecommons.org/licenses/by/4.0/
+ 
+© The Author(s) 2017

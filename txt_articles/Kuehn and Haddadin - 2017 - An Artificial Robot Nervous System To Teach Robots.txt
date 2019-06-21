@@ -1,0 +1,1483 @@
+ IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED JANUARY, 2016
+1
+An Artificial Robot Nervous System To Teach
+Robots How To Feel Pain And Reflexively React To
+Potentially Damaging Contacts
+Johannes Kuehn and Sami Haddadin
+Abstract—In this paper, we introduce the concept of an
+artificial Robot Nervous System (aRNS) as a novel way of
+unifying multi-modal physical stimuli sensation with robot pain-
+reflex movements. We focus on the formalization of robot pain,
+based on insights from human pain research, as an interpretation
+of tactile sensation. Specifically, pain signals are used to adapt
+the equilibrium position, stiffness, and feedforward torque of a
+pain-based impedance controller. The schemes are experimentally
+validated with the KUKA LWR4+ for simulated and real physical
+collisions using the BioTac R
+� sensor.
+Index Terms—Physical Human-Robot Interaction, Compliance
+and Impedance Control, Biologically-Inspired Robots, Biomimet-
+ics, Force and Tactile Sensing.
+I. INTRODUCTION
+P
+HYSICAL human-robot interaction (pHRI) has become
+an increasingly central discipline in robotics research.
+With regard to human safety, considerable research was carried
+out in [1], [2] and the results reached real-world applications
+and international standards. However, rather limited efforts
+were undertaken to ensure the robot’s own safety via suitable
+controls and a systematic approach to do so is still missing. For
+this, a robot needs to be able to detect and classify unforeseen
+physical states and disturbances, rate the potential damage they
+may cause to it, and initiate appropriate countermeasures, i.e.,
+reflexes. In turn, enhanced robot reflexes may improve human
+safety in case of human-robot collisions. In order to tackle
+this demanding requirement, the human antetype shall serve
+as our inspiration, meaning that human pain-reflex movements
+are used for designing according robot pain sensation models
+and reaction controls. For this, it is worthwhile to first take a
+closer look at human reflexes caused by pain - we denote pain-
+reflexes - since they are generally regarded of vital importance
+to the human.
+A. Human Nervous System & Pain Reflexes
+Consisting of millions of connected neurons, the Human
+Nervous System (HNS) is the most powerful measurement and
+communication system of the human body. From a topological
+point of view the HNS can be divided into the Central and the
+Peripheral Nervous System (CNS, PNS). The CNS consists
+of the spinal cord, brain stem and forebrain and is mainly
+Manuscript received August 31, 2015; revised December 19, 2015; accepted
+January 29, 2016.
+This paper was recommended for publication by Editor Y. Yokokohji upon
+Associate Editor and Reviewers’ comments. This work was supported by the
+European Union’s Horizon 2020 research and innovation programme under
+Grant 688857.
+Johannes Kuehn and Sami Haddadin are with Institute of Automatic Control
+(IRT), Faculty of Electrical Engineering and Computer Science, Leibniz
+Universit¨
+at Hannover, Appelstr. 11 D-30167 Hannover, Germany kuehn,
+haddadin@irt.uni-hannover.de
+Digital Object Identifier (DOI): see top of this page.
+responsible for forwarding and processing information coming
+from the PNS [3]. The PNS covers all the nerves that are
+located outside the CNS, gathering tactile and proprioceptive
+information with the help of a wide spectrum of receptors. If
+a stimulus is that strong that body injuries become possible,
+a highly unpleasant, but vitally important, sensation is caused
+— pain [3]. The most responsible and contributing receptors
+to pain caused by physical contact are called nociceptors.
+When a mechanical stimulus affects nociceptors, which are
+distributed all over the skin, they become activated instantly.
+Depending on the stimulus strength, typically in terms of
+duration, penetration depth and stress, the nociceptors send
+ionic electrical spikes decoded in a frequency modulated
+manner [3]. Once the stimulus surpasses a certain threshold, a
+nociceptor starts firing following the all-or-nothing principle
+at constant amplitude [3]. After the signal passes the first
+neural interconnection it crosses to the other side of the
+spinal cord, following the spinothalamic tract, then through
+medulla, pons and midbrain to the thalamus. From there
+on, pain information is projected to different areas of the
+cerebral cortex. Pain is evoked, which may cause appropriate
+movements (pain-reflexes). Obviously, pain is also strongly
+an emotional experience, not only influenced by the signals
+coming from the nociceptors. Thus, one distinguishes between
+the emotional experience of pain and the nociceptive signals
+that may lead to pain experiences. In this paper, we focus on
+the latter.
+B. Reflex Control in Robotics
+Various approaches to reflexes in legged robot locomo-
+tion were developed with focus on stabilizing the gait of
+humanoids in [4], [5], [6]. Reflexes in manipulation tasks
+differ, since they are less cyclic and rather asymmetric. In
+[7], the humanoid ”Cog” was taught reflexive behaviors by
+generating movements from biologically predefined inspired
+postural primitives. Through the superposition of these primi-
+tives it was possible to imitate reflex-like withdrawal behavior.
+In [8], a similar approach was used by overlaying different
+movement patterns triggered by a tactile (force) sensor and
+was implemented on a 7-Degree-of-Freedom (DoF) robot
+arm. In [9], withdrawal movements of the human-arm were
+recorded and a force-distance relation was established to
+model this behavior. In order to trigger reflexes, an elastic
+robot-tissue was introduced, additionally mitigating the impact
+force through inherent damping properties. Moreover, in [10],
+based on the work in [11], [12], various collision reflex
+controls were proposed in the framework of proprioceptive
+collision detection and reflex reaction. Further approaches to
+reflex control based on optimal control can be found in [13]
+and [14].
+This is the author's version of an article that has been published in this journal. Changes were made to this version by the publisher prior to publication.
+The final version of record is available at
+ http://dx.doi.org/10.1109/LRA.2016.2536360
+Copyright (c) 2016 IEEE. Personal use is permitted. For any other purposes, permission must be obtained from the IEEE by emailing pubs-permissions@ieee.org.
+ 2
+IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED JANUARY, 2016
+Early reflex control approaches are mostly based on single
+sensors, e.g., via force-sensors that trigger predefined patterns.
+In [8], the authors activate reflexes by modeling single neuron
+firing per reflex-type. However, they focus on manipulation
+and specific rather abstract high-level reflexes such as grasping
+or catching in case of slipping. The basic implementation
+of mechanically triggered reflexes is also based on force
+sensing only. To the best of the authors’ knowledge, no deeper
+”mechano-physiological” contact dynamics were involved, nor
+does their human-like neuron firing imply human topological
+design. It rather represents a switching strategy that may
+trigger different events.
+C. Contribution
+In this paper, we introduce the artificial Robot Nervous
+System aRNS as a new way of integrating tactile sensation
+and according reflex reactions into robot control based on the
+concept of robot pain sensation. During a mechanical stimulus,
+the penetration stress, depth, and its dynamics are sensed via
+a virtual nervous robot-tissue and corresponding pain spiking
+signals are generated. Together with an interpretation of pain
+level, the signals are then used to activate suitable pain-reflex
+movements. Concretely, the proposed pain-based controller
+serves, e.g., for online adaptation of the equilibrium position,
+stiffness, and feed-forward torque of a joint-level pain-based
+impedance controller. The overall behavior allows the robot
+to sensitively interact with its environment at nominal pain
+level, while mitigating potential risks by activating human
+inspired reflex strategies if the pain level increases. Note that
+the proposed framework can analogously be extended to other
+modalities.
+The paper is organized as follows. In Section II the design
+of the aRNS is introduced. We explain the underlying concept,
+the required definitions, and the proposed mathematical model.
+Furthermore, the signal interpretation and corresponding pain
+reaction strategies are discussed. The pain-based joint-level
+impedance controller is introduced in Sec. III. Section IV
+reports on the results for simulated and real physical contact
+events using the BioTac sensor. The sensor is mounted on the
+robot’s end effector and utilized as a real world implementation
+of the proposed sensory model. Finally, we conclude the paper
+in Sec. V.
+II. ARTIFICIAL ROBOT NERVOUS SYSTEM
+A. Concept
+In general, the schematic concept of a collision between
+any suitably controlled (via the desired torque τd) robot and a
+collision object (mass mc, local radius rc) can be described by
+its corresponding contact dynamics, see Fig. 1. In generalized
+coordinates, the contact dynamics between a robot arm and
+a colliding object with state xc and its derivative ˙
+xc are
+determined by the robot joint configuration q, the joint velocity
+˙
+q, and the external torque vector τext. This torque is caused by
+the contact wrench Fc or the stress σc (single point contact)
+acting on the collision object and the robot, respectively. In
+order to rate potentially painful collisions and activate proper
+pain-reflexes, using information about τext only may not be
+sufficient. Humans are known to utilize further information,
+e.g., in terms of penetration depth δ or stress, into their con-
+trols, using the multitude of information provided by the skin;
+and not only from their proprioceptive torque measurement via
+robot
+contact
+collision
+object
+control
+law
+dynamics
+c =
+�Fc
+σc
+�
+xc, ˙
+xc
+q, ˙
+q
+mc rc
+τext
+x, ˙
+x
+τd
+dynamics
+Fig. 1. Dynamics of a collision between a controlled robot and a collision
+object.
+robot
+contact
+collision
+object
+control
+law
+interpret. spiking
+model
+robot
+tissue
+aRNS
+x, ˙
+x
+c =
+�Fc
+σc
+�
+xc, ˙
+xc
+contact state
+aRN
+dynamics
+q, ˙
+q
+τd
+mc rc
+contextual information
+τext
+dynamics
+ψ =
+�
+δ T ˙
+δ T cT�T
+nervous
+Fig. 2. Collision between a controlled robot and a collision object including
+an artificial Robot Nervous System (aRNS).
+the golgi tendon organs. In this paper, our goal is to enhance
+robots with similar capabilities by introducing the concept of
+an artificial Robot Nervous System that is inspired by the HNS.
+This enables a robot to not only sense, but also to interpret
+and react to ”painful” collisions, see Fig. 2. The aRNS can
+be subdivided into four major components: the nervous robot-
+tissue, the spiking model, the interpretation layer of generated
+spiking signals, and the motor control law. In the following,
+each component is separately elucidated, while the proposed
+control laws are introduced in Sec. III.
+B. Mechanical Model of the Virtual Nervous Robot-Tissue
+We assume a hypothetical nervous robot-tissue model that
+is inspired by the human skin structure. In analogy to the
+human skin, we split the nervous robot-tissue into three
+distinct layers filled with artificial Robot Neurons (aRNs) that
+replicate the principles of human receptors, see Fig. 3. The
+parameters b1,2,3 denote the thickness of each layer and are set
+to b1 = 0.002 m, b2 = 0.004 m, and b3 = 0.014 m, resulting in
+a total tissue thickness bt = 0.02 m. The contact with an object
+is described by the contact radius d, the penetration volume
+Vc, and the object radius rc. The material constants E1,2,3 and
+ν1,2,3 represent the elastic modules and the Poisson ratios. In
+this paper, they are chosen to be E1 = E2 = E3 := 50 MPa
+and ν1 = ν2 = ν3 := 0.25. E1,2,3 and ν1,2,3 correspond to
+polystyrene (soft) material that may be a suitable choice for
+a mechanical implementation. Based on [15], bt is chosen to
+be thick enough to prevent the material from full compression
+during contact events. b1,2,3 are chosen in terms of a scaled
+ratio that approximately corresponds to the standard thickness
+ratio of human skin layers [3]. The parameters ρ1,2,3 represent
+the homogenous density of the aRNs and were chosen to be
+ρ1 < ρ2 < ρ3 with ρ1 = 107 m−3, ρ2 = 1.05 · 107 m−3, and
+ρ3 = 1.1·107 m−3. These density values approximately corre-
+spond to the density of the human fingertip mechanoreceptors
+[16].1 This contact structure has two main properties. First,
+the deeper a collision object penetrates into the nervous robot-
+tissue the more aRNs are stimulated. Second, when a collision
+1For more details on suitable contact models, please refer to [15].
+This is the author's version of an article that has been published in this journal. Changes were made to this version by the publisher prior to publication.
+The final version of record is available at
+ http://dx.doi.org/10.1109/LRA.2016.2536360
+Copyright (c) 2016 IEEE. Personal use is permitted. For any other purposes, permission must be obtained from the IEEE by emailing pubs-permissions@ieee.org.
+ KUEHN et al.: AN ARTIFICIAL ROBOT NERVOUS SYSTEM TO TEACH ROBOTS HOW TO FEEL PAIN AND REFLEXIVELY REACT
+3
+b1
+b2
+b3
+ρ1, E1, ν1
+ρ2, E2, ν2
+ρ3, E3, ν3
+artificial Robot Neuron
+1st layer
+2nd layer
+3rd layer
+δ
+collision object
+(aRN)
+bt
+rc
+Vc
+d
+Fig. 3. Mechanical model of the proposed nervous robot-tissue.
+object reaches the next tissue layer the rate of stimulated aRNs
+rises. Note that the distribution of aRNs does not necessarily
+reflect the distribution of human skin receptors.
+C. Spiking Models
+1) Principle aRN spiking characteristics: Basically, the
+aRNs reflect the basic operation of human receptors. If the
+stimulus of human neurons exceeds a certain threshold, they
+start to send spike-like signals. One spike is constant at
+amplitude, duration and refractory time, which denotes the
+duration the receptor is not able to fire again regardless of
+present stimuli. A significant amount of information is thus
+encoded by changing the frequency of the firing rate. To
+imitate such behavior, aRN firing can be modeled as a finite-
+state machine (FSM) consisting of the three states idle-, firing-
+and rest-state, see Fig. 4. Initially, the aRN is in idle-state, i.e.,
+firing
+rest
+∆t = ts
+∆t = tr
+ri = 1
+ri = 0
+idle
+ri = 0
+act = 0
+∆t = tr
+act = 0
+act = 1
+act = 1
+∧
+∧
+Fig. 4. Modeling aRN firing as a finite-state machine.
+in case of no contact (act = 0) leading to ri = 0. Subscript i ∈ N
+denotes the individual aRN. If stimulation occurs (act = 1) the
+aRN switches to the firing-state, i.e., it starts firing by setting
+ri = 1 for a fixed time duration ts. Thereafter, it switches to
+rest-state. The output is then set to ri = 0 for the refractory
+time tr, regardless of possibly present stimuli. After this silent
+period, the aRN switches either back to firing-state (act = 1) or
+remains silent by switching to idle-state (act = 0), depending
+on the stimulus. In the following, the aRN types modeled in
+this paper are outlined.
+2) aRN types: Here, aRN types that respond to penetration
+depth, penetration velocity and compressive stress, including
+their spiking models, are elaborated as they correlate with
+pain sensation as described in [17], [18].2 We assume each
+aRN type to be equally distributed over the robot-tissue with
+according density ρ1,2,3, respectively. In addition to the ”in-
+stantaneous” aRN types we also introduce aRNs encoding the
+repetitiveness of contacts, since it is known that this influences
+pain level as well [19].
+2In this paper, we add penetration velocity, which obviously strongly
+correlates with potential danger, as an important metric for an aRNS. We
+anticipate that such a modality will become technologically available in the
+future.
+a) Penetration depth spike train: Under the assumption
+that the higher the penetration depth δ, the more aRNs are
+activated, the total number of activated aRNs r(δ) is
+r(δ) =
+� V1(δ)ρ1
+δ ≤ b1
+V2(δ −b1)ρ2 +r(b1)
+b1 < δ ≤ bt2
+V3(δ −bt2)ρ3 +r(bt2)
+bt2 < δ,
+(1)
+with bt2 = b1 +b2. V1(δ), V2(δ −b1) and V3(δ −bt2) denote
+the instantaneous effective volumes that envelop the stimulated
+aRNs. Due to tissue compression, those aRNs that were placed
+at penetration volume Vc (see Fig. 3) push against neighboring
+ones and may stimulate them as well. Therefore, some of the
+affected aRNs lie outside the penetration volume Vc. To take
+this effect into account, we approximate the instantaneous ef-
+fective volumes to be cylindrical as a reasonable simplification.
+Accordingly, each respective volume of layer i is obtained by
+Vi(δ) = ∆δiπd2 = ∆δiπ
+�
+2rc∆δi −∆δ 2
+i
+�
+,
+(2)
+where ∆δi is the penetration depth in layer i and d the radius
+of the cylindric volume (see Fig. 3).
+b) Penetration
+velocity
+spike
+train:
+The
+velocity-
+dependent spike generation is defined in a straight forward
+manner as the absolute value of the first time derivative of
+penetration depth based firing
+rv := |˙
+r(δ)|.
+(3)
+c) Compressive stress spike train: The stress-dependent
+spiking is computed as
+p(σ) =
+� V1(δ ∗)ρ1
+δ ∗ ≤ b1
+V2(δ ∗ −b1)ρ2 +r(b1)
+b1 < δ ∗ ≤ bt2
+V2(δ ∗ −bt2)ρ3 +r(bt2)
+bt2 < δ ∗.
+(4)
+Due to the physically decaying impact characteristics of pres-
+sure we introduce the effective penetration depth δ ∗ as
+δ ∗ :=
+�
+ceδ
+δ ≤ bt
+2
+bt
+bt
+2 < δ ≤ bt,
+(5)
+since not only the aRNs within the penetration depth δ are
+activated, but also significant portions below. We chose ce ≈ 2,
+then, as a result δ ∗ covers 99 % of the impact decay, i.e., the
+tissue stress has reduced to < 1 % of the maximum surface
+stress. In analogy to (2) the instantaneous stress volumes are
+Vi(δ ∗) = ∆δ ∗
+i πd2,
+i = 1,2,3,
+(6)
+where ∆δ ∗
+i is the effective penetration depth of layer i.
+d) Repetitiveness spike train: The repetitiveness ξ is
+defined as
+ξ :=
+�
+tc
+˙
+ξ dt,
+(7)
+where tc is the time instant at which the collision occurs. The
+repetitveness rate ˙
+ξ is defined as
+˙
+ξ :=
+
+
+
+
+
+
+
+aF(δ) ˙
+δ
+˙
+δ > 0
+−
+�
+tv
+¨
+ξr dt
+˙
+δ ≤ 0∧ξ > 0
+0
+˙
+δ ≤ 0∧ξ = 0,
+(8)
+where a > 0 and ¨
+ξr > 0 are the growth and decay factors. tv
+denotes the time when penetration velocity gets negative. The
+contact force F(δ) is assumed to follow Hertzian theory, see
+[15].
+Figure 5 depicts the sensory response of the nociceptive
+aRNs given the true compressive stress σ under the following
+This is the author's version of an article that has been published in this journal. Changes were made to this version by the publisher prior to publication.
+The final version of record is available at
+ http://dx.doi.org/10.1109/LRA.2016.2536360
+Copyright (c) 2016 IEEE. Personal use is permitted. For any other purposes, permission must be obtained from the IEEE by emailing pubs-permissions@ieee.org.
+ 4
+IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED JANUARY, 2016
+collision parameters. The contact occurs between a 2-shell
+1-DoF robot with mr = 4.5 kg, rr = 0.1 m and a 1-shell
+collision object with mc = 4.5 kg, rc = 0.1 m at impact speed
+vc = 0.4 m/s. The robot is assumed to be at rest and the
+object approaches at vc. After a single contact event a repetitive
+decaying impact follows. The response of the respective aRN-
+type to penetration depth r(δ), velocity rv, impact stress p(σ)
+and repetition frequency ξ are displayed. One can see that each
+aRN type correlates with the respective (physical) modality.
+0
+0.5
+1
+1.5
+< [MPa]
+0
+10
+r(/) [ ]
+0
+500
+rv [ 1
+s ]
+0
+20
+40
+p(<) [ ]
+0
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+1.4
+1.6
+1.8
+2
+0
+10
+20
+9 [ ]
+Fig. 5. Cumulated spike signals of aRN-types penetration depth r, velocity
+rv, stress p, and repetitiveness ξ.
+3) Implementation remarks: For convenience, we introduce
+a time discretisation t = kTs, with sampling time Ts and time
+step k ∈ N, in the implementation. During the refractory time tr
+(see Fig. 4) aRNs do not fire. Thus, the number of stimulated
+aRNs r(δ,kTs) in (1) reduces to an effective number ref f . This
+is the sum of aRNs currently being in firing-state. By setting
+tr = ts = Ts the stimulated aRNs can be either in firing or silent
+mode for every k. Consider the stimulated aRNs at time step
+k fire. Then they pause in time step k + 1 and fire again in
+k +2 (assuming the stimulus is still present, i.e., act = 1, see
+Fig. 4). The icrement of stimulated aRNs in time step k is
+therefore
+∆ri(δ,kTs) = r(δ,kTs)−r(δ,(k −1)Ts),
+i = 1,2,...,l,
+(9)
+where subscript i is the incremental counter during contact.
+All ∆ri(δ,kTs) form the elements of the stacked vector
+∆R = [∆r1 ... ∆rl]T
+∆R ∈ Rl,
+∆ri > 0
+(10)
+of length l that increases as long as ∆ri > 0. It follows that
+for even and odd time steps one can separately compute ref f
+as
+ref f (kTs) =
+�
+∑
+�l/2�
+j=0 ∆R2 j+1
+k = 2m+1
+∑
+�l/2�
+j=1 ∆R2 j
+k = 2m
+, m = 0,1,2,... .
+(11)
+If ∆ri is negative (∆r−
+i := ∆ri ≤ 0) the number of stimulated
+aRNs decreases. This means that the object’s collision velocity
+turns into the opposite direction and thus moves away from the
+robot. Therefore, ∆r−
+i is deleted from ∆R in reverse order such
+that the aRNs stimulated last are deactivated first. Algorithm 1
+shows the pseudo code of this firing reduction algorithm.
+Algorithm 1 Pseudo code for modeling firing reduction.
+c = ∆rl +∆r−
+l+1
+while c ≤ 0 do
+∆rl = 0
+l = l −1
+c = ∆rl +c
+end while
+∆rl = c
+D. Interpretation
+In this paper, robot pain is defined as the interpretation
+of spike trains generated by the aRNs involving contextual
+information. Inspired by the human pain system, robot pain
+is divided into four verbal pain classes: no, light, moderate,
+and severe pain. They represent a simplification of the Verbal
+Rating Scale (VRS) of pain measurement in humans, see Tab. I.
+The first pain class contains no contact as well as contacts that
+are not painful, we call those soft contacts. Consider, e.g., the
+robot fulfills a certain task such as holding a desired configu-
+ration qd. Obviously, in case of no contact the robot shall hold
+its position. In case of soft contact, the robot experiences an
+external torque τext that results in a deviation from its desired
+equilibrium position qd. Since the contact is not harmful the
+robot shall treat the contact as a disturbance, compensate for
+it, and focus on the desired task. In the second pain class,
+such contacts occur that may harm the robot or prevent it
+from performing the task. The robot ”feels” uncomfortable
+and shall smoothly retract until the contact event is over and
+return thereafter. Strong collisions are covered in the third pain
+class. The robot ”feels” moderate pain, shall quickly retract,
+and more distant until the contact event is over. Then, it may
+move back towards qd. The last pain class covers all contacts
+in which the robot may be damaged and thus needs some
+sort of ”help”. In order to prevent making the damage worse,
+the robot switches to gravity compensation with additional
+damping for dissipation, improving the safety of the robot and
+the environment by its strictly passive behavior. The desired
+interpretation is realized by the control laws that are elucidated
+in the following.
+III. ARNS: COLLISION CONTROL
+A. Robot dynamics
+For the pain-based controller design, we assume an n-DoF
+serial chain rigid robot to be equipped with the aRNS. The
+dynamics of such a system in contact can be described in
+Lagrangian form by
+τ = M(q) ¨
+q +C(q, ˙
+q) ˙
+q +g(q)+τext,
+(12)
+where τ ∈ Rn denotes the actuator torques, M(q) ∈ Rn×n is
+the symmetric joint inertia matrix, C(q, ˙
+q) ∈ Rn×n the Coriolis
+and centrifugal matrix, g(q) ∈ Rn the gravity vector, and τext
+the external joint torques. Let us consider a single-areal contact
+with associated contact Jacobian matrix Jc(q). This maps the
+physically acting contact wrench Fext ∈ R6, which is caused
+by the local compression and tensile stress distribution, into
+the respective external joint torques via
+τext = JT
+c (q)Fext = JT
+c (q)[fext mext]T
+(13)
+This is the author's version of an article that has been published in this journal. Changes were made to this version by the publisher prior to publication.
+The final version of record is available at
+ http://dx.doi.org/10.1109/LRA.2016.2536360
+Copyright (c) 2016 IEEE. Personal use is permitted. For any other purposes, permission must be obtained from the IEEE by emailing pubs-permissions@ieee.org.
+ KUEHN et al.: AN ARTIFICIAL ROBOT NERVOUS SYSTEM TO TEACH ROBOTS HOW TO FEEL PAIN AND REFLEXIVELY REACT
+5
+TABLE I
+ROBOT PAIN CLASSES AND CORRESPONDING REACTION STRATEGIES.
+Robot pain class
+Collision severity
+Strategy
+qd-adapt.
+Kd-adapt.
+τf f -adapt.
+I
+no pain
+no/soft contact
+fulfill task/compensate
+(16), with ˙
+qp(kI
+q)
+(19), with Kd(IK∗
+d,kI
+K)
+(21), with τf f (kI
+τ ,W > diag(0))
+II
+light pain
+light
+smoothly retract
+(16), with ˙
+qp(kII
+q )
+(19), with Kd(IIK∗
+d,kII
+K)
+(21), with τf f (kII
+τ ,W = diag(0))
+III
+moderate pain
+strong
+quickly retract
+(16), with ˙
+qp(kIII
+q )
+(19), with Kd(IIIK∗
+d,kIII
+K)
+(21), with τf f (kIII
+τ ,W = diag(0))
+IV
+severe pain
+hard
+abort task
+n.a.
+n.a.
+n.a.
+In this paper, we assume the unit collision direction uc of
+Fext and Jc to be known. In general this information could
+be derived from various sources such as e.g. proprioceptive
+information or suitable tactile sensors.
+B. Generalized Pain Spiking State
+In order to involve the spiking signals into the overall
+control strategy, we introduce the generalized pain spiking
+state as
+s(t) = [p(σ) r(δ) rv(δ) ξ]T ≥ 0,
+(14)
+which is defined as the stacked vector of all cumulated spike
+signals from Sec. II-C2. Note, for a possibly real world
+implementation of the aRNS using conventional sensors, i.e.
+providing analogue outputs, one can use this spiking state vec-
+tor as an entry point to incorporate those signals. For example,
+in this paper, we subsequently use the BioTac analogue outputs
+to replace the cumulated spike signals, leading to a sensor
+related spiking vector sBT, see Sec. IV-B.
+C. Reflex Control Strategies
+The
+control
+strategy
+we
+propose
+adapts
+the
+overall
+impedance and feed-forward characteristics of a joint level
+impedance controller, as well as the reference trajectory based
+on the Cartesian pain sensation and interpretation. This pain-
+based joint level impedance controller is defined by
+τd = Kd(s)(qd(s)−q)+D(q) ˙
+q +τf f (s)+τG(q),
+(15)
+where Kd ∈ Rn×n, qd ∈ Rn and τf f ∈ Rn are the desired
+closed loop stiffness, the desired equilibrium position and the
+feedforward torque. They all depend on the generalized pain
+spiking state s. The vector τG ∈ Rn denotes the gravity com-
+pensation torque and D ∈ Rn×n the configuration dependent
+joint damping matrix
+D(q) = A(q)DξKd1 +Kd1DξA(q),
+where Dξ = diag
+�
+1
+√
+2
+�
+∈ Rn×n is the desired joint damping
+ratio matrix. According to [20], A(q) and Kd1 are defined by
+A(q)A(q) = M(q) and Kd1Kd1 = Kd.
+a) qd-adaptation: Equilibrium position adaptation after
+the collision event, occurring at collision time tc, shall cause
+faster evading from external contacts the larger s(t). After the
+contact, an exponential recovery behavior towards the original
+equilibrium qd(tc) shall be achieved. Specifically, the desired
+equilibrium position qd is adapted via
+qd := qd(tc)+
+�
+tc
+˙
+qp(s) dt,
+(16)
+where qd(tc) denotes the desired joint configuration at tc and
+˙
+qp is the pain reflex equilibrium rate, which is integrated from
+collision time tc on. The generalized virtual pain force fv is
+defined as
+fv := (kT
+qs)uc,
+(17)
+where kq > 0 is a gain vector. The pain reflex equilibrium
+rate is then obtained by
+˙
+qp :=
+
+
+
+
+
+
+
+
+
+−JT
+c Fv := −JT
+c [fv 0]T
+s > 0
+−sign{qd −qd(tc)}
+�
+t� ¨
+qr dt
+s = 0∧qd �= qd(tc)
+0
+s = 0∧qd = qd(tc),
+(18)
+where ¨
+qr > 0 is the constant equilibrium recovery acceleration.
+t� is the time at contact loss.
+b) Kd-adaption: The stronger the stimulus, stiffness
+adaptation shall cause faster stiffness increase, while after the
+collision recovery to the original constant reference stiffness
+K∗
+d > 0 shall be moderately fast. For the sake of simplicity,
+we choose the stiffness entries to be equal for all joints. The
+desired diagonal closed loop stiffness Kd > 0 is adapted by
+Kd := K∗
+d +min
+�
+∆Kd,max,
+�
+tc
+˙
+Kp(s) dt
+�
+,
+(19)
+where
+˙
+Kp is the pain stiffness rate. The stiffness increase
+(as reasoned in Sec. III-D), which is bounded from above by
+∆Kd,max = Kd,max −K∗
+d, starts at tc. The according stiffness
+adaptation rate ˙
+Kp(s) is defined as
+˙
+Kp(s) :=
+
+
+
+
+
+
+
+
+
+diag(kT
+Ks)
+s > 0
+−
+�
+t�
+¨
+Kr dt
+s = 0∧Kd > K∗
+d
+0
+s = 0∧Kd = K∗
+d,
+(20)
+where kK > 0 represents the stiffness rate gain vector and
+¨
+Kr > 0 the constant stiffness relaxation acceleration.
+c) τf f -adaptation:
+The feed forward torque τf f
+is
+adapted according to the same principle as the equilibrium
+position behavior. It consists of the pain reflex torque τp and
+the compensation torque τcomp:
+τf f (s) := τp(s)+τcomp
+(21)
+Let us start at the generalized pain force fp, which is defined
+as
+fp := (kT
+τs)uc,
+(22)
+where kτ > 0 is the gain vector of the pain reflex torque. The
+pain reflex torque is then obtained via
+τp(s) :=
+
+
+
+
+
+
+
+
+
+
+
+−JT
+c Fp := JT
+c [fp 0]T
+s > 0
+−sign{τp}
+�
+t�
+¨
+τr dt
+s = 0∧τp �= 0
+0
+s = 0,
+(23)
+This is the author's version of an article that has been published in this journal. Changes were made to this version by the publisher prior to publication.
+The final version of record is available at
+ http://dx.doi.org/10.1109/LRA.2016.2536360
+Copyright (c) 2016 IEEE. Personal use is permitted. For any other purposes, permission must be obtained from the IEEE by emailing pubs-permissions@ieee.org.
+ 6
+IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED JANUARY, 2016
+where Fp denotes the pain wrench and ¨
+τr > 0 the constant
+pain torque recovery acceleration. The compensation torque is
+computed as
+τcomp := W
+�
+tc
+(q −q(tc))dt,
+(24)
+where W > 0 ∈ Rn×n represents a diagonal gain matrix. Note
+that the compensation torque does not depend on the spiking
+state vector s. It is only active in the first pain class in order
+to compensate unintended (and painless) contacts.
+D. Pain Reflex Graph
+Figure 6 illustrates the pain reflex graph. s1, s2 and s3 ∈
+no pain
+light pain
+moderate pain
+severe pain
+recover
+[s(t) > s1]
+[s2 ≥ s(t) > s1]
+Kd = K∗
+d
+[s(t) ≤ s1]
+[qd = qd(tc)∧
+kq = kI
+q, kK = kI
+K, kτ = kI
+τ
+qd = qtask
+τff = τcomp
+(17) with ˙
+qp(p(σ))
+(20) with ˙
+Kp(ξ)
+(22) with τp(r(δ), rv)
+(17) with ˙
+qp(¨
+qr)
+(20) with ˙
+Kp( ¨
+Kr)
+(22) with τp(¨
+τr)
+I
+[s(t) ≤ s1]
+[s(t) > s1]
+[s(t) > s2]
+II
+III
+IV
+kq = kII
+q , kK = kII
+K, kτ = kII
+τ
+kq = kIII
+q , kK = kIII
+K , kτ = kIII
+τ
+[s3 ≥ s(t) > s2]
+[s(t) ≤ s2]
+[s(t) > s2]
+(17) with ˙
+qp(p(σ))
+(20) with ˙
+Kp(ξ)
+(22) with τp(r(δ), rv)
+[s(t) > s3]
+pstate= 2
+pstate= 3
+pstate= 1
+pstate= 4
+pstate= 2
+Kd = K∗
+d∧
+τff = 0∧
+pstate = 3
+(16) with τd = τG(q) + D ˙
+q
+kq = kIV
+q , kK = kIV
+K , kτ = kIV
+τ
+s = 0]
+[s(t) > 0]
+pstate= 1
+Fig. 6. Pain reflex graph.
+R4×1 (s1 < s2 < s3) are the vectors containing the thresholds
+for transitioning between pain states. Note that the comparison
+with s takes place element-wise. For evaluating when to switch
+to the next pain-state the compressive stress spiking p(σ) is
+used. The variable pstate denotes the previously active pain
+state. In case of multiple contacts, the robot returns to the
+nominal pain class only after it has fully recovered from the
+previous pain level. Controls do not switch from higher to
+lower pain level without completely recovering to the nominal
+pain level first. Most noticeably, the equilibrium adaption qd is
+set to correlate with the compressive stress that varies with the
+collision object shape. The stiffness adaption Kd is connected
+to repetitiveness in order to be abel to react to collision bursts
+faster. The feedforward torque adaption τf f changes with
+penetration depth and velocity aRN spiking as a response to
+potentially painful collisions.
+One can conclude, the higher the compressive stress, the
+more distant the equilibrium point is set. The higher the
+number of contact repetitions, the stiffer the controls. The
+deeper and faster the collision object penetrates, the stronger
+the feedforward torque. As the respectively growing intensities
+increase with the order of pain class according to the gain
+vectors, the decaying rates decrease, i.e., the time period of
+recovering grows with order of pain class. In pain class IV,
+controls are set to gravity compensation with a constant diag-
+onal damping matrix D > 0 only. Since fp in (22) depends on
+two aRN types, the respective gain constants kτ,2 and kτ,3 are
+set such that they equally contribute to the maximally possible
+pain force fp,max. Thus, the torque gain vector becomes
+kτ =
+
+
+
+
+
+
+
+
+0
+(2 rmax(δ))−1fp,max
+(2 rv,max(δ))−1fp,max
+0
+
+
+
+
+
+
+
+
+,
+(25)
+where rmax(δ) and rv,max(δ) denote the respective maximum
+spiking magnitude.
+IV. EXPERIMENTAL RESULTS
+A. Parameter dependency of aRNS control laws
+The parameter dependency of aRNS control laws is inves-
+tigated during simulated single and multiple collision event(s)
+between a 2-shell 1-DoF robot (mr = 4.5 kg, rr = 0.1 m)
+and a 1-shell collision object (mc = 4.5 kg, rc = 0.1 m at
+vc = 0.5 m/s.3 The task of the robot is to hold qd = 0 m
+at K∗
+d = 5000 N/m. Please note that for this one-dimensional
+collision q denotes the Cartesian position. The influence of
+the respective key parameters is investigated regarding the
+equilibrium, stiffness, and feedforward torque adaption.
+Figure 7 depicts the qd-adaptation during a single collision.
+The top chart shows the stress spiking p(σ) evoked by the
+0
+20
+40
+p(<) [ ]
+0
+0.02
+0.04
+qd [m]
+kq;1 = 0:01 [N]
+kq;1 = 0:015 [N]
+kq;1 = 0:02 [N]
+kq;1 = 0:025 [N]
+0
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+1.4
+1.6
+1.8
+2
+t [s]
+0
+0.02
+0.04
+qd [m]
+B
+qr = 2 " 10!6 # m
+s2
+$
+B
+qr = 5 " 10!6 # m
+s2
+$
+B
+qr = 10!5 # m
+s2
+$
+B
+qr = 10!4 # m
+s2
+$
+¨
+qr =const.
+kq,1 =const.
+Fig. 7. qd-adaptation for single contact for different kq and ¨
+qr.
+collision. In the middle plot, qd-adaptation based on p(σ)
+and in dependence of kq,1 from the gain vector kq is shown
+at fixed recovery acceleration ¨
+qr. Obviously, kq,1 can be
+used for varying the magnitude of the set point. The lower
+chart shows the reverse case at fixed value of kq,1. This
+means that for a given collision the distal response does not
+change, while the recovery acceleration ¨
+qr varies, allowing
+to influence the decay time before the robot proceeds with
+the task. In Fig. 8 the variation of stiffness rate adaptation is
+shown during repetitive contacts. The top diagram depicts the
+3The radii rr,c are equally chosen, since the used contact model is only
+valid for radii greater than the contact radius d, see Fig. 3. Reasonable values
+are chosen for mr,c that correspond to typically reflected mass values found
+during human-robot collisions [15].
+This is the author's version of an article that has been published in this journal. Changes were made to this version by the publisher prior to publication.
+The final version of record is available at
+ http://dx.doi.org/10.1109/LRA.2016.2536360
+Copyright (c) 2016 IEEE. Personal use is permitted. For any other purposes, permission must be obtained from the IEEE by emailing pubs-permissions@ieee.org.
+ KUEHN et al.: AN ARTIFICIAL ROBOT NERVOUS SYSTEM TO TEACH ROBOTS HOW TO FEEL PAIN AND REFLEXIVELY REACT
+7
+TABLE II
+GAIN VECTORS AND PARAMETERS FOR COLLISION BETWEEN BIOTAC AND HUMAN FINGER (SEE FIG. 10).
+pain class
+qd-adapt.
+Kd-adapt.
+kT
+q [N - -]
+¨
+qr
+�
+rad
+s2
+�
+kT
+K
+�
+- -
+Nm
+rad·s
+�
+K∗
+d
+� Nm
+rad
+�
+¨
+Kr
+�
+Nm
+rad·s2
+�
+I
+0T
+0
+0T
+diag{500}
+0
+II
+[0.05 0 0]T
+diag{10−5}
+[0 0 60]T
+diag{500}
+diag{0.02}
+III
+[0.075 0 0]T
+diag{5·10−6}
+[0 0 80]T
+diag{500}
+diag{0.02}
+0
+50
+100
+9 [ ]
+5000
+5200
+5400
+5600
+Kd
+# N
+m
+$
+kK;4 = 0:03 [ N
+m s]
+kK;4 = 0:04 [ N
+m s]
+kK;4 = 0:05 [ N
+m s]
+kK;4 = 0:2 [ N
+m s]
+0
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+1.4
+1.6
+1.8
+2
+t [s]
+5000
+5100
+5200
+5300
+5400
+Kd
+# N
+m
+$
+B
+Kr = 0:1 [
+N
+m s2 ]
+B
+Kr = 0:3 [
+N
+m s2 ]
+B
+Kr = 0:5 [
+N
+m s2 ]
+B
+Kr = 1:0 [
+N
+m s2 ]
+Kd,max
+¨
+Kr =const.
+kK,4 =const.
+Fig. 8. Kd-adaptation for repetitive contacts for different kK and ¨
+Kr.
+repetitiveness spiking ξ. The middle and lower diagrams show
+Kd-adaptation for different kK,4 at fixed recovery acceleration
+¨
+Kr =const. (middle) and vice versa (bottom). The stiffness
+magnitude increases with the number of contacts (indicated
+by ξ) at different rates depending on the particular choice
+of kK until Kp,max = 5500 N/m is reached. When the contact
+event is over Kd recovers to the nominal stiffness K∗
+d with ¨
+Kr.
+Figure 9 shows feedforward torque adaption for rmax(δ) = 16,
+rv,max(δ) = 2200 s−1, and fp,max = 100 N. The first and
+0
+10
+20
+r(/) [ ]
+0
+1000
+2000
+rv [ 1
+s]
+0
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+t [s]
+0
+50
+100
+150
+=p [N]
+Fig. 9. Contribution of r(δ) and rv to τp-adaptation for given kτ .
+middle chart depict the penetration depth and velocity spiking
+r(δ) and rv for three consecutive collisions. To separately
+emphasize the contribution of the two spiking signals only
+r(δ) is activated for the first collision. During the second
+collision, only rv is considered, while the last collision shows
+the combined response. The decay acceleration is set to
+¨
+τr = 50 N/s2.
+To sum up, the aRNS controller adaption can be separately
+set up for qs, Kd-, and τf f , which should be done carefully,
+while considering the used robot, its task, and foreseeable
+environments.
+B. Pain reaction
+The pain-reflex control is experimentally demonstrated us-
+ing a KUKA LWR4+ equipped with the BioTac R
+� sensor as
+an implementation of the artificial robot neuron concept. The
+sensor is mounted at the end effector and pressure is induced
+by a human finger, leading to the respective pain class and
+reflex reaction, see Fig. 10. The BioTac can sense multiple
+modalities such as pressure, vibration, temperature or spatial
+contact forces. In this paper, we utilize, e.g., the pressure
+signal σBT as the cumulated spiking signal adapting qd. The
+LWR4+
+BioTac
+Fig. 10.
+Experimental setup consisting of KUKA LWR4+ equipped with
+BioTac sensor and controlled by the aRNS.
+repetitiveness spiking ξ is realized by a counter with constant
+gradient and exponential decay characteristics that is activated
+for σBT > 0, directly influencing Kd. The particular relation
+can be derived from (8) by replacing aFδ with Tinc = 0.1 and
+˙
+δ with σBT. In addition, we extend the spiking state vector
+s in (14) by the modality of temperature sensing, utilizing
+the analog derivative of temperature TAC of the BioTac.4 Due
+to the larger time constants of temperature measurement we
+introduce a separate temperature pain class that is activated as
+soon as a threshold of H = 1920 kbits is exceeded. Its formal
+definition and reflex behavior is equivalent to the other contact
+classes. However, only two reaction classes are defined for this
+4For more information about the BioTac and signal interpretation see [21].
+This is the author's version of an article that has been published in this journal. Changes were made to this version by the publisher prior to publication.
+The final version of record is available at
+ http://dx.doi.org/10.1109/LRA.2016.2536360
+Copyright (c) 2016 IEEE. Personal use is permitted. For any other purposes, permission must be obtained from the IEEE by emailing pubs-permissions@ieee.org.
+ 8
+IEEE ROBOTICS AND AUTOMATION LETTERS. PREPRINT VERSION. ACCEPTED JANUARY, 2016
+particular case. The robot retracts with a change of 5 deg in
+every joint and waits 4 s until recovery, provided that TAC does
+not drop any further. These values were empirically found to
+successfully avoid contact with a plastic cup filled with hot
+boiled water (ϑc ≈ 100◦C).
+During the experiment the cup was only slightly touched in
+order to avoid unwanted retraction due to pressure sensing.
+The spiking state vector used in the experiment is sBT =
+[σBT,TAC,ξ]T and the controller parameters can be found
+in Tab. II. The equilibrium position related parameters are
+empirically chosen such that for the given contact events
+the robot does not violate a predefined workspace, while
+the stiffness parameters comply with the specifications of
+the KUKA LWR4+. The robot task is to mantain qd =
+[0,30,0,−50,0,10,0]T [deg]. In Figure 11 one can see an
+increase in desired equilibrium position and a slight increase
+in stiffness for light pain. For moderate pain one observes
+a reinforced version of light pain. Note that since the rele-
+vant reflex behavior in this particular experimental setup was
+mainly observed in axis 2 and 4, we omit the other traces
+for sake of clarity. The corresponding gains were selected
+to be larger and the recovery rates decreased. The collision
+that causes severe pain represents a special case where the
+controller switches to pure gravity compensation mode with
+some additional damping, see Fig. 6. The pain-controls are
+deactivated and without human intervention the robot is not
+able to return to the task. Most noticeably, the set point
+adaption and stiffness rise until contact is lost during repetitive
+contacts. Finally, the robot retracts to avoid longer contact with
+a hot object for the temperature reflexes.
+0
+10
+20
+30
+light pain
+σBT [kPa]
+moderate pain severe pain
+repetitive
+(light pain)
+1.7
+1.8
+1.9
+2
+2.1
+temperature
+ϑc = 100 [◦C]
+TAC [kbits]
+0.4
+0.6
+0.8
+1
+q2 , q4 [rad]
+ 
+ 
+q2
+q4
+0
+5
+10
+600
+800
+1000
+Kd [ Nm
+rad]
+t [s]
+0
+5
+10
+t [s]
+0
+5
+10
+t [s]
+0
+5
+10
+t [s]
+0
+10
+20
+30
+t [s]
+Fig. 11.
+Physical collision for the KUKA LWR4+ equipped with the
+aRNS/BioTac and a human finger that applies varying pressure.
+V. CONCLUSION
+This paper is our first step towards enabling robots to not
+only measure or estimate contacts, but also to sense and inter-
+pret them based on novel bio-inspired controls. For this, we
+developed the concept of an artificial Robot Nervous System
+(aRNS), which architecture and basic functionality mimics its
+human antetype. The concept is designed to unify different
+sensing modalities and let the robot respond in a human-
+inspired way to perceived stimuli. Specifically, we introduce
+a sensory pathway from mechanical collision quantities such
+as contact forces and stresses to arificial Robot Neuron firing
+caused by quantities such as penetration depth, contact timing,
+and aRN density in the involved tissue layers. This concept
+makes it possible to design new and interesting collision
+reflex reaction behaviors. Depending on spiking rate the robot
+executes protective behavior of varying intensity as an escape
+strategy before trying to re-engage into the previous task
+again.
+REFERENCES
+[1] M. Zinn, O. Khatib, B. Roth, and J. Salisbury, “Playing it safe – human-
+friendly robots,” IEEE Robotics and Automation Mag., vol. 11, pp. 12–
+21, 2002.
+[2] S. Haddadin, A. Albu-Sch¨
+affer, and G. Hirzinger, “Safety evaluation of
+physical human-robot interaction via crash-testing,” in Robotics: Science
+and Systems, vol. 3, 2007, pp. 217–224.
+[3] M. A. P. Mark F. Bear, Barry W. Conners, Neuroscience - Exploring the
+Brain.
+Lippincott Williams & Wilkins, 2007.
+[4] Q. H. Q. Huang and Y. Nakamura, “Sensory reflex control for humanoid
+walking,” IEEE Trans. on Robotics, vol. 21, no. 5, pp. 977–984, 2005.
+[5] R. Kratz, S. Klug, M. Stelzer, and O. von Stryk, “Biologically inspired
+reflex based stabilization control of a humanoid robot with artificial
+sma muscles,” in EEE Int. Conf. on Robotics and Biomimetics, 2006,
+pp. 1089–1094.
+[6] S. Yakovenko, V. Gritsenko, and A. Prochazka, “Contribution of stretch
+reflexes to locomotor control: a modeling study,” Biological Cybernetics,
+vol. 90, no. 2, pp. 146–155, 2004.
+[7] M. M. Williamson, “Postural primitives: Interactive behavior for a
+humanoid robot arm,” Society for Adaptive Behaviour, 1996.
+[8] S. Yigit, C. Burghart, and H. Woern, “Applying reflexes to enhance
+safe human-robot-co-operation with humanlike robot arm,” Int. Symp.
+on Robotics, pp. 1–6, 2004.
+[9] T. S. Dahl and A. Paraschos, “A force-distance model of humanoid arm
+withdrawal reflexes,” in FIRA-TAROS, 2012, pp. 13–24.
+[10] S. Haddadin, Towards Safe Robots, ser. Springer Tracts in Advanced
+Robotics.
+Springer Berlin Heidelberg, 2014, no. 90.
+[11] A. De Luca, A. Albu-Sch¨
+affer, S. Haddadin, and G. Hirzinger, “Collision
+detection and safe reaction with the dlr-iii lightweight manipulator arm,”
+in Int. Conf. on Intelligent Robots and Systems, 2006 IEEE/RSJ.
+IEEE,
+2006, pp. 1623–1630.
+[12] S. Haddadin, A. Albu-Sch¨
+affer, A. De Luca, and G. Hirzinger, “Collision
+detection and reaction: A contribution to safe physical human-robot
+interaction,” in Int. Conf. on Intelligent Robots and Systems, 2008.
+IEEE/RSJ.
+IEEE, 2008, pp. 3356–3363.
+[13] S. Haddadin, F. Huber, and A. Albu-Sch¨
+affer, “Optimal control for
+exploiting the natural dynamics of variable stiffness robots,” in IEEE
+Int. Conf. on Robotics and Automation.
+IEEE, 2012, pp. 3347–3354.
+[14] S. Ivaldi, “From humans to hhumanoid: a study on optimal motor
+control for the icub,” Ph.D. dissertation, Italian Institute of Technology
+& University of Genova, Italy, 2011.
+[15] J.-J. Park, S. Haddadin, J.-B. Song, and A. Albu-Sch¨
+affer, “Designing
+optimally safe robot surface properties for minimizing the stress char-
+acteristics of human-robot collisions,” in IEEE Int. Conf. on Robotics
+and Automation, 2011, pp. 5413–5420.
+[16] R. S. Johansson and A. B. Vallbo, “Tactile sensibility in the human
+hand: Relative and absolute densities of four types of mechanoreceptive
+units in glabrous skin,” Journal of Physiology, vol. 286, pp. 283–300,
+1979.
+[17] R. Polianskis, T. Graven-Nielsen, and L. Arendt-Nielsen, “Pressure-pain
+function in desensitized and hypersensitized muscle and skin assessed by
+cuff algometry,” The Journal of Pain, vol. 3, no. 1, pp. 28–37, February
+2002.
+[18] H. Fruhstorfer, T. Mueller, and E. Scheer, “Capillary blood sampling:
+how much pain is necessary? part2: Relation between penetration depth
+and puncture pain,” Practical Diabetes International, vol. 12, no. 4, pp.
+184–185, July/August 1995.
+[19] M. Hollins, D. Harper, and W. Maixner, “Changes in pain from a
+repetitive thermal stimulus: The roles of adaptation and sensitization,”
+Pain, vol. 152, no. 7, pp. 1583–1590, March 2011.
+[20] A. Albu-Schaffer, C. Ott, U. Frese, and G. Hirzinger, “Cartesian
+impedance control of redundant robots: recent results with the dlr-light-
+weight-arms,” in Robotics and Automation, 2003. Proceedings. ICRA
+’03. IEEE International Conference on, vol. 3, Sept 2003, pp. 3704–
+3709 vol.3.
+[21] J. A. F. Danfei Xu, Gerald E. Loeb, “Tactile identification of objects
+using bayesian exploration,” in International Conference on Robotics
+and Automation (ICRA), 2013.
+This is the author's version of an article that has been published in this journal. Changes were made to this version by the publisher prior to publication.
+The final version of record is available at
+ http://dx.doi.org/10.1109/LRA.2016.2536360
+Copyright (c) 2016 IEEE. Personal use is permitted. For any other purposes, permission must be obtained from the IEEE by emailing pubs-permissions@ieee.org.

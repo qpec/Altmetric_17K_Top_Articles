@@ -1,0 +1,813 @@
+ Original Investigation | Health Informatics
+Use of Deep Learning to Examine the Association of the Built
+Environment With Prevalence of Neighborhood Adult Obesity
+Adyasha Maharana, MS; Elaine Okanyene Nsoesie, PhD
+Abstract
+IMPORTANCE More than one-third of the adult population in the United States is obese. Obesity
+has been linked to factors such as genetics, diet, physical activity, and the environment. However,
+evidence indicating associations between the built environment and obesity has varied across
+studies and geographical contexts.
+OBJECTIVE To propose an approach for consistent measurement of the features of the built
+environment (ie, both natural and modified elements of the physical environment) and its
+association with obesity prevalence to allow for comparison across studies.
+DESIGN The cross-sectional study was conducted from February 14 through October 31, 2017. A
+convolutional neural network, a deep learning approach, was applied to approximately 150 000
+high-resolution satellite images from Google Static Maps API (application programing interface) to
+extract features of the built environment in Los Angeles, California; Memphis, Tennessee; San
+Antonio, Texas; and Seattle (representing Seattle, Tacoma, and Bellevue), Washington. Data on adult
+obesity prevalence were obtained from the Centers for Disease Control and Prevention’
+s 500 Cities
+project. Regression models were used to quantify the association between the features and obesity
+prevalence across census tracts.
+MAIN OUTCOMES AND MEASURES Model-estimated obesity prevalence (obesity defined as body
+mass index �30, calculated as weight in kilograms divided by height in meters squared) based on
+built environment information.
+RESULTS The study included 1695 census tracts in 6 cities. The age-adjusted obesity prevalence was
+18.8% (95% CI, 18.6%-18.9%) for Bellevue, 22.4% (95% CI, 22.3%-22.5%) for Seattle, 30.8% (95%
+CI, 30.6%-31.0%) for Tacoma, 26.7% (95% CI, 26.7%-26.8%) for Los Angeles, 36.3% (95% CI,
+36.2%-36.5%) for Memphis, and 32.9% (95% CI, 32.8%-32.9%) for San Antonio. Features of the
+built environment explained 64.8% (root mean square error [RMSE], 4.3) of the variation in obesity
+prevalence across all census tracts. Individually, the variation explained was 55.8% (RMSE, 3.2) for
+Seattle (213 census tracts), 56.1% (RMSE, 4.2) for Los Angeles (993 census tracts), 73.3%
+(RMSE, 4.5) for Memphis (178 census tracts), and 61.5% (RMSE, 3.5) for San Antonio (311
+census tracts).
+CONCLUSIONS AND RELEVANCE This study illustrates that convolutional neural networks can be
+used to automate the extraction of features of the built environment from satellite images for
+studying health indicators. Understanding the association between specific features of the built
+environment and obesity prevalence can lead to structural changes that could encourage physical
+activity and decreases in obesity prevalence.
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+Key Points
+Question How can convolutional neural
+networks assist in the study of the
+association between the built
+environment and obesity prevalence?
+Findings In this cross-sectional
+modeling study of 4 US urban areas,
+extraction of built environment (ie, both
+natural and modified elements of the
+physical environment) information from
+images using convolutional neural
+networks and use of that information to
+assess associations between the built
+environment and obesity prevalence
+showed that physical characteristics of a
+neighborhood (eg, the presence of
+parks, highways, green streets,
+crosswalks, diverse housing types) can
+be associated with variations in obesity
+prevalence across different
+neighborhoods.
+Meaning The convolutional neural
+network approach allows for consistent
+quantification of the features of the built
+environment across neighborhoods and
+comparability across studies and
+geographic regions.
++ Invited Commentary
++ Supplemental content
+Author affiliations and article information are
+listed at the end of this article.
+Open Access. This is an open access article distributed under the terms of the CC-BY License.
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+1/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ Introduction
+The Global Burden of Disease study estimates that more than 603 million adults worldwide were
+obese in 2015.1 In the United States, more than one-third of the adult population is obese,2-4 and 46
+states have an estimated adult obesity rate of 25% or more.5 Obesity is a complex health issue that
+has been linked to a myriad of factors, including genetics, demographics, and behavior.6 Behavioral
+traits that encourage unhealthy food choices and a sedentary lifestyle have been associated with
+features in the social and built environment (ie, both natural and modified elements of the physical
+environment). The built environment can influence health through the availability of resources, such
+as housing, activity and recreational spaces, and measures of community design.7
+Studies8-26 have shown that certain features of the built environment can be associated with
+obesity and physical activity across different life stages. Research also supports the association
+between obesity and environmental factors, including walkability, land use, sprawl, area of residence,
+access to resources (eg, recreational facilities and food outlets), level of deprivation, and perceived
+safety.27-30 Proximity and access to natural spaces and sidewalks can lead to increased and regular
+physical activity, especially in urban areas.31-35
+Despite these associations between obesity and the built environment, inconsistencies have
+been noted across studies and geographic contexts on the association between specific features of
+the built environment and obesity prevalence.28,36-38 These inconsistencies could be due to
+variations in measures and measurement tools across studies, making it difficult to assess and
+compare findings.29 Furthermore, the process of measuring these features can be costly, time-
+consuming, and subject to human judgment and bias. Approaches that enable consistent
+measurement and allow for comparison across studies are needed. Assessing and quantifying the
+association of the built environment with obesity would be useful for selecting and implementing
+appropriate community-based interventions and prevention efforts.4,29
+Herein, we propose a method for comprehensively assessing the association between adult
+obesity prevalence and the built environment that involves extracting neighborhood physical
+features from high-resolution satellite imagery using a previously trained (hereafter termed
+pretrained) convolutional neural network (CNN), a deep learning approach. Nguyen et al39 used
+CNNs to classify images of the built environment from Google’
+s Street View to assess the association
+between obesity and the presence of crosswalks, building types, and street greenness or
+landscaping. However, their study did not take full advantage of CNNs for independently discovering
+features that can be associated with obesity prevalence and was limited to 3 predetermined features.
+In contrast, we comprehensively assess features in the built environment and demonstrate our
+approach by providing fine-grained associations with obesity prevalence at the census tract level for
+4 US regions. Our approach is also scalable and relies on openly available data and computational
+tools and can enable comparability across studies.
+Methods
+Obesity Prevalence Data
+We used 2014 estimates of annual crude obesity prevalence at the census tract level from the 500
+Cities project.2,40,41 These estimates were computed from the Behavioral Risk Factor Surveillance
+System data, wherein the survey respondents are 18 years or older and the body mass index (BMI;
+calculated as weight in kilograms divided by height in meters squared) threshold for obesity is 30. We
+selected cities from states with high (Tennessee and Texas) and low (Washington and California)
+prevalence of obesity.5 The 6 cities selected included Los Angeles, California; Memphis, Tennessee;
+San Antonio, Texas; and Seattle, Tacoma, and Bellevue, Washington. Because Seattle, Tacoma, and
+Bellevue are neighboring cities with few census tracts, we combined their data into a single data set,
+hereinafter referred to as Seattle. The study was exempt from institutional review board approval
+because the research involved the study of existing data and records collected by external parties in
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+2/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ such a manner that individuals cannot be identified. This study followed the Strengthening the
+Reporting of Observational Studies in Epidemiology (STROBE) reporting guideline where applicable.
+The analysis consisted of 2 steps. First, we processed satellite images to extract features of the
+built environment using the CNN and extracted and processed point-of-interest (POI) data. Second,
+we used elastic net regression to build a parsimonious model to assess the association between the
+built environment and obesity prevalence.
+Acquiring Satellite Imagery and POI Data
+We downloaded images from Google Static Maps API (application programing interface) by providing
+the geographic center, image dimensions, and zoom level for each image. The zoom level and image
+dimensions were set to 18 and 400 × 400 pixels, respectively, for the entire data set. For each city,
+we divided its geographic span into a square grid, where each point is a pair of latitude and longitude
+values and the grid spacing is approximately 150 m. Further, we used census tract shapefiles to
+associate each image with its respective census tract and excluded images that were from areas
+outside the city limits. We used the same square grid to select geographic locations and performed a
+radial nearby search within an appropriate distance to download POI data through the Google Places
+of Interest API. Points of interest that were located outside city limits were excluded. We collected
+a set of 96 unique POI categories, and for each census tract we counted the number of locations
+associated with each category (eTable 1 in the Supplement). All POI data and satellite images were
+initially downloaded from February 14 through 28, 2017, and updated during the study period, which
+lasted through October 31, 2017. Satellite images downloaded through the API are only marked with
+the date of download represented by a time stamp and watermark at the bottom.
+Image Processing
+Convolutional neural networks have achieved groundbreaking success with large data sets in critical
+computer vision tasks (eg, object recognition, image segmentation) as well as health-related
+applications (eg, recognition of skin cancer)42 and estimating poverty.43 Owing to the lack of a large
+labeled data set for classifying high- and low-obesity regions, we adopted a transfer learning
+approach (eFigures 1 and 2 in the Supplement), which involves using a pretrained network to extract
+features of the built environment from our unlabeled data set of nearly 150 000 satellite images.
+Transfer learning involves fine-tuning the pretrained CNN for a new task (with modification to the
+output layer) or using the pretrained CNN as a fixed feature extractor combined with linear classifiers
+or regression models. These approaches have been successfully implemented to perform computer
+vision tasks that are markedly different from object recognition.44
+We used the VGG-CNN-F network,45 which is composed of 8 layers (5 convolutional and 3 fully
+connected) and is trained on approximately 1.2 million images from the ImageNet database (a data
+set of >14 million images used for large-scale visual recognition challenges)46 for recognizing objects
+belonging to 1000 categories.47 The network learns to extract gradients, edges, and patterns that
+aid in object detection. Studies using similar transfer learning approaches48,49 have shown that
+features extracted from networks trained on the ImageNet data are effective at classifying aerial
+imagery into fine-grained semantic classes of land use (eg, golf courses, bridges, parking lots,
+buildings, and roads).
+We collected outputs from the second fully connected layer of the network for each image in
+our data set.45,50 The second fully connected layer has 4096 nodes, each of which has nonlinear
+connections with all other nodes in the previous and next layers. Each feature vector has 4096
+dimensions, corresponding to the output (also termed activations) from these nodes. These outputs
+were further aggregated into mean feature vectors for each census tract by computing the mean
+from all images belonging to a census tract. We do not link these features to specific elements in the
+built environment. Rather, these features collectively represent an indicator of the built
+environment. To investigate whether the CNN can differentiate between built environment features,
+we made a forward pass through the network for a randomly selected set of images and examined
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+3/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ the output maps from convolutional layers of the CNN (Figure 1). We also group image features to
+illustrate that built environment characteristics in areas with low and high obesity prevalence are
+distinct (eFigure 3 in the Supplement).
+Statistical Analysis
+We applied Elastic Net,51 a regularized regression method that eliminates insignificant covariates,
+preserves correlated variables, and is well suited to the high-dimensional (n = 4096) feature vectors
+extracted from our image data set. Regularization in Elastic Net guards against overfitting, which is
+a concern given the high dimensionality of our feature data set. To select an appropriate value for the
+tuning parameter (λ value), we used cross-validation and selected the value that minimized the mean
+cross-validated error.
+We performed 5-fold cross-validated regression analyses to quantify the following associations:
+(1) between features of built environment and prevalence of obesity at the census tract level, (2)
+Figure 1. Visualization of Features Identified by the Convolutional Neural Network (CNN) Model
+Filter outputs corresponding to water and buildings
+A
+Filter outputs corresponding to green cover and buildings
+B
+Filter outputs corresponding to roads and green cover
+C
+Building
+Green cover
+Roads
+Water
+The images on the left column are satellite images
+taken from Google Static Maps API (application
+programing interface). Images in the middle and right
+columns are activation maps taken from the second
+convolutional layer of VGG-CNN-F network after
+forward pass of the respective satellite images through
+the network. The CNN understands image by
+interpreting the output from filters learned during the
+training phase. The activation maps may not always
+align exactly with the original image owing to padding
+of output within the CNN. From Google Static Maps
+API, DigitalGlobe, US Geological Survey (accessed
+July 2017).
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+4/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ between density of POIs and prevalence of obesity at the census tract level, and (3) between features
+of built environment and per capita income obtained from the American Community Survey 2014
+five-year estimates at the census tract level (eTable 2 in the Supplement).52 We also split the data into
+2 random samples, using 1 sample representing 60% of the data in model fitting and the remaining
+40% in validation across all analysis. These analyses were performed jointly for all regions and
+independently for each region. Additional details are available in eMethods in the Supplement.
+Results
+We included 1695 census tracts from the 6 cities. Based on 2010 census data, individuals 18 years and
+older constituted 78.8% (n = 96 410) of the population of Bellevue, 84.6% (n = 515 147) of the
+population of Seattle, 77.0% (n = 152 760) of the population of Tacoma, 76.9% (n = 2 918 096) of
+the population of Los Angeles, 74.0% (n = 478 921) of the population of Memphis, and 73.2%
+(n = 971 407) of the population of San Antonio. The per capita income varied across these cities, with
+cities such as Bellevue and Seattle having much higher values. Specifically, the corresponding values
+in US dollars obtained from the American Community Survey 2014 five-year estimates were $50 405
+for Bellevue, $44 167 for Seattle, $26 805 for Tacoma, $28 320 for Los Angeles, $21 909 for
+Memphis, and $22 784 for San Antonio. The cities with the highest per capita income also had the
+lowest city-level age-adjusted obesity prevalence estimates, at 18.8% (95% CI, 18.6%-18.9%), and
+22.4% (95% CI, 22.3%-22.5%), respectively, for Bellevue and Seattle. In contrast, the age-adjusted
+obesity prevalence was 30.8% (95% CI, 30.6%-31.0%) for Tacoma, 26.7% (95% CI, 26.7%-26.8%)
+for Los Angeles, 36.3% (95% CI, 36.2%-36.5%) for Memphis, and 32.9% (95% CI, 32.8%-32.9%) for
+San Antonio.
+Visualization of the outputs from the convolutional layers of the VGG-CNN-F suggests that our
+model learns to identify features of the environment that have been associated with obesity from the
+satellite images. Specifically, the CNN captured gradients and edges corresponding to the presence
+of roads, buildings, trees, water, and land (Figure 1). After regularization, we retained 125 features for
+all cities combined, 157 for Los Angeles, 79 for Memphis, 69 for San Antonio, and 85 for Seattle.
+These features of the built environment explained 64.8% (root mean square error [RMSE], 4.3) of
+the variation in obesity prevalence in out-of-sample estimates across all 1695 census tracts based on
+the elastic net regression. Individually, our models explained 55.8% (RMSE, 3.2) of the variation in
+obesity prevalence for Seattle (213 census tracts), 56.1% (RMSE, 4.2) for Los Angeles (993 census
+tracts), 73.3% (RMSE, 4.5) for Memphis (178 census tracts), and 61.5% (RMSE, 3.5) for San Antonio
+(311 census tracts) in out-of-sample estimates (Figure 2 and Figure 3 and eFigures 4-11 in the
+Supplement). Our approach consistently presents a strong association between obesity prevalence
+and the built environment indicator across all 4 regions, despite varying city and neighborhood
+values. These high associations between features of the built environment and obesity were
+achieved without labeling the satellite images or fine-tuning the CNN model to differentiate between
+images from neighborhoods with high vs low prevalence of obesity.
+Compared with the features of the built environment, the POI data explained 42.4%
+(RMSE, 4.3) of the variation in obesity prevalence across all 1695 census tracts in out-of-sample
+estimates. The variation explained at the regional level was approximately 14.0% (RMSE, 4.5) for the
+213 Seattle census tracts, 29.2% (RMSE, 5.4) for the 993 Los Angeles census tracts, 43.0%
+(RMSE, 4.1) for the 311 San Antonio census tracts, and 43.2% (RMSE, 6.7) for the 178 Memphis census
+tracts. We illustrate the linear correlation between the actual obesity prevalence and our model-
+estimated prevalence and compare the findings using the image features and POI data in Figure 4
+and eFigure 12 in the Supplement.
+One possible explanation of the significant associations between the data on the built
+environment features and obesity prevalence is that the data might be representative of
+socioeconomic indicators such as income. Specifically, the variation in per capita income explained by
+the features of the built environment was 37.6% for the 213 Seattle census tracts, 62.1% for the 993
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+5/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ Los Angeles census tracts, 58.2% for the 311 San Antonio census tracts, and 23.2% for the 178
+Memphis census tracts (eFigures 13-16 in the Supplement). These observations suggest that for cities
+such as Los Angeles and San Antonio, most of the significant association between obesity prevalence
+and the features of the built environment could potentially be explained by variations in
+socioeconomic status. This suggestion agrees with a previous study43 that used CNNs and satellite
+imagery to assess the association between the built environment and poverty. However, the
+inconsistency in the associations across the 4 regions also suggests that features discerned by the
+CNN might capture additional information not directly linked to socioeconomic indicators.
+Figure 2. Actual Obesity Prevalence and Cross-Validated Model Estimates of Obesity Prevalence in High-Prevalence Areas
+Seattle, Washington
+A
+Los Angeles, California
+B
+15.2
+18.1
+20.9
+23.8
+26.6
+29.5
+32.3
+38.0
+40.9
+15.2
+18.1
+20.9
+23.8
+26.6
+29.5
+32.3
+38.0
+40.9
+15.4
+11.3
+19.6
+23.7
+27.8
+32.0
+36.1
+40.2
+44.4
+48.5
+15.4
+11.3
+19.6
+23.7
+27.8
+32.0
+36.1
+40.2
+44.4
+48.5
+Bellevue
+Seattle
+Obesity Prevalence, %
+Obesity Prevalence, %
+Obesity Prevalence, %
+Obesity Prevalence, %
+Tacoma
+Bellevue
+Seattle
+Tacoma
+Images on the right represent actual obesity prevalence; on the left, cross-validated estimates of obesity prevalence based on features of the built environment extracted from
+satellite images. Images from the Seattle region include Bellevue, Seattle, and Tacoma. The gray shaded regions do not have data.
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+6/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ Discussion
+In this study, we used a CNN, a deep learning approach, to extract data representing features of the
+built environment from high-resolution satellite images to examine the association between the built
+environment and the prevalence of obesity across 4 regions. The CNN features capture different
+aspects of the environment, such as greenery and different housing types, that have been associated
+with physical activity and obesity. Our results demonstrate a consistent association between the built
+environment indicator and obesity prevalence across neighborhoods with low and high prevalence
+of adult obesity. A sampling of the satellite images from various census tracts with high and low
+prevalence of obesity indicates that these environments have features that have been linked with
+low and high prevalence of obesity in other studies. For example, we observe neighborhoods with
+Figure 3. Actual Obesity Prevalence and Cross-Validated Model Estimates of Obesity Prevalence in Low-Prevalence Areas
+Memphis, Tennessee
+A
+San Antonio, Texas
+B
+15.6
+19.4
+23.1
+26.9
+30.6
+34.4
+38.1
+41.9
+45.6
+18.9
+21.8
+24.8
+27.7
+30.6
+33.6
+36.5
+39.4
+42.4
+45.3
+18.9
+21.8
+24.8
+27.7
+30.6
+33.6
+36.5
+39.4
+42.4
+45.3
+15.6
+19.4
+23.1
+26.9
+30.6
+34.4
+38.1
+41.9
+45.6
+Obesity Prevalence, %
+Obesity Prevalence, %
+Obesity Prevalence, %
+Obesity Prevalence, %
+Images on the right represent actual obesity prevalence; on the left, cross-validated estimates of obesity prevalence based on features of the built environment extracted from
+satellite images. The gray shaded regions do not have data.
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+7/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ tightly packed houses vs spaced housing (eFigure 11 in the Supplement), neighborhoods close to
+roadways vs those with smaller streets and crosswalks (eFigure 9 in the Supplement), neighborhoods
+with much vs less greenery (eFigure 7 in the Supplement), and affluent vs poor neighborhoods
+(eFigure 5 in the Supplement).
+In some instances, our models tended to underestimate obesity prevalence, especially for
+Seattle, which could be explained by the presence of green spaces in the region and the low variation
+of obesity prevalence across most of the region. Overestimation of obesity prevalence as observed
+in some of the high-income census tracts in the east of Memphis could be explained by the presence
+of features that do not encourage physical activity; however, individuals can more readily afford gym
+memberships and other recreational facilities. These observations therefore suggest that the
+features of the built environment can be used in combination with other data sources for monitoring
+obesity prevalence, and these data could be useful for regions with delayed updates on obesity
+estimates and for programs focused on reducing obesity.
+Our study is important for several reasons. First, although the built environment has been
+postulated to have an effect on obesity prevalence, studies have produced varying results, partly
+because measures of the built environment can be subjective, sometimes relying on participant or
+researcher perceptions. Second, in some studies, neighborhood audits of features of the built
+environment have heretofore been conducted using costly and time-consuming on-site visits or
+neighborhood surveys. The development of data algorithms that can automatically process satellite
+images to create indicators of the built environment would dramatically lower the cost and allow for
+Figure 4. Scatterplots of Model-Estimated and Model-Predicted Obesity Prevalence Plotted Against Actual Obesity Prevalence
+0
+60
+50
+40
+Model-Estimated Obesity Prevalence, %
+30
+20
+10
+0
+20
+30
+40
+50
+Actual Obesity Prevalence, %
+10
+Cross-validated model estimates based on built environment
+A
+0
+60
+50
+40
+Model-Predicted Obesity Prevalence, %
+30
+20
+10
+0
+20
+30
+40
+50
+Actual Obesity Prevalence, %
+10
+Out-of-sample prediction based on built environment
+B
+0
+60
+50
+40
+Model-Estimated Obesity Prevalence, %
+30
+20
+10
+20
+30
+40
+50
+Actual Obesity Prevalence, %
+10
+0
+Cross-validated model estimates based on density of POI data
+C
+0
+60
+50
+40
+Model-Predicted Obesity Prevalence, %
+30
+20
+10
+0
+20
+30
+40
+50
+Actual Obesity Prevalence, %
+10
+Out-of-sample predictions of obesity prevalence based on density of POI data
+D
+Built environment information is extracted from satellite images. POI indicates point of interest.
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+8/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ investigations of the effect of place characteristics on obesity prevalence. Third, our study presents
+strong and consistent evidence suggesting that the built environment may be a significant indicator
+of obesity prevalence.
+The proportion of variation (R2) in obesity prevalence explained in studies that report this
+measure has varied. For example, the percentage of between–census tract variance explained
+increased from 77% to 87% when built environment variables were added to a model for BMI
+composed of demographic variables.53 However, not all the built environment features (ie, land use
+mix, subway density, bus stop density, intersection density) were significant. On adding built
+environment variables (including land-use mix, distribution of fast-food outlets, street connectivity,
+access to public transportation, and green and open spaces) to a model for overweight and obesity
+that included individual and neighborhood level covariates, Li et al54 observed that the model
+explained neighborhood-level variation of 0.981. The proportion of variation observed in our
+analyses could be owing to the comprehensiveness of our approach and possible confounding
+factors such as socioeconomic status. However, although our findings are likely to be explained at
+least in part by socioeconomic indicators, such as income, our analyses also suggest that the built
+environment features more consistently estimate obesity than per capita income across all regions.
+A possible explanation is that the features extracted include man-made changes to the built
+environment and natural features (eg, parks and forests) that might not always be indicative or
+particularly associated with socioeconomic status.
+We also demonstrate that the density of POI can also be associated with variations in obesity
+prevalence, but to a lesser extent when compared with results obtained using the data extracted
+from satellite images. The POI data displayed higher associations with obesity prevalence for regions
+with higher obesity prevalence (ie, San Antonio and Memphis) and less so in regions with lower
+obesity prevalence. Furthermore, some of the most significant variables could be directly associated
+with health, diet, and exercise (eg, gyms, spas, restaurants, bakeries, supermarkets, bowling alleys),
+whereas others might be linked to other neighborhood characteristics (eg, natural features, pet
+stores, recreational vehicle parks). Also, strictly restricting the data to POIs associated with health
+and exercise resulted in poorer results. Furthermore, the POI data support the results from the
+satellite imagery analysis; specifically, both analyses suggest stronger associations between the built
+environment and obesity for San Antonio and Memphis compared with Los Angeles and Seattle.
+Our findings are relevant to researchers seeking to develop low-cost and timely methods that
+allow for direct measurement of the built environment to study its association with obesity and other
+health outcomes. All the data and computational methods used in this study are openly available,
+allowing for comparisons of study results across regions with varying populations and geographies.
+In addition, our results are also relevant to people monitoring obesity prevalence or working to
+develop public health programs to decrease obesity. We show that models fitted solely to the
+features of the built environment can provide reasonable estimates of neighborhood obesity
+prevalence, which are typically delayed from official sources by several years. For this study, we used
+obesity prevalence estimates from 2014, because more recent values were unavailable. Ideally,
+methods and programs should focus on combining individual- and neighborhood-level data to
+provide timely estimates of neighborhood obesity prevalence.
+Limitations
+This study has some limitations. First, the obesity prevalence estimates from the Behavioral Risk
+Factor Surveillance System are based on self-reported height and weight, which have been shown to
+be biased and tend to lead to lower estimates of obesity prevalence.55,56 In addition, BMI does not
+allow for the direct measurement of body fat, which can vary across sex, age, race, and ethnicity.
+Furthermore, mortality and morbidity risk may vary across different race and ethnicities at the same
+BMI.57,58 Differences also occur in the timing of the obesity data and the satellite images, which can
+introduce bias into our analysis.
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+9/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ Furthermore, we used a CNN that is trained for object recognition to extract features relevant
+to the built environment because of the lack of a labeled data set for high- and low-obesity areas. This
+approach puts some restrictions on the interpretability of features used in our model. A CNN trained
+to classify land use patterns (eg, the UC [University of California] Merced land use data set59) also
+encodes fine-grained information about the built environment. Thus, alternatively, we can use such
+a CNN trained on a large land-use data set as a fixed-feature extractor and examine the performance
+of these vectors for classifying high- and low-obesity areas. This CNN will allow us to associate land
+use patterns with obesity trends and lend greater interpretability to prediction models. However, we
+were unable to find openly available networks pretrained on aerial and satellite imagery data sets for
+such a task. Google Street View images are a potential resource for capturing community activity
+levels at greater precision. For example, presence of persons jogging in the neighborhood might be
+an indicator of lower obesity prevalence in the community.
+Conclusions
+Our study provides evidence of the efficacy of CNNs at associating obesity prevalence with
+significant physical environment features and opens possibilities for refining the methods for a more
+consistent and useful application. To make our approach useful for public health and community
+planning efforts, our future efforts will focus on assessing disparities based on neighborhood racial
+composition and socioeconomic status. Socioeconomic status has been linked to obesity and other
+health outcomes. For example, Gordon-Larsen et al21 found that lower socioeconomic status blocks
+were more likely to have fewer physical activity facilities, and these disparities in access could be
+associated with differences in overweight patterns. Review studies focused on the African American
+population and disadvantaged populations highlighted a strong association between safety and
+physical activity and obesity, especially in urban regions.38,60 This finding could also explain the
+associations we noted between police stations and the high obesity prevalence in the POI data.
+These populations were also less likely to have access to needed resources and environments
+typically associated with lower obesity prevalence. Furthermore, longitudinal studies using our
+approach can assess changes in the built environment that may be associated with increases or
+decreases in neighborhood obesity prevalence.
+Results in this study support the association between features of the built environment and
+obesity prevalence. Neighborhood-level interventions to encourage physical activity and increase
+access to healthy food outlets could be combined with individual-level interventions to aid in curbing
+the obesity epidemic.
+ARTICLE INFORMATION
+Accepted for Publication: May 11, 2018.
+Published: August 31, 2018. doi:10.1001/jamanetworkopen.2018.1535
+Open Access: This is an open access article distributed under the terms of the CC-BY License. © 2018 Maharana A
+et al. JAMA Network Open.
+Corresponding Author: Elaine Okanyene Nsoesie, PhD, Institute for Health Metrics and Evaluation, University of
+Washington, 2301 Fifth Ave, Ste 600, Seattle, WA 98121 (en22@uw.edu).
+Author Affiliations: Department of Biomedical Informatics and Medical Education, University of Washington,
+Seattle (Maharana); Institute for Health Metrics and Evaluation, University of Washington, Seattle (Nsoesie).
+Author Contributions: Both authors had full access to all the data in the study and take responsibility for the
+integrity of the data and the accuracy of the data analysis.
+Concept and design: Both authors.
+Acquisition, analysis, or interpretation of data: Both authors.
+Drafting of the manuscript: Both authors.
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+10/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ Critical revision of the manuscript for important intellectual content: Both authors.
+Statistical analysis: Both authors.
+Conflict of Interest Disclosures: None reported.
+Funding/Support: Funding for this project was provided by the Robert Wood Johnson Foundation (grant 73362).
+Role of the Funder/Sponsor: The funder/sponsor had no role in the design and conduct of the study; collection,
+management, analysis, and interpretation of the data; preparation, review, or approval of the manuscript; and
+decision to submit the manuscript for publication.
+REFERENCES
+1. Afshin A, Forouzanfar MH, Reitsma MB, et al; GBD 2015 Obesity Collaborators. Health effects of overweight and
+obesity in 195 countries over 25 years. N Engl J Med. 2017;377(1):13-27. doi:10.1056/NEJMoa1614362
+2. Centers for Disease Control and Prevention. Overweight & obesity: adult obesity facts. October 2016. https://
+www.cdc.gov/obesity/data/adult.html. Updated June 12, 2018. Accessed May 19, 2017.
+3. Dwyer-Lindgren L, Freedman G, Engell RE, et al. Prevalence of physical activity and obesity in US counties,
+2001-2011: a road map for action. Popul Health Metr. 2013;11:7. doi:10.1186/1478-7954-11-7
+4. Hales CM, Carroll MD, Fryar CD, Ogden CL. Prevalence of obesity among adults and youth: United States, 2015–
+2016. NCHS Data Brief No. 288. https://www.cdc.gov/nchs/products/databriefs/db288.htm. Updated October 13,
+2017. Accessed October 14, 2017.
+5. The State of Obesity. Obesity rates & trends—adult obesity in the United States. https://stateofobesity.org/rates/.
+Published August 2017. Accessed October 14, 2017.
+6. Ghosh S, Bouchard C. Convergence between biological, behavioural and genetic determinants of obesity. Nat
+Rev Genet. 2017;18(12):731-748. doi:10.1038/nrg.2017.72
+7. Centers for Disease Control and Prevention. About healthy places. 2007. https://www.cdc.gov/healthyplaces/
+factsheets.htm. Reviewed October 21, 2016. Accessed July 14, 2018.
+8. Giles-Corti B, Macintyre S, Clarkson JP, Pikora T, Donovan RJ. Environmental and lifestyle factors associated
+with overweight and obesity in Perth, Australia. Am J Health Promot. 2003;18(1):93-102. doi:10.4278/0890-
+1171-18.1.93
+9. Saelens BE, Sallis JF, Black JB, Chen D. Neighborhood-based differences in physical activity: an environment
+scale evaluation. Am J Public Health. 2003;93(9):1552-1558. doi:10.2105/AJPH.93.9.1552
+10. Burdette HL, Whitaker RC. Neighborhood playgrounds, fast food restaurants, and crime: relationships to
+overweight in low-income preschool children. Prev Med. 2004;38(1):57-63. doi:10.1016/j.ypmed.2003.09.029
+11. Frank LD, Andresen MA, Schmid TL. Obesity relationships with community design, physical activity, and time
+spent in cars. Am J Prev Med. 2004;27(2):87-96. doi:10.1016/j.amepre.2004.04.011
+12. Maddock J. The relationship between obesity and the prevalence of fast food restaurants: state-level analysis.
+Am J Health Promot. 2004;19(2):137-143. doi:10.4278/0890-1171-19.2.137
+13. Ellaway A, Macintyre S, Bonnefoy X. Graffiti, greenery, and obesity in adults: secondary analysis of European
+Cross Sectional Survey. BMJ. 2005;331(7517):611-612. doi:10.1136/bmj.38575.664549.F7
+14. Rutt CD, Coleman KJ. Examining the relationships among built environment, physical activity, and body mass
+index in El Paso, TX. Prev Med. 2005;40(6):831-841. doi:10.1016/j.ypmed.2004.09.035
+15. Sturm R, Datar A. Body mass index in elementary school children, metropolitan area food prices and food
+outlet density. Public Health. 2005;119(12):1059-1068. doi:10.1016/j.puhe.2005.05.007
+16. Lopez-Zetina J, Lee H, Friis R. The link between obesity and the built environment: evidence from an ecological
+analysis of obesity and vehicle miles of travel in California. Health Place. 2006;12(4):656-664. doi:10.1016/j.
+healthplace.2005.09.001
+17. Ewing R, Schmid T, Killingsworth R, Zlot A, Raudenbush S. Relationship between urban sprawl and physical
+activity, obesity and morbidity. Am J Health Promot. 2003;18(1):47-57. doi:10.4278/0890-1171-18.1.47
+18. Nelson MC, Gordon-Larsen P, Song Y, Popkin BM. Built and social environments associations with adolescent
+overweight and activity. Am J Prev Med. 2006;31(2):109-117. doi:10.1016/j.amepre.2006.03.026
+19. Morland K, Diez Roux AV, Wing S. Supermarkets, other food stores, and obesity: the Atherosclerosis Risk in
+Communities Study. Am J Prev Med. 2006;30(4):333-339. doi:10.1016/j.amepre.2005.11.003
+20. Mobley LR, Root ED, Finkelstein EA, Khavjou O, Farris RP, Will JC. Environment, obesity, and cardiovascular
+disease risk in low-income women. Am J Prev Med. 2006;30(4):327-332. doi:10.1016/j.amepre.2005.12.001
+21. Gordon-Larsen P, Nelson MC, Page P, Popkin BM. Inequality in the built environment underlies key health
+disparities in physical activity and obesity. Pediatrics. 2006;117(2):417-424. doi:10.1542/peds.2005-0058
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+11/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ 22. Doyle S, Kelly-Schwartz A, Schlossberg M, Stockard J. Active community environments and health: the
+relationship of walkable and safe communities to individual health. J Am Plann Assoc. 2006;72(1):19-31. doi:10.1080/
+01944360608976721
+23. Ewing R, Brownson RC, Berrigan D. Relationship between urban sprawl and weight of United States youth. Am
+J Prev Med. 2006;31(6):464-474. doi:10.1016/j.amepre.2006.08.020
+24. Lopez R. Urban sprawl and risk for being overweight or obese. Am J Public Health. 2004;94(9):1574-1579. doi:10.
+2105/AJPH.94.9.1574
+25. Kelly-Schwartz AC, Stockard J, Doyle S, Schlossberg M. Is sprawl unhealthy? a multilevel analysis of the
+relationship of metropolitan sprawl to the health of individuals. J Plann Educ Res. 2004;24(2):184-196. doi:10.1177/
+0739456X04267713
+26. Inagami S, Cohen DA, Finch BK, Asch SM. You are where you shop: grocery store locations, weight, and
+neighborhoods. Am J Prev Med. 2006;31(1):10-17. doi:10.1016/j.amepre.2006.03.019
+27. Booth KM, Pinkston MM, Poston WSC. Obesity and the built environment. J Am Diet Assoc. 2005;105
+(5)(suppl 1):S110-S117. doi:10.1016/j.jada.2005.02.045
+28. Black JL, Macinko J. Neighborhoods and obesity. Nutr Rev. 2008;66(1):2-20. doi:10.1111/j.1753-4887.
+2007.00001.x
+29. Papas MA, Alberg AJ, Ewing R, Helzlsouer KJ, Gary TL, Klassen AC. The built environment and obesity.
+Epidemiol Rev. 2007;29(1):129-143. doi:10.1093/epirev/mxm009
+30. Li F, Harmer P, Cardinal BJ, et al. Built environment and 1-year change in weight and waist circumference in
+middle-aged and older adults: Portland Neighborhood Environment and Health Study. Am J Epidemiol. 2009;169
+(4):401-408. doi:10.1093/aje/kwn398
+31. Ferreira I, van der Horst K, Wendel-Vos W, Kremers S, van Lenthe FJ, Brug J. Environmental correlates of
+physical activity in youth—a review and update. Obes Rev. 2007;8(2):129-154. doi:10.1111/j.1467-789X.
+2006.00264.x
+32. Babey SH, Hastert TA, Yu H, Brown ER. Physical activity among adolescents: when do parks matter? Am J Prev
+Med. 2008;34(4):345-348. doi:10.1016/j.amepre.2008.01.020
+33. Reed J, Ainsworth B. Perceptions of environmental supports on the physical activity behaviors of university
+men and women: a preliminary investigation. J Am Coll Health. 2007;56(2):199-204. doi:10.3200/JACH.
+56.2.199-208
+34. McCormack G, Giles-Corti B, Lange A, Smith T, Martin K, Pikora TJ. An update of recent evidence of the
+relationship between objective and self-report measures of the physical environment and physical activity
+behaviours. J Sci Med Sport. 2004;7(1)(suppl):81-92. doi:10.1016/S1440-2440(04)80282-2
+35. Kaczynski AT, Henderson KA. Parks and recreation settings and active living: a review of associations with
+physical activity function and intensity. J Phys Act Health. 2008;5(4):619-632. doi:10.1123/jpah.5.4.619
+36. Rundle A, Neckerman KM, Freeman L, et al. Neighborhood food environment and walkability predict obesity
+in New York City. Environ Health Perspect. 2009;117(3):442-447. doi:10.1289/ehp.11590
+37. Jeffery RW, Baxter J, McGuire M, Linde J. Are fast food restaurants an environmental risk factor for obesity? Int
+J Behav Nutr Phys Act. 2006;3(1):2. doi:10.1186/1479-5868-3-2
+38. Lovasi GS, Hutson MA, Guerra M, Neckerman KM. Built environments and obesity in disadvantaged
+populations. Epidemiol Rev. 2009;31(1):7-20. doi:10.1093/epirev/mxp005
+39. Nguyen QC, Sajjadi M, McCullough M, et al. Neighbourhood looking glass: 360º automated characterisation
+of the built environment for neighbourhood effects research. J Epidemiol Community Health. 2018;72(3):
+260-266. doi:10.1136/jech-2017-209456
+40. Centers for Disease Control and Prevention. 500 Cities: Local Data for Better Health. https://www.cdc.gov/
+500cities/. Updated November 28, 2017. Accessed September 13, 2017.
+41. Centers for Disease Control and Prevention. 500 Cities: Local Data for Better Health. Unhealthy Behaviors. https://
+www.cdc.gov/500cities/definitions/unhealthy-behaviors.htm. Updated December 12, 2016. Accessed September
+13, 2017.
+42. Esteva A, Kuprel B, Novoa RA, et al. Dermatologist-level classification of skin cancer with deep neural
+networks. Nature. 2017;542(7639):115-118. doi:10.1038/nature21056
+43. Jean N, Burke M, Xie M, Davis WM, Lobell DB, Ermon S. Combining satellite imagery and machine learning to
+predict poverty. Science. 2016;353(6301):790-794. doi:10.1126/science.aaf7894
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+12/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ 44. Sharif Razavian A, Azizpour H, Sullivan J, Carlsson S. CNN features off-the-shelf: an astounding baseline for
+recognition. In: Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition Workshops;
+Columbus, OH; 2014:806-813.
+45. Chatfield K, Simonyan K, Vedaldi A, Zisserman A. Return of the devil in the details: delving deep into
+convolutional nets. https://arxiv.org/abs/1405.3531. Revised November 5, 2014. Accessed July 14, 2018.
+46. ImageNet. http://www.image-net.org. Accessed May 9, 2018.
+47. ImageNet Large Scale Visual Recognition Challenge 2014 (ILSVRC2014). http://image-net.org/challenges/
+LSVRC/2014/browse-synsets. Accessed May 8, 2018.
+48. Marmanis D, Datcu M, Esch T, Stilla U. Deep learning earth observation classification using ImageNet
+pretrained networks. IEEE Geosci Remote Sens Lett. 2016;13(1):105-109. doi:10.1109/LGRS.2015.2499239
+49. Cheng G, Han J, Lu X. Remote sensing image scene classification: benchmark and state of the art. Proc IEEE.
+2017;105(10):1865-1883. doi:10.1109/JPROC.2017.2675998
+50. Deng J, Dong W, Socher R, Li L-J, Li K, Fei-Fei L. Imagenet: A large-scale hierarchical image database. In:
+Proceedings of the 2009 IEEE Conference on Computer Vision and Pattern Recognition; Miami Beach, FL; 2009:
+248-255.
+51. Friedman J, Hastie T, Tibshirani R. The Elements of Statistical Learning: Vol 1: Springer Series in Statistics. Berlin,
+Germany: Springer; 2001.
+52. US Census Bureau. American Fact Finder: 2014 American Community Survey 5-Year Estimates. Table B19301
+generated by Adyasha Maharana. http://factfinder2.census.gov. Accessed June 16, 2017.
+53. Rundle A, Roux AV, Freeman LM, Miller D, Neckerman KM, Weiss CC. The urban built environment and obesity
+in New York City: a multilevel analysis. Am J Health Promot. 2007;21(4)(suppl):326-334. doi:10.4278/0890-1171-
+21.4s.326
+54. Li F, Harmer PA, Cardinal BJ, et al. Built environment, adiposity, and physical activity in adults aged 50-75. Am
+J Prev Med. 2008;35(1):38-46. doi:10.1016/j.amepre.2008.03.021
+55. Kuczmarski MF, Kuczmarski RJ, Najjar M. Effects of age on validity of self-reported height, weight, and body
+mass index: findings from the Third National Health and Nutrition Examination Survey, 1988-1994. J Am Diet
+Assoc. 2001;101(1):28-34. doi:10.1016/S0002-8223(01)00008-6
+56. Merrill RM, Richardson JS. Validity of self-reported height, weight, and body mass index: findings from the
+National Health and Nutrition Examination Survey, 2001-2006. Prev Chronic Dis. 2009;6(4):A121.
+57. Zheng W, McLerran DF, Rolland B, et al. Association between body-mass index and risk of death in more than 1
+million Asians. N Engl J Med. 2011;364(8):719-729. doi:10.1056/NEJMoa1010679
+58. Jafar TH, Islam M, Poulter N, et al. Children in South Asia have higher body mass-adjusted blood pressure
+levels than white children in the United States: a comparative study. Circulation. 2005;111(10):1291-1297. doi:10.1161/
+01.CIR.0000157699.87728.F1
+59. Yang Y, Newsam S. Bag-of-visual-words and spatial extensions for land-use classification. In: Proceedings of
+the 18th SIGSPATIAL International Conference on Advances in Geographic Information Systems; New York, NY;
+2010:270-279.
+60. Casagrande SS, Whitt-Glover MC, Lancaster KJ, Odoms-Young AM, Gary TL. Built environment and health
+behaviors among African Americans: a systematic review. Am J Prev Med. 2009;36(2):174-181. doi:10.1016/j.amepre.
+2008.09.037
+SUPPLEMENT.
+eMethods. Materials and Data Analysis
+eTable 1. Places of Interest
+eTable 2. Demographic and Obesity Data
+eFigure 1. Illustration of Transfer Learning Approach
+eFigure 2. VGG-CNN-F Convolutional NN Architecture
+eFigure 3. t-SNE Visualization of Features Extracted From VGG-CNN-F for Satellite Imagery
+eFigure 4. Actual Obesity Prevalence and Cross-validated Model Estimates of Obesity Prevalence
+eFigure 5. Google Satellite Images for Seattle Showing Locations With Low and High Obesity Prevalence,
+Respectively
+eFigure 6. Actual Obesity Prevalence and Cross-validated Model Estimates of Obesity Prevalence
+eFigure 7. Google Satellite Images for San Antonio Showing Locations With Low and High Obesity Prevalence,
+Respectively
+eFigure 8. Actual Obesity Prevalence and Cross-validated Model Estimates of Obesity Prevalence
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+13/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019
+ eFigure 9. Google Satellite Images for Memphis Showing Locations With Low and High Obesity Prevalence,
+Respectively
+eFigure 10. Actual Obesity Prevalence and Cross-validated Model Estimates of Obesity Prevalence
+eFigure 11. Google Satellite Images for Los Angeles Showing Locations With Low and High Obesity Prevalence,
+Respectively
+eFigure 12. Out-of-Sample Predictions of Obesity Prevalence Plotted Against Actual Obesity Prevalence
+eFigure 13. Cross-validated Model Estimates of Per Capita Income Plotted Against Actual Per Capita Income
+eFigure 14. Out-of-Sample Model Predictions of Per Capita Income Plotted Against Actual Per Capita Income
+eFigure 15. Actual Per Capita Income and Cross-validated Model Estimates of Per Capita Income
+eFigure 16. Actual Per Capita Income and Cross-validated Model Estimates of Per Capita Income
+eReferences.
+JAMA Network Open | Health Informatics
+Deep Learning to Examine the Built Environment and Neighborhood Adult Obesity Prevalence
+JAMA Network Open. 2018;1(4):e181535. doi:10.1001/jamanetworkopen.2018.1535
+August 31, 2018
+14/14
+Downloaded From: https://jamanetwork.com/ on 06/02/2019

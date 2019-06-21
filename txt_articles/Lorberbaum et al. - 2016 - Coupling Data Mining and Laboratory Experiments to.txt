@@ -1,0 +1,739 @@
+ Coupling Data Mining and Laboratory Experiments to Discover 
+Drug Interactions Causing QT Prolongation
+Tal Lorberbaum, MAa,b, Kevin J. Sampson, PhDc, Jeremy B. Chang, PhDb, Vivek Iyer, MD 
+MSEd, Raymond L. Woosley, MD, PhDe, Robert S. Kass, PhDc, and Nicholas P. Tatonetti, 
+PhDa,b
+aDepartment of Physiology and Cellular Biophysics, Columbia University, New York, New York
+bDepartment of Biomedical Informatics, Columbia University, New York, New York
+cDepartment of Pharmacology, Columbia University, New York, New York
+dDepartment of Cardiology, Columbia University, New York, New York
+eAZCERT, Inc., Oro Valley, Arizona
+Abstract
+Background—QT-interval prolonging drug-drug interactions (QT-DDIs) may increase the risk 
+of life-threatening arrhythmias. Despite guidelines for testing from regulatory agencies, these 
+interactions are usually discovered after drugs are marketed and may go undiscovered for years.
+Objectives—Using a combination of adverse event reports, electronic health records (EHR), and 
+laboratory experiments, we sought to develop a data-driven pipeline for discovering QT-DDIs.
+Methods—We mined 1.8 million adverse event reports for signals indicating a QT-DDI. Using 
+1.6 million electrocardiogram results from 380,000 patients in our institutional EHR, we either 
+refuted or corroborated these putative interactions. In the laboratory, we used patch-clamp 
+electrophysiology to measure the human Ether-à-go-go-Related Gene (hERG) block (the primary 
+mechanism by which drugs prolong the QT interval) to evaluate our top candidate.
+Results—We found both direct and indirect signals in the adverse event reports that the 
+combination of ceftriaxone (a cephalosporin antibiotic) and lansoprazole (a proton-pump 
+inhibitor) will prolong the QT interval. In the EHR, we found that patients on both ceftriaxone and 
+lansoprazole had significantly longer QTc intervals (up to 12 ms in white men), and were 1.4 
+Reprint requests and correspondence to: Nicholas P. Tatonetti, PhD, 622 W 168th St., PH20, New York, New York 10032, 
+Telephone: 480.467.7456, Fax: 212-342-0663, nick.tatonetti@columbia.edu. 
+Publisher's Disclaimer: This is a PDF file of an unedited manuscript that has been accepted for publication. As a service to our 
+customers we are providing this early version of the manuscript. The manuscript will undergo copyediting, typesetting, and review of 
+the resulting proof before it is published in its final citable form. Please note that during the production process errors may be 
+discovered which could affect the content, and all legal disclaimers that apply to the journal pertain.
+Disclosures: Mr. Lorberbaum is supported by National Institute of General Medical Sciences (NIGMS) training grant 
+(T32GM082797). Mr. Lorberbaum and Dr. Tatonetti are supported by the NIGMS (R01GM107145). Drs. Sampson and Kass are 
+supported by the National Institute of Health (NIH; 5R01GM109762-02). Dr. Iyer is supported by the NIH (K08HL116790). Dr. 
+Tatonetti is a paid advisor to Advera Health, Inc.; he declares no conflict of interest. Dr. Woolsey is an uncompensated officer of the 
+nonprofit organization AZCERT.org, which is supported by a contract from the Food and Drug Administration’s Safe Use Initiative 
+(HHSF223201400189C) and sponsors the website www.CredibleMeds.org utilized in this study; he declares no conflict of interest. All 
+other authors have reported that they have no relationships relevant to the contents of this paper to disclose.
+HHS Public Access
+Author manuscript
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Published in final edited form as:
+J Am Coll Cardiol. 2016 October 18; 68(16): 1756–1764. doi:10.1016/j.jacc.2016.07.761.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ times more likely to have a QTc interval above 500 ms. In the laboratory, we found that these 
+drugs block the hERG channel in combination at clinically-relevant concentrations. As a negative 
+control, we evaluated the combination of lansoprazole and cefuroxime (another cephalosporin), 
+which lacked evidence of an interaction in the adverse event reports. We found no significant 
+effect of this pair in either the EHR or in the electrophysiology experiments. Class effect analyses 
+suggest this interaction is specific to lansoprazole combined with ceftriaxone, but not with other 
+cephalosporins.
+Conclusions—Coupling data mining and laboratory experiments is an efficient method for 
+identifying QT-DDIs. Combination therapy of ceftriaxone and lansoprazole is associated with 
+increased risk of acquired long QT syndrome
+Keywords
+data mining; data science; drug-drug interaction; prolonged QT interval
+Torsades de pointes (TdP) is a ventricular tachycardia that can result in sudden death (1) and 
+occurs as an adverse effect of over 40 medications that prolong the QT interval, referred to 
+as acquired long QT syndrome (LQTS) (2). The U.S. Food and Drug Administration (FDA) 
+has established strict guidelines for evaluating the risk of acquired LQTS for new 
+compounds when administered individually. Nonantiarrhythmic compounds that increase the 
+QT/QTc interval by 20 ms or more are unlikely to be approved, and a compound associated 
+with an increase of 10 ms or more would face many challenges (3). Even a 5-ms increase 
+would prompt an evaluation of the risks and benefits of the new compound (3). Studies of 
+both cardiac and noncardiac compounds found that a QTc interval above 500 ms is 
+associated with significant risk of TdP (4,5).
+Acquired LQTS is of particular concern when it is not anticipated and occurs as the result of 
+a QT interval-prolonging drug-drug interaction (QT-DDI) (2,6). QT-DDIs are not routinely 
+evaluated pre-clinically and can go undiscovered for years. For example, quetiapine (an 
+antipsychotic agent) was on the market for nearly 10 years before reports of a QT-DDI with 
+methadone (an analgesic agent) prompted investigation into a possible mechanism (7). It 
+took 3 more years before a label change was made to caution against the use of quetiapine in 
+combination with other drugs known to prolong the QT interval.
+Large clinical databases, such as electronic health records (EHR), represent an opportunity 
+to rapidly detect QT-DDIs and save lives (8,9). Drug safety algorithms could be applied to 
+health record data in near real-time, flagging potentially dangerous drug interactions before 
+they become widespread. Furthermore, these analyses are in situ, and therefore focus on the 
+most important drug combinations: those that are actually used in clinical practice. 
+Unfortunately, analysis of medical records is complex, due to issues of missing data, noise, 
+and bias (10). This leads to high false positive rates and algorithms that often will mislead 
+health care providers. Laboratory experiments, especially if they are high-throughput, can be 
+used to screen data-mined hypotheses for plausibility. Following observational analysis with 
+confirmatory prospective experiments can remove the spurious signals, enabling clinically 
+useful discoveries (11).
+Lorberbaum et al.
+Page 2
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ We developed a data science pipeline to mine potential QT-prolonging drug-drug 
+interactions from clinical databases. In this pipeline, we combine evidence of QT-DDIs from 
+the FDA Adverse Event Reporting System (FAERS) and the EHR at New York-
+Presbyterian/Columbia University Medical Center (CUMC-EHR). We identified a putative 
+interaction between lansoprazole (a proton-pump inhibitor [PPI]) and ceftriaxone (a 
+cephalosporin antibiotic). Importantly, this is an interaction that would not have been 
+suspected using current surveillance methods. We used patch-clamp electrophysiology of 
+cells stably expressing human Ether-à-go-go-Related Gene (hERG) channels to establish a 
+physiological mechanism. We further confirmed the specificity of our pipeline by also 
+investigating the combination of cefuroxime (another cephalosporin) and lansoprazole, a 
+drug pair that did not have evidence in FAERS of an interaction. In the clinic, patients on the 
+combination of ceftriaxone and lansoprazole had 12 ms (95% CI: 7 to 15 ms) longer QTc 
+intervals than patients exposed to either drug alone and were 1.4 times as likely to have a 
+QTc interval above 500 ms. The negative control showed no significant effect. A QT-DDI 
+between ceftriaxone and lansoprazole has the potential for significant morbidity and 
+mortality.
+Methods
+Data Sources
+We used 2 independent databases to investigate possible QT-DDIs. The first was a derivative 
+of 1.8 million adverse event reports from FAERS mined for evidence of adverse drug-drug 
+interactions that could not be explained by the individual effects of the drugs (TWOSIDES) 
+(12). The second database was of 1.6 million electrocardiograms (ECGs) from 382,221 
+patients treated at New York-Presbyterian/CUMC between 1996 and 2014. To obtain the 
+heart rate-corrected QT (QTc) intervals, we wrote a parser to automatically extract the 
+patient identifier, laboratory date, and QTc value from the ECG reports. QTc values were 
+calculated using Bazett’s formula. We manually checked 50 abnormal ECGs (defined as 
+QTc >500 ms) to confirm we were extracting the correct values, and found that the parser 
+obtained 100% precision and recall. We implemented the pipeline using Python 2.7.9 and R 
+v3.2.2.
+Identification of candidate QT-DDIs
+We used the side effect reporting frequencies in TWOSIDES to find drug pairs significantly 
+over-reported with the 6 adverse events in the standardized MedDRA query for “Torsade de 
+Pointes/QT prolongation”; we call this the direct evidence model (12). However, most drug 
+pairs are not directly reported with QT prolongation. In addition, we performed latent signal 
+detection, a method we have previously validated (13,14), to identify candidate QT-DDIs 
+that lacked prior direct evidence. To perform latent signal detection, we used machine 
+learning to define and validate a side effect profile of 13 side effects associated with known 
+QT-prolonging compounds. Some of these latently identified side effects (such as arrhythmia 
+and rhabdomyolysis) are positively correlated with QT interval prolongation, whereas others 
+(such as hemorrhage and myocardial infarction) are negatively correlated (Figure 1B). We 
+previously validated the method using drug pairs containing a known QT-prolonging drug 
+(2), and demonstrated high specificity and sensitivity (Online Figure 1). We then scanned for 
+Lorberbaum et al.
+Page 3
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ novel drug interactions in the TWOSIDES database that matched the side effect profile; we 
+refer to this as indirect evidence. We scored each drug pair for the amount of both direct and 
+indirect evidence.
+Evaluation of candidate QT-DDIs using EHR
+We attempted to corroborate (or refute) each of the candidate QT-DDI hypotheses using the 
+heart rate-corrected QTc values from ECGs stored in the CUMC-EHR. For each candidate 
+drug-drug interaction (DDI) we defined an exposed cohort and 2 control cohorts. Those 
+patients included in the exposed cohort were administered both drugs within a 7-day 
+window. Those in the control cohorts had evidence of exposure to only 1 of the 2 drugs ever 
+in their records. Only patients who had at least 1 ECG in the following 36 days after drug 
+exposure (either combination or single) were included. Corroboration required that we found 
+significantly longer heart rate-corrected QTc intervals in patients on combination treatment 
+compared with patients on either drug alone. The CUMC-EHR uses Bazett’s formula by 
+default; we also evaluated the change in QT interval using the Fridericia, Framingham, and 
+Hodges correction formulae (15). Because the distributions of QTc intervals were non-
+normal, we assessed significance using a Mann-Whitney U test with a Bonferroni correction 
+for multiple hypothesis testing. We further verified that this effect could not be explained by 
+concomitant medications (analysis of covariance with concomitant medications modeled as 
+categorical variables) (14). This analysis was stratified by sex because QT interval durations 
+are known to differ between men and women (16). We evaluated the effects of each drug 
+pair both on individual races and on all races combined (Mann-Whitney U test). We also 
+performed a post hoc power analysis to estimate our ability to detect a change in QTc 
+interval for the sample and effect sizes present in our EHR (17). Only those QT-DDIs 
+corroborated by the EHR data (in either men, women, or both) were considered for 
+laboratory analysis.
+Patch-clamp electrophysiology
+QT-prolonging drugs have in common the ability to block the hERG channel (which 
+conducts IKr) in the heart. We evaluated the combination of ceftriaxone and lansoprazole by 
+performing patch-clamp electrophysiology of cells stably expressing IKr. Using an 
+automated patch-clamp system (PatchLiner, Nanion, Delaware) in voltage clamp mode, we 
+examined the concentration-dependent block of the IKr current by each drug individually, as 
+well as in combination, using dimethyl sulfoxide as vehicle control (Figure 1D). We applied 
+a voltage protocol with a step to +40 mV, followed by a return to −40 mV, to elicit the 
+inward-rectifying tail current. This protocol was repeated every 20s for the length of the 
+experiment and, after 10 consecutive sweeps in each concentration, the concentration is 
+increased. We then averaged the current at the end of each drug application and normalized 
+it to the control to measure the block by each compound. We assessed significance using a 
+test of repeated measures on the log-normalized block percentages.
+We performed patch-clamp electrophysiology experiments as described for ceftriaxone 
+alone, lansoprazole alone, and ceftriaxone and lansoprazole, and similarly for the negative 
+controls of cefuroxime alone and cefuroxime and lansoprazole. We evaluated the ability of 
+ceftriaxone or cefuroxime to block the hERG channel at 0.1 μM, 1 μM, 10 μM, 50 μM, and 
+Lorberbaum et al.
+Page 4
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ 100 μM. For lansoprazole, we evaluated at 0.1 μM, 1 μM, and 10 μM. We performed 3 
+combination experiments: for the combination of ceftriaxone and lansoprazole, we held 
+lansoprazole constant at either 1 μM or 10 μM and increased the dose of ceftriaxone 
+stepwise from 0.1 to 100 μM. To evaluate our negative control of cefuroxime and 
+lansoprazole, we held lansoprazole constant at 1 μM and increased the dose of cefuroxime 
+stepwise from 0.1 to 100 μM. The concentrations tested were chosen to include the range of 
+plasma concentrations usually reached during routine clinical use of the drugs (1.9 to 3.9 μM 
+for lansoprazole, 24 to 228 μM for ceftriaxone, and 35 to 428 μM for cefuroxime) (18–21).
+Computational mechanistic model
+We used a computational model of the human ventricular myocyte (22) to simulate the 
+action potential for the hERG block we observed for ceftriaxone, lansoprazole, and the 
+combination from our laboratory experiments. We ran the model for a ventricular action 
+potential paced at 1 Hz with baseline conditions and 10% or 55% block of hERG current 
+(chosen using the current block observed in the electrophysiology experiments). We 
+evaluated the APD70, the action potential duration at 70% of repolarization.
+Results
+Candidate QT-DDI discovery via data science
+We detected 889 putative signals in FAERS, of which 34 (1.42× more than expected by 
+chance, p = 0.003) were corroborated by the CUMC-EHR, after multiplicity correction. 
+Twenty-six were eliminated by confounder analysis for concomitant medications. The 
+remaining 8 combinations could not be explained by concomitant medications and were not 
+previously associated with acquired LQTS (14). We prioritized the combination of 
+ceftriaxone and lansoprazole for experimental validation, as lansoprazole is available over 
+the counter and is one of the top 200 most-prescribed drugs (totaling over 2.6 million 
+prescriptions in 2010) (23). An interaction with a PPI could therefore have a profound 
+impact on patient safety. As a negative control, we chose to evaluate the combination of 
+cefuroxime and lansoprazole as, according to our algorithm, it did not match the side-effect 
+profile for QT prolongation in FAERS (Figures 1A and 1B).
+Comedication of ceftriaxone and lansoprazole is associated with prolonged QT in the EHR
+Overall, the QTc intervals (Bazett’s correction) for male patients taking this combination 
+were 12 ms (95% CI: 7 to 15 ms; n = 934) longer than patients taking either drug alone (p < 
+0.001); for female patients, QTc intervals on the combination were 9 ms (95% CI: 5.2 to 
+11.3 ms; n = 1,414) longer than patients taking either drug alone (p < 0.001) (Figure 1C). 
+We evaluated QT interval prolongation post hoc, using the Fridericia, Framingham, and 
+Hodges correction formulae. In men, all 3 were significant, with p < 0.01 (Online Table 1), 
+and, in women, Fridericia and Hodges were significant, with p < 0.01. When stratifying by 
+race in addition to sex, the largest effect was observed in white men (12 ms increase; 95% 
+CI: 6.5 to 17 ms; p < 0.001) and black women (12 ms increase; 95% CI: 3.7 to 18.5 ms; p < 
+0.001). We performed a regression analysis, which confirmed the increased sensitivity to the 
+drug pair in white patients (p = 0.049, Online Table 2). In 19% of men taking the 
+Lorberbaum et al.
+Page 5
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ combination, the QTc was ≥500 ms, an accepted threshold for clinical concern (3), 
+compared with 14% (p < 0.001) of patients taking only 1 drug (Table 1).
+Applying the same case-control analysis to cefuroxime and lansoprazole showed no 
+significant difference in QTc interval for both men (7 ms increase; 95% CI: −4.5 to 17 ms, n 
+= 107; p = 0.167) and women (1.5 ms decrease; 95% CI: −9.3 to 4.3 ms; n = 228; p = 
+0.155). We observed no significant changes in QTc interval when further stratifying by race. 
+See Figure 1C for complete results.
+We performed sample-size and effect-size analyses, which demonstrated that with 100 
+patients prescribed either combination, we would be able to detect a 10-ms QT interval 
+prolongation with 80% power; with 1,000 patients, the same effect size could be detected 
+with 100% power (Online Figure 2).
+Six hundred and three patients on ceftriaxone and lansoprazole had ECGs both before and 
+after they started combination treatment. To control for baseline confounders, we performed 
+a paired analysis comparing each of these patient’s highest QTc interval from ECGs 
+performed up to 36 days before and after exposure to ceftriaxone and lansoprazole. We 
+stratified the analysis by both sex and race. We observed a statistically significant increase in 
+QTc interval for both white men (14.0 ± 4.0 ms increase; p = 6.56 × 10−4) and white women 
+(12.9 ± 3.3 ms increase; p = 1.03 × 10−4). We observed no significant change in QTc 
+interval for patients prescribed our negative control. See Online Table 3 for complete results.
+In combination, ceftriaxone and lansoprazole block the hERG channel
+Using a test of repeated measures, we found no significant effect from ceftriaxone on the 
+hERG channel (p = 0.096). We found a significant effect from lansoprazole alone (p = 1.63 
+× 10−4), causing a drop in current to 86.6 ± 16.7% at 10 μM (no effect at 1 μM or 0.1 μM). 
+In the presence of 1 μM lansoprazole, ceftriaxone caused a dose-dependent drop in current 
+(96.8 ± 13.2% of control at 0.1 μM, 89.3 ± 13.2% at 100 μM; p = 1.07 × 10−4). In the 
+presence of 10 μM lansoprazole, ceftriaxone caused a dose-dependent drop in current (63.1 
+± 10.9% of control at 0.1 μM, 42.4 ± 11.6% at 100 μM; p < 3.45 × 10−5) (Figure 1D, left). 
+For our negative control, we saw a small block in cefuroxime alone (94.0 ± 14.8% of control 
+at 100 μM cefuroxime; p = 5.62 × 10−5) but no dose-dependent response of cefuroxime 
+combined with 1 μM lansoprazole (p = 0.083) (Figure 1D, right).
+Computational model recapitulates clinical observations
+Using the hERG current blocks observed in the electrophysiology experiments as input to 
+the computational model, the APD prolongation (measured as APD70) was 9 ms for the 
+combination of 1 μM lansoprazole and 100 μM ceftriaxone, and 50 ms for 10 μM 
+lansoprazole and 100 μM ceftriaxone (Figure 2). For the combination of 1 μM lansoprazole 
+and 100 μM cefuroxime, the APD70 was shortened by 2 ms.
+No evidence of class effects between cephalosporins and PPIs
+Given our identification of a putative drug interaction between a cephalosporin antibiotic 
+and a PPI, we systematically evaluated all combinations of cephalosporins and PPIs for 
+Lorberbaum et al.
+Page 6
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ evidence of a drug interaction in FAERS, EHR, or both (Figure 3). The combination of 
+ceftriaxone and lansoprazole in men was the only drug pair that had evidence in both 
+FAERS and the EHR that also passed our confounder analysis for concomitant medications.
+Discussion
+New data sources present new avenues for discovery
+Data science and large clinical databases present new opportunities to discover adverse drug 
+effects and drug-drug interactions. This is especially true in situations where traditional 
+methods are impractical or infeasible, as is often the case for DDIs. There are many 
+advantages to taking a retrospective approach for detecting DDIs. The analyses are relatively 
+rapid and inexpensive to perform, and, because they are in situ, they focus on drug 
+combinations that are actually used together in clinical practice. In particular, our use of 
+latent signal detection to mine for DDIs using side-effect profile models allows us to 
+circumvent many of the limitations inherent to traditional data-mining approaches that rely 
+solely on direct evidence between drug pairs and side effects (13,14). However, there are 
+many disadvantages as well. Retrospective analysis, and data mining in particular, are 
+notorious for their potential biases and high false discovery rates. There are simply too many 
+potentially confounding variables to make strong statements about causal relationships.
+Here, we present a novel strategy that couples observational data mining with laboratory 
+experiments to identify QT-DDIs (Central Illustration). Our observational analysis 
+establishes the presence of a clinically-significant association between comedication and a 
+prolonged QT interval. There are many hypotheses that may explain such an association. For 
+example, a patient prescribed the putative interacting drugs may also be prescribed a known 
+QT-prolonging agent. In fact, this is what we observed. Of 34 drug combinations that were 
+associated with increased QT intervals, 26 could be dismissed as likely confounded by a 
+known agent. Alternatively, it may be that there is a real drug interaction, in the 
+pharmacological sense. The most common physiological explanation would be hERG block; 
+therefore, we tested this hypothesis for our top prediction (ceftriaxone/lansoprazole) using 
+patch-clamp electrophysiology. This atypical path, going from the clinic into the lab, has 
+great potential to increase the efficiency of DDI discovery.
+Critical evaluation of data mining using laboratory experiments
+We combined data from FAERS with our local EHR to find evidence of QT-prolonging drug 
+interactions. Either data source alone provides only weak evidence of a potential DDI 
+producing thousands of equivalent hypotheses. By integrating these data, we increase power 
+and focus the analysis on only the strongest candidates. Most importantly, we follow up on 
+these DDI hypotheses using laboratory experiments to identify a possible mechanism.
+An interaction between ceftriaxone and lansoprazole is unexpected
+Our top candidate, ceftriaxone and lansoprazole, would not have been suspected using 
+current surveillance methods. In the clinical records we found that comedication of these 2 
+common drugs is associated with significantly prolonged QTc intervals. This increase was 
+highest for white men and black women, where we observed an average increase of 12 ms. It 
+Lorberbaum et al.
+Page 7
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ is important to note that if this effect size was observed for a single drug, it would be well 
+above the threshold for regulatory concern during the approval stage (3). In the laboratory, 
+we found that, in combination, lansoprazole and ceftriaxone block the hERG channel up to 
+57.6%, corresponding with an APD70 increase of 50 ms. At these higher lansoprazole 
+concentrations, it is likely that, if treated as a single entity, the combination would not have 
+received regulatory approval.
+Molecular mechanism of the interaction between ceftriaxone and lansoprazole
+We discovered that ceftriaxone and lansoprazole were significantly associated with 
+prolonged QT intervals using clinical data. Our laboratory analysis suggests that this effect 
+may be mediated through the hERG potassium channel, the most common mechanism by 
+which drugs prolong the QT interval. However, the molecular explanation is not clear. 
+Possibilities include a chemical interaction between the 2 compounds, cooperative binding 
+to the channel, or an indirect mechanism through proteins that function with hERG. 
+Furthermore, we found significantly different effects when our analysis was stratified by 
+race and ethnicity. White men and women appear to be sensitive to the interaction, whereas 
+black men experience only an intermediate change, and women identifying as “other, 
+including Hispanic” experience no detectable effect. This is consistent with the large amount 
+of ethnic heterogeneity in cardiac potassium channels (24,25), and may guide a structural 
+analysis of the interaction.
+Prior evidence of related adverse events
+Lansoprazole is a commonly used PPI that is available over-the-counter. In retrospective 
+analyses, PPIs were associated with a slight increased risk of myocardial infarction (26). 
+Additionally, there have been a large number of deaths reported to the FDA for patients on 
+this class of drugs, although this association is not statistically significant. Our discovery of 
+a drug interaction with a PPI may explain these observations, although this requires follow-
+up study. Notably, evaluation of cefuroxime and lansoprazole, a pair predicted not to interact 
+from the FAERS reporting frequencies, suggests that our pipeline is capable of 
+distinguishing between safe and unsafe pairs, even within the same drug class.
+Conclusion
+We present evidence of a novel QT-DDI between lansoprazole and ceftriaxone. This 
+interaction was discovered using a combination of data mining and laboratory experiments. 
+Our clinical data suggest that patients on this pair of interacting drugs are more likely to 
+have acquired LQTS, and the experimental study suggests that this effect may be mediated 
+by blocking the hERG channel, the most common mechanism of acquired LQTS. This 
+interaction appears to be specific to ceftriaxone, and does not extend to other cephalosporin 
+antibiotics in combination with lansoprazole. Follow-up studies are required to confirm our 
+findings and should include evaluating the mechanism of the interaction at the hERG 
+channel, the effect of ceftriaxone and lansoprazole on other ion channels, and investigation 
+of these drugs in combination with other hERG-blockers.
+Lorberbaum et al.
+Page 8
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Supplementary Material
+Refer to Web version on PubMed Central for supplementary material.
+Acknowledgments
+The authors thank Sam Roe for his insight and perspective throughout the design and execution of this study.
+Abbreviations and Acronyms
+APD70
+action potential duration at 70% of repolarization
+DDI
+drug-drug interaction
+ECG
+electrocardiogram
+EHR
+electronic health records
+FAERS
+Food and Drug Administration Adverse Event Reporting System
+hERG
+human Ether-à-go-go-Related Gene
+LQTS
+long QT syndrome
+PPI
+proton-pump inhibitor
+QT-DDI
+QT interval-prolonging drug-drug interaction
+TdP
+torsades de pointes
+References
+1. Roden DM. Repolarization reserve: a moving target. Circulation. 2008; 118:981–2. [PubMed: 
+18765386] 
+2. Woosley RL, Romero K. Assessing cardiovascular drug safety for clinical decision-making. Nat Rev 
+Cardiol. 2013; 10:330–7. [PubMed: 23591268] 
+3. Fermini B, Fossa AA, Fermini B, et al. The impact of drug-induced QT interval prolongation on 
+drug discovery and development. Nat Rev Drug Discov. 2003; 2:439–47. [PubMed: 12776219] 
+4. Woosley RL, Chen Y, Freiman JP, et al. Mechanism of the cardiotoxic actions of terfenadine. 
+JAMA. 1993; 269:1532–6. [PubMed: 8445816] 
+5. Shah RR. Drug-induced prolongation of the QT interval: regulatory dilemmas and implications for 
+approval and labelling of a new chemical entity. Fundam Clin Pharmacol. 2002; 16:147–56. 
+[PubMed: 12031067] 
+6. Itzhaki I, Maizels L, Huber I, et al. Modelling the long QT syndrome with induced pluripotent stem 
+cells. Nature. 2011; 471:225–9. [PubMed: 21240260] 
+7. Uehlinger C, Crettol S, Chassot P, et al. Increased (R)-methadone plasma concentrations by 
+quetiapine in cytochrome P450s and ABCB1 genotyped patients. J Clin Psychopharmacol. 2007; 
+27:273–8. [PubMed: 17502774] 
+8. Hripcsak G, Duke JD, Shah NH, et al. Observational Health Data Sciences and Informatics 
+(OHDSI): opportunities for observational researchers. Stud Health Technol Inform. 2015; 216:574–
+8. [PubMed: 26262116] 
+9. Psaty BM, Breckenridge AM. Mini-Sentinel and regulatory science--big data rendered fit and 
+functional. N Engl J Med. 2014; 370:2165–7. [PubMed: 24897081] 
+Lorberbaum et al.
+Page 9
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ 10. Hripcsak G, Albers DJ. Next-generation phenotyping of electronic health records. J Am Med 
+Inform Assoc. 2012; 20:117–21. [PubMed: 22955496] 
+11. Tatonetti NP, Denny JC, Murphy SN, et al. Detecting drug interactions from adverse-event reports: 
+interaction between paroxetine and pravastatin increases blood glucose levels. Clin Pharmacol 
+Ther. 2011; 90:133–42. [PubMed: 21613990] 
+12. Tatonetti NP, Ye PP, Daneshjou R, et al. Data-driven prediction of drug effects and interactions. Sci 
+Transl Med. 2012; 4:125ra31.
+13. Tatonetti NP, Fernald GH, Altman RB. A novel signal detection algorithm for identifying hidden 
+drug-drug interactions in adverse event reports. J Am Med Inform Assoc. 2012; 19:79–85. 
+[PubMed: 21676938] 
+14. Lorberbaum T, Sampson KJ, Woosley RL, et al. An integrative data science pipeline to identify 
+novel drug interactions that prolong the QT interval. Drug Saf. 2016; 39:433–41. [PubMed: 
+26860921] 
+15. Indik J, Pearson EC, Fried K, et al. Bazett and Fridericia QT correction formulas interfere with 
+measurement of drug-induced changes in QT interval. Heart Rhythm. 2006; 3:1003–7. [PubMed: 
+16945790] 
+16. Rautaharju PM, Zhou SH, Wong S, et al. Sex differences in the evolution of the 
+electrocardiographic QT interval with age. Can J Cardiol. 1992; 8:690–5. [PubMed: 1422988] 
+17. Collings BJ, Hamilton MA. Estimating the power of the two-sample Wilcoxon test for location 
+shift. Biometrics. 1988; 44:847–60. [PubMed: 3203133] 
+18. Sakurai Y, Hirayama M, Hashimoto M, et al. Population pharmacokinetics and proton pump 
+inhibitory effects of intravenous lansoprazole in healthy Japanese males. Biol Pharm Bull. 2007; 
+30:2238–43. [PubMed: 18057705] 
+19. Tolman KG, Sanders SW, Buchi KN, et al. The effects of oral doses of lansoprazole and 
+omeprazole on gastric pH. J Clin Gastroenterol. 1997; 24:65–70. [PubMed: 9077718] 
+20. Rocephin (ceftriaxone sodium) for injection [prescribing information]. South San Francisco, CA: 
+Genentech USA, Inc; 2015. 
+21. Foord RD. Cefuroxime: human pharmacokinetics. Antimicrob Agents Chemother. 1976; 9:741–7. 
+[PubMed: 949172] 
+22. Iyer V, Mazhari R, Winslow RL. A computational model of the human left-ventricular epicardial 
+myocyte. Biophys J. 2004; 87:1507–25. [PubMed: 15345532] 
+23. Pharmaceutical Sales 2010. Verispan, VONA; Available at: http://www.drugs.com/
+top200_units.html. Accessed August 9, 2016
+24. Modell SM, Lehmann MH. The long QT syndrome family of cardiac ion channelopathies: a HuGE 
+review. Genet Med. 2006; 8:143–55. [PubMed: 16540748] 
+25. Ackerman MJ, Tester DJ, Jones GS, et al. Ethnic differences in cardiac potassium channel variants: 
+implications for genetic susceptibility to sudden cardiac death and genetic testing for congenital 
+long QT syndrome. Mayo Clin Proc. 2003; 78:1479–87. [PubMed: 14661677] 
+26. Shah NH, LePendu P, Bauer-Mehren A, et al. Proton pump inhibitor usage and the risk of 
+myocardial infarction in the general population. PLoS ONE. 2015; 10:e0124653. [PubMed: 
+26061035] 
+Lorberbaum et al.
+Page 10
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Clinical Perspectives
+Competency in Systems-Based Practice
+Data science methodologies may accelerate evaluation of the safety of drug 
+combinations. Data from large numbers of patients and ECGs in EHR can corroborate 
+clinical event reports of adverse drug interactions and, for those involving QT-interval 
+prolongation, laboratory methods can then be used to elucidate the electrophysiological 
+mechanisms involved.
+Translational Outlook
+Further work is needed to systematically extend this paradigm to evaluate the safety of 
+commonly used drug combinations in other cardiovascular domains.
+Lorberbaum et al.
+Page 11
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 1. Data Science and Experimental Pipeline for Identifying and Validating QT-DDIs
+(A) Chemical structures for ceftriaxone (cephalosporin) and lansoprazole (proton pump 
+inhibitor, PPI), which we predicted would have a QT-DDI; we predicted cefuroxime 
+(cephalosporin) and lansoprazole not to interact. (B) QT-DDI discovery in FAERS: data-
+driven side effect profile containing latent evidence of a QT-DDI (black boxes: positive 
+correlation with QT prolongation; white boxes: negative correlation). Each bar represents the 
+reporting frequency of a given side effect in FAERS for ceftriaxone (green), lansoprazole 
+(blue), cefuroxime (orange), ceftriaxone + lansoprazole (red), and cefuroxime + 
+lansoprazole (purple). (C) Retrospective corroboration in electronic health records (EHR). 
+Left: Difference in QTc interval (mean ± 95% CI) between cases (patients prescribed the 
+drug pair) and controls (patients on only 1 drug). We stratified the analysis by sex (men: 
+gray; women: teal) and evaluated all races combined, as well as whites, blacks, and “other, 
+including Hispanic” separately. Star indicates the change in QTc intervals is statistically 
+significant (Mann-Whitney U test with Bonferroni correction). We obtained 95% CIs by 
+bootstrapping case and control QTc distributions, and calculating the change in median QTc 
+for each iteration. Right: Percentage of patients with a QTc interval ≥500 ms (mean ± 95% 
+CI), stratified by sex and race. Star indicates the combination had a significantly greater 
+proportion of patients with a QTc interval ≥500 ms than either drug alone (independent-
+samples Student t-test, with Bonferroni correction, comparing means of single drug and 
+combination therapy percentage≥500 distributions generated using bootstrapping). (D) 
+Lorberbaum et al.
+Page 12
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Experimental validation using patch-clamp electrophysiology. Left: Change in hERG current 
+from control (mean and SD) for increasing concentrations of cephalosporin alone (dashed 
+line), and increasing concentrations of cephalosporin in the presence of a single 
+concentration of lansoprazole (solid lines). Right: Representative traces from each patch-
+clamp electrophysiology experiment. From top to bottom: hERG-channel current in the 
+presence of vehicle only (control), and then cephalosporin at 3 concentrations (0.1 μM, 10 
+μM, and 100 μM); hERG-channel current in the presence of lansoprazole and then in 
+combination with progressively increasing concentrations of cephalosporin. CI = confidence 
+interval; FAERS = FDA Adverse Event Reporting System; hERG = human Ether-à-go-go 
+Related Gene; QT-DDI = QT-prolonging drug-drug interaction.
+Lorberbaum et al.
+Page 13
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 2. Results of the Computational Model of Ventricular Epicardial Myocytes
+The APD prolongation (measured as APD70) for each case is 9 ms and 50 ms, simulating 1 
+μM lansoprazole + 100 μM ceftriaxone and 10 μM lansoprazole + 100 μM ceftriaxone, 
+respectively. Briefly, the model was run for a ventricular action potential paced at 1 Hz with 
+baseline conditions (black) and 10% or 55% block of peak hERG current (brown and red, 
+respectively). APD70 = action potential duration at 70% of repolarization; hERG = human 
+Ether-à-go-go Related Gene.
+Lorberbaum et al.
+Page 14
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 3. Analysis of Class Effects Between Cephalosporins and PPIs
+We analyzed each cephalosporin and PPI pair for evidence of an interaction in FAERS 
+(black box: drug pair matches side effect profile), EHR (red: patients on combination have 
+significantly prolonged QT intervals compared with those on either drug alone; blue: no 
+significant change between cases and controls; white: no patients on the drug pair in the 
+EHR), and that the change seen in the EHR was not due to concomitant medications (red 
+star). We stratified the analysis between men and women. Only ceftriaxone and lansoprazole 
+Lorberbaum et al.
+Page 15
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ in men passed each of these criteria. EHR = electronic health records; FAERS = FDA 
+Adverse Event Reporting System; PPI = proton-pump inhibitor.
+Lorberbaum et al.
+Page 16
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Central Illustration. Ceftriaxone and Lansoprazole are Associated With Acquired LQTS
+We combined mining of adverse event reports, corroboration in electronic health records, 
+and experimental validation using single cell patch clamp to discover and validate a QT-DDI 
+between ceftriaxone and lansoprazole. We used a data-driven profile of side effects that are 
+predictive of LQTS to prioritize drug pairs pairs in FAERS. We corroborated these findings 
+in the electronic health records by comparing the QTc intervals of patients administered the 
+prioritized drug pair to patients exposed to either drug alone. We then validated our top 
+prediction (ceftriaxone/lansoprazole) by measuring the dose-dependent changes in hERG 
+channel current using patch-clamp electrophysiology.
+AFib = atrial fibrillation; FAERS = FDA Adverse Event Reporting System; hERG = human 
+Ether-à-go-go-Related Gene; LQTS = long QT syndrome; QT-DDI = QT-prolonging drug-
+drug interaction; VTach = ventricular tachycardia.
+Lorberbaum et al.
+Page 17
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Lorberbaum et al.
+Page 18
+Table 1
+Demographic and Clinical Characteristics of Cohort
+Variable
+Men
+Women
+Combination: ceftriaxone + lansoprazole
+ n
+934
+1,414
+ Demographic
+  Age, yrs (mean ± SD)
+61.3 ± 16.9
+66.5 ± 18.5
+  Race (% of group)
+   White
+57.3
+52.9
+   African American
+18.9
+20.2
+   Other/unknown
+23.8
+26.9
+ Median QTc (ms) (95% CI)
+458 (398–588)
+457 (401–571.7)
+ Patients with QTc ≥500 ms (%)
+19.27
+16.34
+Combination: cefuroxime + lansoprazole
+ n
+107
+228
+ Demographic
+  Age, yrs (mean ± SD)
+66.1 ± 15.7
+67.6 ± 17.9
+  Race (% of group)
+   White
+56.1
+60.1
+   African American
+13.1
+14.9
+   Other/unknown
+30.8
+25.0
+ Median QTc, ms (95% CI)
+450 (393.6–579.4)
+443.5 (398.7–579.2)
+ Patients with QTc ≥500 ms (%)
+14.95
+11.40
+Ceftriaxone only
+ N
+5,734
+6,850
+ Demographic
+  Age, yrs (mean ± SD)
+59.5 ± 17.9
+63.7 ± 19.8
+  Race (% of group)
+   White
+46.6
+45.1
+   African American
+19.0
+18.4
+   Other/unknown
+34.4
+36.5
+ Median QTc, ms (95% CI)
+446 (394–566)
+448 (398–560)
+ Patients with QTc ≥500 ms (%)
+14.21
+11.43
+Cefuroxime only
+ N
+636
+957
+ Demographic
+  Age, yrs (mean ± SD)
+61.5 ± 17.6
+66.0 ± 19.3
+  Race (% of group)
+   White
+54.1
+50.3
+   African American
+20.6
+19.3
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.
+ Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Lorberbaum et al.
+Page 19
+Variable
+Men
+Women
+   Other/unknown
+25.3
+30.4
+ Median QTc, ms (95% CI)
+435 (391.9–552.1)
+439 (397–551.1)
+ Patients with QTc ≥500 ms (%)
+11.16
+9.09
+Lansoprazole only
+ n
+12,271
+13,074
+ Demographic
+  Age, yrs (mean ± SD)
+60.0 ± 15.8
+63.1 ± 17.7
+  Race (% of group)
+   White
+60.8
+54.6
+   African American
+13.9
+16.7
+   Other/unknown
+25.3
+28.7
+ Median QTc, ms (95% CI)
+443 (395–572)
+445 (399–569)
+ Patients with QTc ≥500 ms (%)
+12.84
+12.07
+J Am Coll Cardiol. Author manuscript; available in PMC 2017 October 18.

@@ -1,0 +1,1434 @@
+ RESEARCH ARTICLE
+Data-driven brain network models
+differentiate variability across language tasks
+Kanika Bansal1,2,3, John D. Medaglia4,5, Danielle S. Bassett6,7,5,8, Jean M. VettelID2,6,9,
+Sarah F. MuldoonID1,10*
+1 Department of Mathematics, University at Buffalo – SUNY, Buffalo, New York, United States of America,
+2 Human Research and Engineering Directorate, U.S. Army Research Laboratory, Aberdeen Proving
+Ground, Maryland, United States of America, 3 Department of Biomedical Engineering, Columbia University,
+New York, New York, United States of America, 4 Department of Psychology, Drexel University, Philadelphia,
+Pennsylvania, United States of America, 5 Department of Neurology, Perelman School of Medicine,
+University of Pennsylvania, Philadelphia, Pennsylvania, United States of America, 6 Department of
+Biomedical Engineering, University of Pennsylvania, Philadelphia, Pennsylvania, United States of America,
+7 Department of Electrical and Systems Engineering, University of Pennsylvania, Philadelphia, Pennsylvania,
+United States of America, 8 Department of Physics and Astronomy, University of Pennsylvania, Philadelphia,
+Pennsylvania, United States of America, 9 Department of Psychological and Brain Sciences, University of
+California, Santa Barbara, Santa Barbara, California, United States of America, 10 Computational and Data-
+Enabled Science and Engineering Program, University at Buffalo – SUNY, Buffalo, New York, United States
+of America
+* smuldoon@buffalo.edu
+Abstract
+The relationship between brain structure and function has been probed using a variety of
+approaches, but how the underlying structural connectivity of the human brain drives behav-
+ior is far from understood. To investigate the effect of anatomical brain organization on
+human task performance, we use a data-driven computational modeling approach and
+explore the functional effects of naturally occurring structural differences in brain networks.
+We construct personalized brain network models by combining anatomical connectivity esti-
+mated from diffusion spectrum imaging of individual subjects with a nonlinear model of brain
+dynamics. By performing computational experiments in which we measure the excitability of
+the global brain network and spread of synchronization following a targeted computational
+stimulation, we quantify how individual variation in the underlying connectivity impacts both
+local and global brain dynamics. We further relate the computational results to individual var-
+iability in the subjects’ performance of three language-demanding tasks both before and
+after transcranial magnetic stimulation to the left-inferior frontal gyrus. Our results show that
+task performance correlates with either local or global measures of functional activity,
+depending on the complexity of the task. By emphasizing differences in the underlying struc-
+tural connectivity, our model serves as a powerful tool to assess individual differences in
+task performances, to dissociate the effect of targeted stimulation in tasks that differ in cog-
+nitive demand, and to pave the way for the development of personalized therapeutics.
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+1 / 25
+a1111111111
+a1111111111
+a1111111111
+a1111111111
+a1111111111
+OPEN ACCESS
+Citation: Bansal K, Medaglia JD, Bassett DS, Vettel
+JM, Muldoon SF (2018) Data-driven brain network
+models differentiate variability across language
+tasks. PLoS Comput Biol 14(10): e1006487.
+https://doi.org/10.1371/journal.pcbi.1006487
+Editor: Saad Jbabdi, Oxford University, UNITED
+KINGDOM
+Received: February 23, 2018
+Accepted: September 3, 2018
+Published: October 17, 2018
+Copyright: This is an open access article, free of all
+copyright, and may be freely reproduced,
+distributed, transmitted, modified, built upon, or
+otherwise used by anyone for any lawful purpose.
+The work is made available under the Creative
+Commons CC0 public domain dedication.
+Data Availability Statement: All study data is
+available at http://doi.org/10.5281/zenodo.
+1412715.
+Funding: This work was supported by mission
+funding to the U.S. Army Research Laboratory as
+well as contract numbers W911NF-10-2-0022
+(SFM, DSB) and W911NF-16-2-0158 (KB). DSB
+acknowledges the MacArthur Foundation and the
+Alfred P. Sloan Foundation. JDM acknowledges
+funding from National Institute of Health through
+the National Institute of Mental Health (award no.
+1-DP5 OD021352-01). The content is solely the
+ Author summary
+How the organization of the brain drives human behavior is an important but open ques-
+tion in neuroscience. Recent advances in non-invasive imaging techniques and analytical
+tools allow one to build personalized brain network models that simulate an individual’s
+brain activity based on the underlying anatomical connectivity. Here, we use these
+computational models to perform virtual experiments in order to understand individual
+performance of three different language-demanding tasks. For each individual, we build a
+subject-specific brain network model and measure the global brain activation and patterns
+of synchronized activity after a targeted computational stimulation. We find that depend-
+ing on the complexity and type of the language task performed, either global or local mea-
+sures of brain dynamics correlate with individual performance. By emphasizing
+individual differences in human brain structure, the model serves as a powerful tool to
+understand cognitive task performance and to promote the development of personalized
+therapeutics.
+Introduction
+Cognitive responses and human behavior have been hypothesized to be the outcome of com-
+plex interactions between regional populations of neurons [1, 2] and show significant variabil-
+ity across individuals. While certain patterns of brain activity are robust [3], many patterns
+change with learning and aging [4–8], and an underlying inter-subject variability in neural
+activity has been observed [9–13]. Importantly, the underlying anatomical connectivity of the
+brain provides a crucial backbone that drives neuronal dynamics and thus behavior [4, 14, 15].
+Given recent and ongoing advancements in imaging techniques, such as diffusion spectrum
+imaging (DSI), which estimates the presence of white matter tracts connecting brain regions,
+mesoscale maps of anatomical brain connectivity can now be obtained [14, 16]. While differ-
+ences in brain connectivity have long been known to exist between diseased and healthy popu-
+lations [17–19], recent findings indicate measurable differences in patterns of white matter
+connectivity across healthy individuals [20–23]. Although work is beginning to link individual
+variability in white matter structure, functional activity, and task performance [24–30], there is
+currently no standard methodology for evaluating the interplay between the brain’s structural
+topology, dynamics, and function, and many open questions remain about how these features
+are coupled.
+The new field of network neuroscience [31] provides a coherent framework in which to
+model and investigate this coupling. In the context of modeling human brain networks, net-
+work nodes can be chosen to represent brain regions and network edges can represent either
+physical connections (anatomical networks) or statistical relationships between nodal dynam-
+ics (functional networks) [17, 31, 32]. Analytical tools from network science have been success-
+fully utilized to quantify both structural and functional brain network organization and to gain
+insight into topics as diverse as brain development [33], disease states [18, 19, 34], learning [4],
+and intelligence [35].
+Combining a network representation of the brain with computational modeling of brain
+dynamics allows one to further investigate the links between brain structure, dynamics, and
+performance by providing a controlled environment in which to perform in silico experiments
+and make predictions about real-world brain function. Using experimentally obtained struc-
+tural brain network data combined with biologically motivated computational models of brain
+dynamics [36], one can build personalized brain network models of human brain activity [37–
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+2 / 25
+responsibility of the authors and does not
+necessarily represent the official views of the
+funding agencies. The funders had no role in study
+design, data collection and analysis, decision to
+publish, or preparation of the manuscript.
+Competing interests: The authors have declared
+that no competing interests exist.
+ 39]. This modeling approach has been used to gain insight into structure-function relation-
+ships in disease populations [40, 41], perform virtual lesioning or resection experiments [42–
+44], and assess the differential impact of stimulation to different brain regions [45, 46].
+Here, we use this data-driven modeling approach to investigate the interplay between struc-
+tural variation, brain activity, and task performance. Our computational model is built upon
+subject-specific connectomes that are combined with biologically informed Wilson-Cowan
+nonlinear oscillators (WCOs) [47, 48] to produce simulated patterns of personalized brain
+activity. Additionally, this controlled computational environment allows us to perform tar-
+geted stimulation experiments—motivated by actual laboratory experiments—and quantify
+the emerging neural activity patterns that represent both global brain network activation and
+task-specific local subnetwork activation. Using this model, we construct computational mea-
+sures in order to relate structure and individual performance variability across a cohort of ten
+healthy individuals who performed three language-demanding cognitive tasks before and after
+transcranial magnetic stimulation (TMS) [49] targeted at the left inferior frontal gyrus (L-IFG)
+of the brain. The performed tasks involved verb generation, sentence completion, and number
+reading, and are known to vary in their cognitive complexity [50, 51].
+Based upon the patterns of simulated brain activity driven by the structural networks in our
+model, we find that task performance can be correlated with either local or global circuitry
+depending on the complexity of the task. Further, we observe that, post experimentally applied
+TMS, the correlation between model output and task performance is weakened. Finally, we
+show that the eigenspectrum of the observed structural brain networks plays a key role in
+global brain dynamics which can additionally provide predictive insight into performance of
+some, but not all, tasks. Taken together, our results reveal that using personalized brain net-
+work models to simulate brain dynamics provides an important tool for studying and under-
+standing human performance in cognitively demanding tasks and represents an important
+step towards the development of personalized therapeutics.
+Results
+In order to assess the link between variability in brain connectivity, activity patterns, and
+behavior, we build data-driven personalized brain network models of ten individuals who per-
+formed three language-demanding cognitive tasks before and after TMS targeted at the L-IFG
+(see Materials and methods). Subject-specific anatomical connectivity was derived from DSI
+imaging data, combined with a brain parcellation scheme based on the Lausanne atlas [52]
+(Fig 1a). We studied two different resolutions scales of the Lausanne atlas that parcellate the
+brain into either 83 or 234 regions (see Material and methods). In the main text, we present
+our findings using the 234-region parcellation and include the 83-region results in the Sup-
+porting Information, as the findings were largely preserved across scales. In Fig 1b, we present
+the structural (anatomical) network of an individual as a weighted connectivity matrix whose
+entries represent the strength of the connection between two brain regions. The dynamics of
+each brain region are modeled using nonlinear Wilson-Cowan oscillators (WCOs), coupled
+through a subject-specific anatomical brain network (Materials and methods). A WCO is a
+biologically motivated model of local brain activity, developed to describe the mean behavior
+of small neuronal populations [47]. The model therefore simulates a specific individual’s spa-
+tiotemporal macro-level brain activity.
+By holding the mathematical modeling of regional brain dynamics constant across individu-
+als but allowing the underlying (subject-specific) structural connectivity matrix, A, to vary, the
+model provides a causal link between differences in the structural organization of the brain and
+differences in the resulting simulated brain dynamics. The global strength of the coupling
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+3 / 25
+ between different brain regions via A is controlled by a global coupling parameter (c5; Materials
+and methods). The dynamical state of the brain can be tuned by varying this parameter as
+shown in Fig 1c, which depicts the average excitatory dynamics as a function of global coupling.
+When the global coupling parameter exceeds a threshold value (cT
+5 ), the brain dynamics
+abruptly transition to an active state that is characterized by the oscillatory activity of Fig 1d.
+Mathematically, this equates to oscillators switching from hovering near a fixed point to jump-
+ing to a limit cycle. (See [45] for more details about this transition.) Previous work has shown
+that the computational model is particularly sensitive to the point at which model dynamics
+undergo this transition: the value of cT
+5 at which the transition takes places is subject-specific,
+and the inter-subject variability in cT
+5 is greater than that seen using anatomical networks
+derived from different scans of the same individual [45]. The transition value cT
+5 can be thought
+of as a proxy for the global excitability of the brain. Brains with a lower transition value require
+less external input (e.g. stimulation) to the system to enter the active state, whereas brains with
+Fig 1. Data-driven brain network models. (a) The brain connectivity used as a basis for the computational model is
+obtained by combining tractography estimates from diffusion spectrum imaging data of a specific individual’s brain
+and a parcellation of the brain into 234 regions. (b) The resulting anatomical connectivity matrix where entries indicate
+the density of connections between two brain regions. (c) The dynamic state of brain activity can be tuned by the global
+coupling parameter, c5. As this parameter crosses a threshold, a sudden transition to an excited state is observed as
+marked by the orange arrow. (d) Representative excitatory dynamics of selected brain regions in the excited state,
+demonstrating a rich spectrum of temporal activity that is driven by the underlying anatomical connectivity.
+https://doi.org/10.1371/journal.pcbi.1006487.g001
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+4 / 25
+ a higher transition value require greater external input to enter the active state. Here, we use
+this as a parameter to measure differences in global network dynamics between individuals.
+Individual variability: Model and experiments
+Because we are interested in linking variability in brain structure and behavior, we first mea-
+sured the extent of individual variability in anatomical connectivity, simulated brain activity,
+and task performance in our data set. Across our cohort of subjects, we observed measurable
+variability in anatomical network structure as seen in Fig 2a, which shows the standard devia-
+tion in edge weights between two brain regions, normalized by the mean edge weight. This
+structural variability is also manifested in the simulated brain activity depicted in Fig 2b and
+2c. We observe variability across individuals in the specific patterns of brain activity in the
+active state (Fig 2b) as well as in the transition values (cT
+5) (Fig 2c). Since the nonlinear WCOs
+are all identical in the model, these observed differences in simulated brain activity are a direct
+result of variation in the underlying anatomical connectivity. In Fig 2d we show the spatial
+map of the average regional variability in structural connectivity and functional activity across
+Fig 2. Assessing variability in structure, dynamics, and performance. (a) Variability in the connection strengths between pairs of brain regions
+across ten subjects, measured as the standard deviation of edge weights between brain regions across individuals, normalized by the mean of edge
+weights. Although there are few regions of low variability (blue), there are a significant number of regions with moderate to high variability
+(green to yellow). (b) Spatial patterns of excitatory activity vary across individuals due to regional variations in the structural connectivity
+between subjects. Each column represents the temporal average of the excitatory activity across brain regions for a given individual in the excited
+state and is unique in terms of the overall activity pattern. (c) The global coupling transition value (cT
+5 ) also varies across our cohort of ten
+individuals. (d) Spatial mapping of the average variability in structural connectivity and functional activity across individuals. (e) Cognitive task
+performance for the ten subjects was assessed by experimentally measuring the response times for three language-demanding tasks: verb
+generation (VG), sentence completion (SC), and number reading (NR), both before (filled symbols) and after (open symbols) a targeted
+transcranial magnetic stimulation (TMS) to the left-inferior frontal gyrus (L-IFG) of the brain.
+https://doi.org/10.1371/journal.pcbi.1006487.g002
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+5 / 25
+ individuals. Interestingly, we observe a diverse range of regional variation in functional
+dynamics that does not necessarily match the pattern or level of structural variation.
+Finally, we assessed the extent of variability in the cognitive performances of individuals
+across three language-demanding tasks: (i) verb-generation (VG); (ii) sentence-completion
+(SC); and (iii) number-reading (NR). Performance was measured as the median response time
+across multiple (~50) trials (see Materials and methods) and shows variability across both sub-
+jects and tasks (Fig 2e). Moreover, performances were altered after transcranial magnetic stim-
+ulation (TMS) was applied to the left inferior frontal gyrus (L-IFG). The L-IFG, also known as
+Broca’s area, is traditionally believed to play an important role in language comprehension and
+syntactic processing, and specifically in the selection and retrieval of words [53]. It is therefore
+expected that external stimulation to this region should affect task performance. However, it is
+important to note that while subject performance on a task did often change after TMS, we did
+not consistently observe an improvement (or degradation) in task performance across individ-
+uals, nor was the effect consistent between tasks within a given subject. This suggests that
+although the L-IFG plays an important role in the context of language comprehension, the
+actual cognitive response reflects contributions from a larger part of the brain network.
+Given the observed variability in the structural, dynamical, and behavioral aspects of our
+data, we next focused on assessing how this variability was related across these three domains.
+We therefore examined network features measured at both the global network level (using the
+entire brain network) and within task-specfic subnetworks that were selected to represent the
+specific circuitry involved in task completion and asked how these measures related to task
+performance.
+Global network features correlate with certain task performances
+We first examined the relationship between global network properties and task performance
+by estimating the correlation between global brain activation and task performance. For each
+subject, we measured the threshold value of the global coupling parameter (cT
+5) at which the
+individual’s brain transitions to the excited state, and we calculated the correlation between
+this value and their performance on each task (before the application of TMS). As seen in Fig 3
+and Table 1, we observed a significant positive correlation (r = 0.86, 90% CI [0.68 0.95],
+Fig 3. Correlation between model transition threshold and task performance. Task performance versus model
+transition values, cT
+5 , for three tasks: (a) verb generation (VG), (b) sentence completion (SC), and (c) number reading
+(NR). The red lines represent a linear fit to the data for visual guidance. The corresponding Pearson correlation
+coefficients are given in Table 1. There is a significant correlation between the global transition value and task
+performance for the SC task (r = 0.86, 90% CI [0.68 0.95], p = 0.001) that is preserved across the different scales of
+brain parcellation (S1 Fig and S1 Table).
+https://doi.org/10.1371/journal.pcbi.1006487.g003
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+6 / 25
+ p = 0.001) between model transition values and task performance in the sentence completion
+(SC) task. Thus for the SC task, individuals with a lower value of cT
+5 (more easily excitable
+brain) are likely to perform better (as measured through a short response time). However, we
+did not observe a significant correlation in the verb generation (VG) or number reading (NR)
+tasks, indicating that the performance of these tasks cannot be predicted by a global network
+property. To ensure that these results were dependent upon the organization of the subject-
+specific anatomical connectivity used as a basis for the computational model, for each individ-
+ual, we created randomized brain networks by preserving the distribution of edge weights but
+randomly reassigning connection strengths between brain regions (Materials and methods).
+We recalculated the cT
+5 values for simulations using these randomized connectivity matrices,
+but did not observe any significant correlations between transition values and task perfor-
+mance in this case.
+To further explore the link between global brain dynamics and behavior, we additionally
+assessed the relationship between specific patterns of brain activity and task performance.
+Since the L-IFG is involved in controlled language processing [54–56], one can argue that the
+pattern of brain synchronization as a result of targeted stimulation to the region might also be
+predictive of task performance. We therefore computationally stimulated the brain regions
+comprising the L-IFG (Fig 4a), and quantified how the stimulation spread throughout the
+global brain network (see Materials and methods for details). As shown in Fig 4a, computa-
+tional stimulation pushes the dynamics of the region into oscillatory activity which then drives
+the functional dynamics of other brain regions through the underlying structural connections.
+We measure the resulting pattern of brain activity by calculating the pairwise functional con-
+nectivity using the maximum normalized correlation between brain regions [45, 57, 58] (Mate-
+rials and methods). In Fig 4b, we show the spatial mapping of the variability in average
+functional connectivity across subjects (measured as the standard deviation divided by the
+mean) resulting from computational stimulation of the L-IFG, and in Fig 4c, we show the sub-
+ject-specific patterns of functional connectivity for three subjects. Due to the variability in the
+underlying anatomical connectivity matrices, the resulting patterns of functional connectivity
+differ between individuals. We measure the extent of the global spread of synchronization by
+calculating the functional effect [45] which measures the average value of synchronization
+across the entire brain (Materials and methods). Interestingly, unlike our observation with the
+Table 1. Correlations between model features and task performance.
+Model feature
+VG
+SC
+NR
+r
+p
+r
+p
+r
+p
+Transition value
+0.30
+0.39
+0.86�•
+0.001
+0.27
+0.45
+[-0.27, 0.80]
+[0.68, 0.95]
+[-0.52, 0.69]
+Functional effect (global brain)
+-0.04
+0.91
+0.39
+0.26
+0.23
+0.52
+[-0.52, 0.44]
+[-0.27, 0.80]
+[-0.31, 0.72]
+Functional effect (task circuit)
+0.42
+0.22
+0.73�
+0.017
+0.74�•
+0.016
+[0.12, 0.82]
+[0.01, 0.90]
+[0.20, 0.94]
+Functional effect (outside the task circuit)
+-0.06
+0.87
+0.38
+0.29
+0.18
+0.62
+[-0.54, 0.43]
+[-0.26, 0.79]
+[-0.35, 0.69]
+The variables r and p denote the Pearson correlation coefficient and associated p-value, respectively. The 90% confidence interval for r is reported below each
+correlation. Here a � denotes that the observed correlation is significant under FDR correction for multiple comparisons across tasks (for p < 0.05) and a • denotes a
+significant correlation across the two scales of the brain parcellation studied in this paper (S1 Table). VG = verb generation, SC = sentence completion, and
+NR = number reading.
+https://doi.org/10.1371/journal.pcbi.1006487.t001
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+7 / 25
+ global coupling parameter, the global functional effect does not show a significant correlation
+with task performance for any of the cognitive tasks (Table 1).
+Localized task-specific circuit features correlate with other task
+performance
+While we did observe a significant correlation between the global threshold value and task per-
+formance for the SC task, we saw no correlations between global brain dynamics and task per-
+formance in the remaining two tasks, and the global functional effect was not correlated with
+performance in any of the tasks. However, the three language tasks performed in this study dif-
+fer in semantic demands, and the absence of a significant correlation for the VG and NR tasks
+could be due to either a drastically different cognitive mechanism for performing these tasks,
+or the dependence of these tasks on a more localized brain circuit. To investigate the latter pos-
+sibility, we assessed the role of task-specific subnetworks in task performance.
+To construct a task dependent, spatially localized measure, we follow the work of Roux
+et al. [59] to identify the possible brain regions involved in reading alphabets and numbers.
+Roux et al. used intracranial direct cortical stimulation paired with behavioral measurements
+to spatially map the brain regions that were differentially involved in reading both alphabets
+and numbers. This approach provides a much more direct and causal form of evidence that
+implicates the role of specific brain regions in the behaviors of interest as compared to anatom-
+ical or functional networks based on task-related activity measured using fMRI, which are
+Fig 4. Effects of targeted stimulation. (a) The left-inferior frontal gyrus (L-IFG) is composed of four brain regions in the
+234-region parcellation scheme used in this study: pars orbitalis (POB), pars triangularis (PTA) and pars opercularis
+(POC, two regions). Computational stimulation of a single brain region pushes its dynamics into a limit cycle
+(oscillations). (b) Spatial mapping of the variability in functional connectivity across subjects after computational
+stimulation to the L-IFG. Variability is measured as the standard deviation in regional functional connectivity across
+subjects divided by mean. (c) Individual functional connectivity matrices for three subjects resulting from computational
+stimulation of the L-IFG. Note the variation in the observed connectivity patterns across subjects.
+https://doi.org/10.1371/journal.pcbi.1006487.g004
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+8 / 25
+ indirect measures of cognitive circuits. We mapped these regions to the Lausanne atlas and
+constructed two task circuits: one involved in VG and SC (alphabets-related, Fig 5a), and one
+involved in NR (number-related, Fig 5b). We found that these circuits are also consistent with
+other studies mapping brain regions involved in language processing [53, 60–62]. Note that
+both of these sub-networks are contained entirely in the left hemispheric language network.
+We then calculated the functional effect within these task circuits (averaging the functional
+connectivity values only within the subnetwork as opposed to the entire brain network as done
+previously) and correlated this local measure with task performances (Fig 5c–5e and Table 1).
+We observed a significant positive correlation between the task-specific functional effect and
+task performance for the NR task (r = 0.74, 90% CI [0.20 0.94], p = 0.016), indicating that per-
+formance on the NR task depends on the localized spread of activation throughout the task
+sub-network and is less dependent on the global brain network structure. Our results indicate
+that individuals with a lower functional effect (less synchronization within the task circuit)
+also have a lower response time (better performance). When synchronization within the task
+circuit is increased (a high functional effect), task performance degrades, suggesting that high
+levels of synchronized activity within the task circuit could potentially impede the ability of the
+circuit to perform localized computations necessary for task completion.
+Fig 5. Task-specific circuits. (a) Alphabet reading task circuit used in the analysis of VG and SC tasks. (b) Number
+reading task circuit used in the analysis of the NR task. Brain regions in the circuits are 1: pars orbitalis, 2: pars
+triangularis, 3: pars opercularis-1, 4: pars opercularis-2, 5: superiofrontal-9, 6: caudal middle frontal-1, 7: postcentral-7, 8-
+12: supramarginal, 13: inferioperietal-3, 14-15: fusiform-2 and 3, 16-17: inferio temporal-2 and 3, 18: temporal pole, 19-
+22: middle temporal, 23-27: superior temporal. (c)-(e)Task performance versus the functional effect within task-specific
+cirucuits for three tasks: (c) verb generation (VG), (d) sentence completion (SC), and (e) number reading (NR). The
+red lines represent a linear fit to the data for visual guidance. The corresponding Pearson correlation coefficients are
+given in Table 1. There is a significant correlation between the functional effect and task performance for the NR task
+(r = 0.74, 90% CI [0.20 0.94], p = 0.016) that is preserved across the different scales of brain parcellation (S1 Fig and S1
+Table).
+https://doi.org/10.1371/journal.pcbi.1006487.g005
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+9 / 25
+ If we compare the functional effect measured only within brain regions outside of the task
+circuit, the significant correlation with the NR task is lost (Table 1), indicating the specificity
+of the task circuit in the model. Although we also observed a significant correlation between
+the task-specific functional effect and task performance for the SC task, this result is driven by
+a single subject and does not hold if this subject is removed from the data set. Performing the
+analysis on a larger data set would therefore be necessary to confirm this finding for the SC
+task. No significant correlations were observed for the VG task.
+To validate the specificity of our selected task circuits, we constructed 10,000 random sub-
+networks by randomly selecting the same number of brain regions as in each task circuit and
+then calculated the functional effect within these random circuits after stimulating the L-IFG
+(Materials and methods). The randomized circuits had a variable degree of overlap with the
+actual task circuit (0 to 35%). We observed that only 1.8% of the randomly selected circuits
+gave significant correlations (r > 0.5 and p < 0.05) between the circuit-specific functional
+effect and task performance, which we estimate to be the false positive rate in our computa-
+tional predictions. This low error rate signifies that the observed significant correlation in the
+NR task is due to the selection of brain regions in the task-specific circuit.
+We also verified that the observed effects were related to our choice of stimulating the
+L-IFG as opposed to some other brain structure. We chose different sets of brain regions
+(equal in size to the number of brain regions that compose the L-IFG) that were randomly dis-
+tributed within the task circuit and applied targeted computational stimulation to these ran-
+domly selected regions. When randomly selected brain regions were stimulated, we did not
+observe a significant correlation between the task performance and functional effect, confirm-
+ing the importance of specifically targeting the L-IFG in our in silico experiments. Addition-
+ally, consistent with previous findings [45], we observed that the patterning of activation as a
+result of stimulation of randomly selected brain regions varied with the selection of brain
+regions and across subjects. These findings support the possibility that in the future our model-
+ing approach can be used to help design and optimize therapeutic strategies that use external
+activation such as TMS to treat neurological disorders [63].
+Correlating task performance post-TMS
+We also asked if our computational model correlated with individual performance after the
+application of experimentally applied TMS targeted at the L-IFG. The underlying mechanisms
+of how TMS affects the brain are not well understood, but it is believed that TMS locally influ-
+ences neuronal firing which can then propagate within the brain through inter-regional neuro-
+anatomical pathways [45, 64]. We therefore examined the correlation between model features
+and behavioral performance during the post-TMS task. As seen in Fig 6 and Table 2, while we
+still observe a positive correlation between the transition value and performance in the SC task
+(r = 0.68, 90% CI [0.32 0.87], p = 0.03) and between the functional effect within the task circuit
+and performance in the NR task (r = 0.63, 90% CI [-0.07 0.88], p = 0.05), in both cases, the
+strength of the correlation is decreased when compared to correlations with task performance
+before TMS. It should also be noted that these correlations exist across the two spatial scales of
+parcellation but their significance does not survive multiple comparison corrections. Specula-
+tively, the fact that the correlation strength is weakened post-TMS potentially reflects contribu-
+tions of noise to the system mediated through inhibitory stimulation to the L-IFG.
+Correlations with graph theoretical measures of network connectivity
+Finally, to be able to draw a direct connection between anatomical brain connectivity and
+behavior, we asked if the correlations observed in our computational model of brain dynamics
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+10 / 25
+ Fig 6. Post-TMS correlations between model features and task performance. (a-c) Task performance post-TMS
+versus the model transition value for three tasks: (a) verb generation (VG), (b) sentence completion (SC), and (c)
+number reading (NR). (d)-(f) Task performance post-TMS versus the functional effect within task-specific circuits for
+three tasks: (a) verb generation (VG), (b) sentence completion (SC), and (c) number reading (NR). The red lines
+represent a linear fit to the data for visual guidance. The corresponding Pearson correlation coefficients are given in
+Table 2. There is a significant correlation between the global transition value and task performance for the SC task
+(r = 0.68, 90% CI [0.32 0.87], p = 0.03) and between the functional effect and task performance of the NR task (r = 0.63,
+90% CI [-0.07 0.88], p = 0.05) that are preserved across the different scales of brain parcellation (S2 Fig and S2 Table)
+but do not survive multiple comparison corrections.
+https://doi.org/10.1371/journal.pcbi.1006487.g006
+Table 2. Correlations between post-TMS task performances and model features.
+Model feature
+VG
+SC
+NR
+r
+p
+r
+p
+r
+p
+Transition value
+0.35
+0.33
+0.68•
+0.03
+0.45
+0.20
+[0.01, 0.70]
+[0.32, 0.87]
+[0.01, 0.93]
+Functional effect (global brain)
+0.19
+0.59
+0.39
+0.27
+0.08
+0.82
+[-0.18, 0.63]
+[-0.22, 0.81]
+[-0.43, 0.57]
+Functional effect (task circuit)
+0.23
+0.52
+0.52
+0.12
+0.63•
+0.05
+[-0.38, 0.57]
+[-0.22, 0.79]
+[-0.07, 0.88]
+Functional effect (outside the task circuit)
+0.18
+0.62
+0.37
+0.29
+0.04
+0.91
+[-0.02, 0.71]
+[-0.23, 0.80]
+[-0.45, 0.54]
+The variables r and p denote the Pearson correlation coefficient and associated p-value, respectively. The 90% confidence interval for r is reported below each
+correlation. Here a • denotes a significant correlation across the two scales of the brain parcellation studied in this paper (S2 Table). VG = verb generation, SC = sentence
+completion, and NR = number reading.
+https://doi.org/10.1371/journal.pcbi.1006487.t002
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+11 / 25
+ could be revealed using only graph theoretical measures of network structure applied directly
+to the anatomical connectivity matrices alone (in the absence of model dynamics). We there-
+fore calculated three measures of network structure that have been shown to be related to the
+spread of synchronization in networks: the average degree, inverse spectral radius, and syn-
+chronizability (see Materials and methods). The average degree measures the average strength
+of connections per brain region, while the spectral radius and synchronizability are related to
+the eigenspectrum of the adjacency matrix or graph Laplacian respectively, and relate to the
+ease and extent to which the network is expected to synchronize under the assumption that
+regions behaved as oscillators.
+In Table 3, we report the Pearson correlation coefficients for these measures of network
+structure with task performance both before and after TMS was applied. Both the average
+degree and the inverse spectral radius show significant correlations with task performance for
+the SC task, and as observed earlier, show a decrease in their correlation magnitude after the
+application of TMS. Both of these measures are known to relate to the ease of global synchroni-
+zation in a network [65, 66], and therefore this finding is somewhat expected given our prior
+observations about cT
+5. Interestingly, we find that the synchronizability of the network does not
+correlate with performance of the SC task. Instead, this measure, which has also been shown to
+be more sensitive to changes in local network structure [67, 68], shows a correlation with per-
+formance of the NR task that increases after the application of TMS. However, this correlation
+is weaker than that observed with the local measurements of the functional effect within the
+task circuit reported earlier in Table 1.
+Discussion
+We presented a computational model of individualized brain dynamics that allows us to make
+predictions about cognitive task performance based on the variability of anatomical brain con-
+nectivity between people. By analyzing global model excitability and localized patterns in the
+spread of a targeted stimulation in our data-driven model, we explain individual variability in
+Table 3. Correlations between anatomical network features and task performance.
+Network feature
+Task performance
+VG
+SC
+NR
+r
+p
+r
+p
+r
+p
+Average degree
+Before-TMS
+-0.25
+0.48
+-0.84�•
+0.002
+-0.10
+0.78
+[-0.73, 0.33]
+[-0.96, -0.53]
+[-0.65, 0.69]
+Post-TMS
+-0.14
+0.70
+-0.65•
+0.04
+-0.26
+0.47
+[-0.64, 0.43]
+[-0.87, -0.18]
+[-0.90, 0.41]
+Inverse spectral radius
+Before-TMS
+0.29
+0.42
+0.87�•
+0.001
+0.31
+0.38
+[-0.47, 0.69
+[0.71, 0.96]
+[-0.47, 0.69]
+Post-TMS
+0.36
+0.31
+0.70•
+0.02
+0.48
+0.16
+[0.05, 0.68]
+[0.39, 0.88]
+[0.12, 0.92]
+Synchronizability
+Before-TMS
+-0.02
+0.96
+0.58
+0.08
+0.68
+0.03
+[-0.57, 0.77]
+[0.20, 0.83]
+[0.32, 0.93]
+Post-TMS
+0.51
+0.13
+0.64
+0.05
+0.73
+0.02
+[0.13, 0.83]
+[0.21, 0.89]
+[0.56, 0.94]
+The variables r and p denote the Pearson correlation coefficient and associated p-value, respectively. The 90% confidence interval for r is reported below each
+correlation. Here a � denotes that the observed correlation is significant under FDR correction for multiple comparisons across tasks (for p < 0.05) and a • denotes a
+significant correlation across the two scales of the brain parcellation studied in this paper (S3 Table). VG = verb generation, SC = sentence completion, and
+NR = number reading.
+https://doi.org/10.1371/journal.pcbi.1006487.t003
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+12 / 25
+ the performance of cognitively demanding tasks and establish the significant role of brain net-
+work organization in driving individual behavior.
+We examined three cognitive tasks and found that different measures of model dynamics
+gave rise to correlations with task performance. Our results indicate that as the complexity of
+the cognitive task increases, a larger portion of the brain network, including interhemispheric
+connections, contribute in determining the overall response. The SC task, which has additional
+language processing demands compared to the other two tasks, requires understanding differ-
+ent words, constructing the overall meaning of the sentence, and determining the appropriate
+word to fit in the sentence. For this cognitively demanding task, a global parameter of the
+model, cT
+5, which could be related to the overall excitability of the network, correlates with indi-
+vidual task performance. We also observed significant correlations between global network
+properties of the anatomical connectivity matrices (specifically the average degree and inverse
+spectral radius) and performance of the SC task. The fact that these global measures are corre-
+lated with performance in the SC task but not the other two tasks possibly reflects the global
+nature and complexity of the network of brain regions required to complete a sentence [69].
+On the other hand, performances on the NR task, which has been established to be more
+localized in terms of the brain regions involved (i.e., involves the activation of only a sub-net-
+work of the brain as opposed to the entire brain network) [59], can be predicted by tracking
+the spread of a targeted stimulation within a task-specific circuit in the brain. Further, we
+observed that a higher functional effect of the stimulation correlates with a higher response
+time (poorer performance) on the NR task. In our model, a high functional effect indicates a
+high degree of synchronization within the task circuit. This heightened level of synchroniza-
+tion could effectively constrain the degrees of freedom for brain circuit activity and computa-
+tion, resulting in poorer task performance. Better task performance might be achieved through
+an integration and segregation mechanism which allows brain regions to mutually communi-
+cate but does not require synchrony over a longer time scale. Such a modular functional orga-
+nization has been associated with efficient learning of motor skills [5].
+Interestingly, no tested measures of model dynamics or structural network features were
+able to explain the performance of the VG task. It is likely that VG requires a different coupling
+mechanism of global and local dynamics which is not captured in the model features con-
+structed here. For example, while verb generation and sentence completion are both “open
+ended” language tasks, SC requires our ability to accumulate the probability of a response over
+an entire sentence, whereas VG is cued by a single word. Thus, even if both involve the L-IFG,
+SC might recruit quite a few more distributed resources, while VG might require more focal
+resources. It is possible that our selection of regions comprising the language task circuit was
+not sensitive enough to these focal areas. We propose that this problem could potentially be
+resolved by a more extensive research effort that combines experimental and theoretical
+approaches from cognitive and network neuroscience in order to better understand the spe-
+cific circuitry involved in task completion.
+A somewhat surprising finding was that the application of TMS did not have a directional
+effect; task performance both improved and degraded post-TMS. One might ask if this could
+be interpreted as a regression to the mean. However, here, our primary focus for behavioral
+analyses was on the correlation between inter-subject differences in response times and the
+simulated dynamic measures. We found evidence that our measures of simulated network
+excitability independently correlated with behavior before and after stimulation. That is, the
+relationship between behavior and our excitability measures cannot be explained by regression
+to the mean because they do not involve a correlation with changes in behavior over time,
+which would indeed be potentially susceptible to regression to the mean. However, it is true
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+13 / 25
+ that predicting variability in change scores where a brain stimulation effect is strong across
+subjects is an important future direction.
+A strength of our modeling approach is that the construction of localized task circuits is not
+limited to those involved in the tasks studied here, and could easily be extended to represent dif-
+ferent brain circuitry. Ultimately, our model magnifies the effects of differences in the observed
+anatomical brain structure, and it is not always feasible to measure differences in network
+structure in terms of general network statistics. While some network statistics also provided
+predictive power of task performance, the strength of the correlation was only comparable for
+measures of global network structure, and our computational model can generate measures of
+structure and dynamics specific to the task that is being performed. We also note that while in
+the SC task we saw correlations between global measures of network structure such as the aver-
+age degree and inverse spectral radius, we did not observe consistently significant correlations
+between measures of network structure and the NR task; correlations between synchronizability
+and NR task performance existed only at the 234-region scale and did not survive multiple com-
+parison corrections. This suggests that for tasks that invoke local computations involving spe-
+cific circuitry, generic measures of network structure might not be sensitive to anatomical
+variations in the local circuitry. However, within the modeling framework presented here, we
+are able to define task-specific subnetworks and examine the patterns of brain activity within
+these local circuits, making the use of computational modeling preferable to assess potential
+relationships between variability in individual brain structure and task performance.
+It should also be noted that the functional measures examined here (for both global and
+task circuit specific calculations) involved measuring the spread of synchronization after
+computational stimulation of the L-IFG. The choice to stimulate the L-IFG represents essential
+a priori knowledge from cognitive neuroscience studies, and stimulating randomly chosen sets
+of brain regions within the task circuits did not produce significant correlations with task per-
+formances. In other paradigms, one might prefer to study the effects of stimulation to a differ-
+ent brain region, or to compare the effects of applying stimulation to multiple different brain
+regions. In each scenario, the exact design of the appropriate computational experiment will
+depend on the cognitive question at hand and the type of experimental data with which one
+wishes to compare model outputs. The ability to integrate knowledge from cognitive neurosci-
+ence into computational experiments represents a strength of our data-driven modeling
+approach, as it makes the model flexible and opens the door to studies across a range of cogni-
+tive paradigms. As stimulation strategies are increasingly being used to treat neurological dis-
+orders, we hope that our modeling framework can guide the design, personalization, and
+understanding of such treatment strategies.
+Although the current study was constrained by its small subject population size, it is
+encouraging that despite this limitation, we were still able to observe significant correlations
+between model features and certain task performance. These findings should therefore serve
+as a proof of principle study to promote the use of similar data-driven modeling approaches in
+larger data sets with more subjects and a higher diversity of task conditions. The use of person-
+alized brain network models will serve as an increasingly valuable tool to establish explicit
+links between brain connectivity, dynamics, and behavior, and to develop personalized thera-
+peutic strategies.
+Materials and methods
+Ethics statement
+All procedures were approved in a convened review by the University of Pennsylvania’s
+Institutional Review Board and were carried out in accordance with the guidelines of the
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+14 / 25
+ Institutional Review Board/Human Subjects Committee, University of Pennsylvania. All par-
+ticipants volunteered with informed consent in writing prior to data collection.
+Subjects and cognitive tasks
+Ten healthy individuals (mean age = 25.4, St.D. = 4.5, 6 female) from a larger neuroimaging
+study [70] returned to participate in the present study. Participants performed two open-
+ended language tasks and one closed-ended number naming task. The language tasks
+included a verb generation task [50] and a sentence completion task [51]. For the verb gener-
+ation task, subjects were instructed to generate the first verb that came to mind when pre-
+sented with a noun stimulus (e.g., ‘cat’). The verb could be either something that the noun
+does or something that can be done with the noun. Response times (RTs) were collected
+from the onset of the noun cue to the onset of the verb response. For the sentence comple-
+tion task, subjects were presented with a sentence, for example “They left the dirty dishes in
+the —–?”, and were instructed to generate a single word that appropriately completes the
+sentence, such as ‘sink’. Words in the sentences were presented serially in 1 s segments con-
+sisting of one or two words. RTs were computed as the latency between the onset of the last
+segment, which always contained two words (i.e., a word and an underline), and the onset of
+the participant’s response. For all items in the sentence completion task, items in the high vs.
+low selection demand conditions were matched on retrieval demands (association strength)
+[51]. For both language tasks, each trial began with the presentation of a fixation point (+)
+for 500 ms, followed by the presentation of the target stimulus, which remained on the
+screen for 10 s until the subject made a response. Subjects were given an example and five
+practice trials in the first administration of each language task (i.e., before TMS), and were
+reminded of the instructions before performing the task a second time (i.e., after TMS). In
+each of the before and after TMS conditions, subjects completed 50 trials for a total of 100
+trials.
+In the number reading task, participants produced the English names for strings of Arabic
+numerals presented on the screen. On each trial, a randomized number (from tens of thou-
+sands to millions; e.g., 56395, 614592, 7246856) was presented in black text on a white back-
+ground. The numbers were uniformly distributed over three lengths (17 per length for each
+task administration). The position of items on the screen was randomized between the center,
+left, and right of the screen to reduce the availability of visual cues to number length and syntax
+[50]. RTs were collected from the onset of the stimulus presentations to the onset of the sub-
+ject’s response. The number appeared in gray following the detection of a response (i.e., voice
+key trigger), and remained on the screen thereafter to reduce the working memory demands
+required for remembering the digit string. At the start of the experiment, subjects performed
+50 trials of the number naming task to account for initial learning effects [50]. Prior to per-
+forming the task for the first time, subjects were given an example and five practice trials, and
+were later reminded of the instructions before performing the task a second (i.e., before TMS)
+and a third (i.e., after TMS) time. In each of the before and after TMS conditions, subjects
+completed 51 trials for a total of 102 experimental trials. The items for the verb generation task
+were identical to those used in [71] and the items for the sentence completion task were those
+from [72]. The difficulty of items was sampled to cover a distribution of values computed via
+latent semantic analysis (LSA) applied to corpus data.
+Verbal responses for all tasks were collected from a computer headset microphone. The
+microphone was calibrated to reduce sensitivity to environment background noise prior to the
+collection of data for each session such that the recording software was not triggered without
+clear verbalizations. List order (before or after TMS) was counterbalanced across participants.
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+15 / 25
+ Item presentation order within each task was fully randomized across participants. Task per-
+formance was assessed based on the subject’s median response time across all the trials.
+Experimental design
+A schematic of the experimental design can be seen in Fig 7. Subjects performed the verb gen-
+eration, sentence completion, and number reading tasks in a randomized order across sub-
+jects. Then, the subjects received 40s of continuous theta burst stimulation. Finally, the
+subjects performed alternate difficulty-matched forms of each task (i.e., matched distributions
+of association strengths and entropy values across items for the sentence completion and verb
+generation task, and matched distributions of number lengths in the number reading task)
+after stimulation in the same order as before stimulation.
+Transcranial magnetic stimulation
+The Brainsight system (Rogue Research, Montreal) was used to co-register MRI data with the
+location of the subject and the TMS coil. The stimulation site was defined as the posterior
+extent of the pars triangularis in each individual subject’s registered T1 image. A Magstim
+Super Rapid2 Plus1 stimulator (Magstim; Whitland, UK) was used to deliver continuous theta
+burst stimulation (cTBS) via a 70 mm diameter figure-eight coil. cTBS was delivered at 80% of
+each participant’s active motor threshold [73]. Each participant’s threshold was determined
+prior to the start of the experimental session using a standard up-down staircase procedure
+with stimulation to the motor cortex [M1]. The measured thresholds (given in units measured
+as the percentage of machine output from the Magstim device) for the 10 participants were 68,
+60, 46, 57, 37, 36, 44, 39, 46, and 65, respectively.
+Human DSI data acquisition and preprocessing
+Diffusion spectrum images (DSI) were acquired for a total of 10 subjects along with a
+T1-weighted anatomical scan at each scanning session, in line with previous work [64]. DSI
+scans sampled 257 directions using a Q5 half-shell acquisition scheme with a maximum b-
+value of 5,000 and an isotropic voxel size of 2.4 mm. We utilized an axial acquisition with the
+following parameters: repetition time (TR) = 5 s, echo time (TE) = 138 ms, 52 slices, field of
+view (FoV) (231, 231, 125 mm). DSI data were reconstructed in DTI Studio (www.dsi-studio.
+labsolver.org) using q-space diffeomorphic reconstruction (QSDR) [74]. QSDR first recon-
+structs diffusion-weighted images in native space and computes the quantitative anisotropy
+(QA) in each voxel. These QA values are used to warp the brain to a template QA volume in
+Montreal Neurological Institute (MNI) space using the statistical parametric mapping (SPM)
+nonlinear registration algorithm. Once in MNI space, spin density functions were again recon-
+structed with a mean diffusion distance of 1.25 mm using three fiber orientations per voxel.
+Fiber tracking was performed in DSI Studio with an angular cutoff of 35˚, step size of 1.0 mm,
+minimum length of 10 mm, spin density function smoothing of 0.0, maximum length of 400
+mm and a QA threshold determined by DWI signal in the colony-stimulating factor.
+Fig 7. Experimental timeline. Tasks were performed in a randomized order across subjects.
+https://doi.org/10.1371/journal.pcbi.1006487.g007
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+16 / 25
+ Deterministic fiber tracking using a modified FACT algorithm was performed until 1,000,000
+streamlines were reconstructed for each individual.
+Anatomical (T1) scans were segmented using FreeSurfer [75] and parcellated using the con-
+nectome mapping toolkit [76]. We studied two different scales of regional parcellation (n = 83
+or n = 234 brain regions) which were registered to the B0 volume from each subject’s DSI data.
+The B0 to MNI voxel mapping produced via QSDR was used to map region labels from native
+space to MNI coordinates. To extend region labels through the grey-white matter interface,
+the atlas was dilated by 4 mm [77]. Dilation was accomplished by filling non-labelled voxels
+with the statistical mode of their neighbors’ labels. In the event of a tie, one of the modes was
+arbitrarily selected. Each streamline was labeled according to its terminal region pair.
+Construction of anatomical brain networks
+To construct the subject-specific anatomical connectivity networks each brain region was rep-
+resented as a network node. A list of brain regions included in our study is given in S4 Table
+for both the 83-region and 234-region parcellations. As in prior studies, we define pairwise
+connection weights between nodes based on the number of streamlines connecting brain
+regions and normalized by the sum of the volumes of the nodes [45, 52]. This procedure results
+in a sparse, weighted, undirected structural brain network for each subject (N = 10), where net-
+work connections represent the density of white matter tracts between brain regions (Fig 1b).
+Computational model of brain dynamics
+In our data-driven network model, regional brain dynamics are given by Wilson-Cowan oscil-
+lators [45, 47]. In this biologically motivated model of neuronal populations, the fraction of
+excitatory and inhibitory neurons active at time t in the ith brain region are denoted by Ei(t)
+and Ii(t) respectively, and their temporal dynamics are given by:
+t dEi
+dt ¼ � EiðtÞ þ ðSEm � EiðtÞÞSE
+�
+c1EiðtÞ � c2IiðtÞ
+þc5
+X
+j
+AijEjðt � t
+ij
+dÞ þ PiðtÞ
+�
+þ swiðtÞ;
+ð1Þ
+t dIi
+dt ¼ � IiðtÞ þ ðSIm � IiðtÞÞSI
+�
+c3EiðtÞ � c4IiðtÞ
+þc6
+X
+j
+AijIjðt � t
+ij
+dÞ
+�
+þ sviðtÞ;
+ð2Þ
+where
+SE;IðxÞ ¼
+1
+1 þ e� aE;Iðx� yE;IÞ �
+1
+1 þ eaE;IyE;I :
+ð3Þ
+We note that Aij is an element of the subject-specific coupling matrix, A, whose value is the
+connection strength between brain regions i and j as determined from DSI data (see above).
+The global strength of coupling between brain regions is tuned by excitatory and inhibitory
+coupling parameters c5 and c6 respectively. We fix c6 = c5/4, representing the approximate ratio
+of excitatory to inhibitory coupling. Pi(t) represents the external inputs to excitatory state
+activity and is used to perform computational stimulation experiments (see below). The
+parameter t
+ij
+d represents the communication delay between regions i and j. If the spatial
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+17 / 25
+ distance between regions i and j is dij, t
+ij
+d ¼ dij=td, where td = 10m/s is the signal transmission
+velocity. Additive noise is input to the system through the parameters wi(t) and vi(t) which are
+derived from a normal distribution and σ = 10−5. Other constants in the model are biologically
+derived: c1 = 16, c2 = 12, c3 = 15, c4 = 3, aE = 1.3, aI = 2, θE = 4, θI = 3.7, τ = 8 as described in ref-
+erences [45, 47].
+To numerically simulate the dynamics of the system we use a second order Runge Kutta
+method with step size 0.1 and initial conditions Ei(0) = Ii(0) = 0.1. All analysis is performed
+after allowing the system to stabilize for 1s.
+Assessing individual variability
+In order to calculate the model transition values for each individual, we ran 1s simulations
+(after allowing the system to stabilize) for a range of c5 parameters (0.05 � c5 � 0.25, with a
+step-size of 0.001) in which no external input was applied (P = 0). The average excitatory activ-
+ity was recorded for each region as a function of c5 as shown in Fig 1c. The value of c5 at which
+we observed a sudden increase in the average activity (marked by an arrow in Fig 1c), was
+identified as the transition value, cT
+5.
+Structural variability was measured by calculating the standard deviation of a given connec-
+tion strength Aij between brain regions i and j for all the subjects and then normalizing by the
+average connection strength, <Aij>. In Fig 2d we show the regional average value of the struc-
+tural variability across individuals. Similarly, the average functional variability, as also shown
+in Fig 2d, was estimated for brain regions by calculating the standard deviation of the excit-
+atory activity of a given brain region Ei across individuals and then normalizing by the average
+excitatory activity of that region across individuals.
+In Fig 4b, the variability in regional functional connectivity is calculated as the standard
+deviation of the average regional functional connectivity across individuals divided by the
+regional mean of functional connectivity across individuals.
+Targeted computational activation
+To activate (stimulate) a particular brain region, we applied a constant external input Pi = 1.15
+which drives the regional activity into a limit cycle as shown in Fig 4b. Before targeted activa-
+tion, the global coupling parameter c5 was fixed just below its transition value cT
+5 (which differs
+between subjects) to perturb the system in a state with maximum sensitivity for perturbations.
+When stimulating the L-IFG, we simultaneously activated four brain regions (pars orbitalis
+(POB), pars triangularis (PTA) and pars opercularis (POC, two regions), Fig 4a) by applying an
+external input of P = 1.15.
+Functional connectivity and functional effect of stimulation
+To quantify the spread of computational stimulation, functional connectivity was determined
+by calculating the pairwise maximum normalized cross-correlation [57, 58] between the excit-
+atory activity Ei(t) and Ej(t), for brain regions i and j. We used a window size of 1s and calcu-
+lated correlations over a maximum lag of 250ms.
+In order to quantify the functional effect of stimulation, we considered the regional dynam-
+ics within a window of 2s once the system is stabilized after the initial transient period. The
+system was first allowed to evolve without any external input (Pi = 0) for 1s and then an exter-
+nal input of Pi = 1.15 was applied for 1s to the set of brain regions selected for activation or
+stimulation. Functional connectivity was calculated separately for the stimulation-free period
+and the period of stimulation. We then calculated the difference between the pairwise values of
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+18 / 25
+ functional connectivity measured during and before stimulation, resulting in a matrix that
+describes the pairwise changes in functional connectivity resulting from the stimulation. The
+functional effect of stimulation [45] was then calculated using this matrix either globally by
+averaging over the entire matrix, or within a task circuit by averaging within the task circuit,
+or outside of a task circuit by averaging over regions outside of the task circuit.
+Defining task circuits
+To construct a task dependent localized measure, we followed the work of Roux et al. [59] to
+identify the possible brain regions involved in reading alphabets and numbers. We extended
+their findings to propose that the brain regions involved in reading alphabets contribute
+towards performing VG and SC tasks, and the brain regions involved in reading numbers con-
+tribute towards performing the NR task. We mapped these regions to the Lausanne atlas and
+constructed possible task circuits involved in VG and SC (alphabets-related, Fig 5a), and NR
+(number-related, Fig 5b). These circuits are also consistent with other studies mapping brain
+regions involved in language processing [53, 60–62].
+Randomizing network structure and stimulation effect
+To assess the effect of global network organization, we repeated our entire computational anal-
+ysis with randomized anatomical connectivity matrices. Anatomical connectivity matrices
+were randomized separately for each individual in order to alter the original brain network
+organization. Here, we preserved the overall connectivity distribution but randomly reas-
+signed connection strength values to each pair of the brain regions from this distribution.
+To test the specificity of our results to the choice of regions comprising the task circuit, we
+constructed 10, 000 sub-networks by randomly picking the same number of brain regions as
+in the NR circuit (22) from all of the 234 brain regions. We then stimulated the L-IFG and cal-
+culated the functional effect within these randomly constructed sub-networks for each individ-
+ual. These sub-networks had varying degree of overlap with the actual task circuit, ranging
+from 0 to 35%. We observed that only 1.8% of the random sub-networks produced a signifi-
+cant correlation between the localized functional effect and task performance with r > 0.5 and
+p < 0.05, indicating that our results are indeed related to the specific construction of the task
+circuit.
+In order to assess the importance of stimulating the L-IFG for the cognitive tasks chosen in
+this particular work, we compared our findings with those when stimulation was applied to a
+group of regions randomly chosen (under spatial constraints) within the actual task circuits
+with a regional brain volume equivalent to L-IFG (4 brain regions). The 4 brain regions were
+chosen such that they formed a continuous spatial volume within the brain. We could identify
+7 such volumes within the task circuits that we constructed, and used these 7 alternate stimula-
+tion sites to assess the specificity of our findings to the choice of stimulation site. The model
+did not produce significant correlations when any of these 7 volumes were stimulated, indicat-
+ing that the model is indeed sensitive to the choice of stimulation site.
+Confidence intervals and multiple comparison testing
+In order to calculate 90% confidence intervals of the Pearson’s correlation coefficient, r, we
+bootstrapped each sample 5000 times (with replacements). We used the resulting distribution
+of r values to obtain the 0.05 and 0.95 quantiles.
+We tested the significance of correlations under multiple comparison corrections by apply-
+ing the false discovery rate (FDR) correction to p-values across tasks. Correlations were
+deemed to be significant under multiple comparisons if the corrected p-value was less than
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+19 / 25
+ 0.05. In all tables throughout the text, we report original (uncorrected) p-values, and indicate
+whether or not the findings remained significant as a result of applying the FDR correction.
+Network statistics
+We calculated network statistics for each subject using the structural matrices derived
+from their DSI data. The weighted degree centrality, ki, for a given region i is defined as
+ki ¼ P234
+j¼1 Aij [78]. The average across the degree centralities of all network nodes was used to
+obtain the average degree of a given subject. The spectral radius, Sr, is given by the maximum
+eigenvalue of the connectivity matrix A, Sr = λ|Max, and is a global measure of network struc-
+ture that is related to the spread of synchronization in a network [65, 66]. Synchronizability, S,
+is defined as, S ¼
+lL
+2
+lL
+Max, where lL
+2 and lL
+Max denote the second smallest and the largest eigenvalue
+of the Laplacian matrix L (L = D − A, where D is the degree matrix of A) [67, 68].
+Supporting information
+S1 Fig. Correlations between model features and task performance for the 83-region par-
+cellation. Task performance versus model features for three tasks: (a,d) verb generation (VG),
+(b,e) sentence completion (SC), and (c,f) number reading (NR). Model features are calculated
+for the 83-region scale of parcellation. (a-c) Correlations between the global transition value
+and task performance for comparison with the 234-region scale shown in Fig 3. (d-e) Correla-
+tions between the functional effect within the task-specific circuits and task performance for
+comparison with the 234-region scale shown in Fig 5. The red lines represent a linear fit to the
+data for visual guidance. The corresponding Pearson correlation coefficients are given in S1
+Table. There is a significant correlation between the transition value and task performance for
+the SC task (panel b), and functional effect and task performance for the NR task (panel e).
+(EPS)
+S2 Fig. Post-TMS correlations between model features and task performance for the
+83-region parcellation. Post-TMS task performance versus model features for three tasks: (a,
+d) verb generation (VG), (b,e) sentence completion (SC), and (c,f) number reading (NR).
+Model features are calculated for the 83-region scale of parcellation. (a-c) Correlations
+between the global transition value and task performance, and (d-e) correlations between the
+functional effect within the task-specific circuits and task performance for comparison with
+the 234-region scale shown in Fig 6. The red lines represent a linear fit to the data for visual
+guidance. The corresponding Pearson correlation coefficients are given in S2 Table. We
+observe somewhat significant correlations between the transition value and task performance
+for the SC task, and functional effect and task performance for the NR task.
+(EPS)
+S1 Table. Correlations between model features and task performance for the 83-region
+parcellation. The variables r and p denote the Pearson correlation coefficient and associated
+p-value, respectively. The 90% confidence interval for r is reported below each correlation.
+Here a � denotes that the observed correlation is significant under FDR correction for multiple
+comparisons across tasks (for p < 0.05) and a • denotes a significant correlation across the two
+scales of the brain parcellation studied in this paper. VG = verb generation, SC = sentence
+completion, and NR = number reading.
+(DOCX)
+S2 Table. Post-TMS correlations between model features and task performance for the
+83-region parcellation. The variables r and p denote the Pearson correlation coefficient and
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+20 / 25
+ associated p-value, respectively. The 90% confidence interval for r is reported below each cor-
+relation. Here a � denotes that the observed correlation is significant under FDR correction for
+multiple comparisons across tasks (for p < 0.05) and a • denotes significant correlation across
+the two scales of the brain parcellation studied in this paper. VG = verb generation, SC = sen-
+tence completion, and NR = number reading.
+(DOCX)
+S3 Table. Correlations between anatomical network features and task performance for the
+83-region parcellation. The variables r and p denote the Pearson correlation coefficient and
+associated p-value, respectively. The 90% confidence interval for r is reported below each cor-
+relation. Here a � denotes that the observed correlation is significant under FDR correction for
+multiple comparisons across tasks (for p < 0.05) and a • denotes a significant correlation across
+the two scales of the brain parcellation studied in this paper. VG = verb generation,
+SC = sentence completion, and NR = number reading.
+(DOCX)
+S4 Table. Anatomical brain regions. A list of anatomical regions used to construct anatomical
+brain networks. Matrix indices of a given anatomical region are indicated for both of the reso-
+lution scales used (83 or 234 regions).
+(DOCX)
+Author Contributions
+Conceptualization: Kanika Bansal, John D. Medaglia, Jean M. Vettel, Sarah F. Muldoon.
+Formal analysis: Kanika Bansal.
+Funding acquisition: John D. Medaglia, Danielle S. Bassett, Jean M. Vettel, Sarah F. Muldoon.
+Resources: John D. Medaglia, Danielle S. Bassett, Jean M. Vettel, Sarah F. Muldoon.
+Supervision: Jean M. Vettel, Sarah F. Muldoon.
+Writing – original draft: Kanika Bansal, Sarah F. Muldoon.
+Writing – review & editing: Kanika Bansal, John D. Medaglia, Danielle S. Bassett, Jean M.
+Vettel, Sarah F. Muldoon.
+References
+1.
+Mcintosh A. Mapping cognition to the brain through neural interactions. memory. 1999; 7:523–548.
+https://doi.org/10.1080/096582199387733 PMID: 10659085
+2.
+Misic B, Sporns O. From regions to connections and networks: new bridges between brain and behav-
+ior. Current Opinion in Neurobiology. 2016; 6:1–7. https://doi.org/10.1016/j.conb.2016.05.003
+3.
+Bressler S, Menon V. Large scale brain networks in cognition: emerging methods and principles. Trends
+Cogn Sci. 2010; 14:277–290. https://doi.org/10.1016/j.tics.2010.04.004 PMID: 20493761
+4.
+Zatorre RJ, Fields RD, H JB. Plasticity in gray and white: neuroimaging changes in brain structure dur-
+ing learning. Nat Neurosci. 2012; 15(4):528–536. https://doi.org/10.1038/nn.3045 PMID: 22426254
+5.
+Bassett DS, Wymbs NF, Porter MA, Mucha PJ, Carlsona JM, Grafton ST. Dynamic reconfiguration of
+human brain networks during learning. Proc Nat Acad Sci. 2011; 108(18):7641–7646. https://doi.org/
+10.1073/pnas.1018985108 PMID: 21502525
+6.
+Zacks JM, Speer NK, Vettel JM, Jacoby LL. Event understanding and memory in healthy aging and
+dementia of the Alzheimer type. Psychology and Aging. 2006; 21(3):466–482. https://doi.org/10.1037/
+0882-7974.21.3.466 PMID: 16953710
+7.
+Nestor A, Vettel JM, Tarr MJ. Task-Specific Codes for Face Recognition: How they Shape the Neural
+Representation of Features for Detection and Individuation. PLOS ONE. 2009; 3(12):1–11.
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+21 / 25
+ 8.
+Telesford QK, Lynall ME, Vettel J, Miller MB, Grafton ST, Bassett DS. Detection of functional brain net-
+work reconfiguration during task-driven cognitive states. NeuroImage. 2016; 142:198–210. https://doi.
+org/10.1016/j.neuroimage.2016.05.078 PMID: 27261162
+9.
+Mueller S, Wang D, Fox MD, Thomas Yeo BT, Sepulcre J, Sabuncu MR, et al. Individual Variability in
+Functional Connectivity Architecture of the Human Brain. Neuron. 2013; 77(3):586–595. https://doi.org/
+10.1016/j.neuron.2012.12.028 PMID: 23395382
+10.
+Schmaelzle R, Brook O’Donnell M, Garcia JO, Cascio CN, Bayer J, Bassett DS, et al. Brain connectivity
+dynamics during social interaction reflect social network structure. Proceedings of the National Acad-
+emy of Sciences. 2017; 114(20):5153–5158. https://doi.org/10.1073/pnas.1616130114
+11.
+Telesford QK, Ashourvan A, Wymbs NF, Grafton ST, Vettel JM, Bassett DS. Cohesive network recon-
+figuration accompanies extended training. Human Brain Mapping. 2017; 38(9):4744–4759. https://doi.
+org/10.1002/hbm.23699 PMID: 28646563
+12.
+Garcia JO, Brooks J, Kerick S, Johnson T, Mullen TR, Vettel JM. Estimating direction in brain-behavior
+interactions: Proactive and reactive brain states in driving. NeuroImage. 2017; 150:239–249. https://doi.
+org/10.1016/j.neuroimage.2017.02.057 PMID: 28238938
+13.
+Nestor A, Vettel JM, Tarr MJ. Internal representations for face detection: An application of noise-based
+image classification to BOLD responses. Human Brain Mapping. 2013; 34(11):3101–3115. https://doi.
+org/10.1002/hbm.22128 PMID: 22711230
+14.
+Roberts R, Anderson E, Husain M. White Matter Microstructure and Cognitive Function. Neuroscientist.
+2013; 19(1):8–15. https://doi.org/10.1177/1073858411421218 PMID: 22020545
+15.
+Reijmer Y, Leemans A, Brunde lM, Kappelle L, Biessels G. Disruption of the Cerebral White Matter Net-
+work Is Related to Slowing of Information Processing Speed in Patients With Type 2 Diabetes. Diabe-
+tes. 2013; 62(6):2112–2115. https://doi.org/10.2337/db12-1644 PMID: 23349494
+16.
+Vettel JM, Cooper N, Garcia JO, Yeh F, Verstynen TD. White Matter Tractography and Diffusion-
+Weighted Imaging. eLS. 2017; p. 1–9.
+17.
+Bassett D, Bullmore E. Human brain networks in health and disease. Curr Opin Neurol. 2009; 22(4):340–
+347. https://doi.org/10.1097/WCO.0b013e32832d93dd PMID: 19494774
+18.
+van den Heuvel MP, O S, G C, et al. Abnormal rich club organization and functional brain dynamics in
+schizophrenia. JAMA Psychiatry. 2013; 70(8):783–792. https://doi.org/10.1001/jamapsychiatry.2013.
+1328 PMID: 23739835
+19.
+Gong Q, He Y. Depression, Neuroimaging and Connectomics: A Selective Overview. Biological Psychi-
+atry. 2015; 77(3):223–235. https://doi.org/10.1016/j.biopsych.2014.08.009 PMID: 25444171
+20.
+Bassett DS, Brown JA, Deshpande V, Carlson JM, Grafton ST. Conserved and variable architecture of
+human white matter connectivity. NeuroImage. 2011; 54(2):1262–1279. https://doi.org/10.1016/j.
+neuroimage.2010.09.006 PMID: 20850551
+21.
+Yeh FC, Vettel JM, Singh A, Poczos B, Grafton ST, Erickson KI, et al. Quantifying Differences and Simi-
+larities in Whole-Brain White Matter Architecture Using Local Connectome Fingerprints. PLOS Compu-
+tational Biology. 2016; 12(11):1–17. https://doi.org/10.1371/journal.pcbi.1005203
+22.
+Kahn AE, Mattar MG, Vettel JM, Wymbs NF, Grafton ST, Bassett DS. Structural Pathways Supporting
+Swift Acquisition of New Visuomotor Skills. Cerebral Cortex. 2017; 27(1):173–184. https://doi.org/10.
+1093/cercor/bhw335 PMID: 27920096
+23.
+Powell MA, Garcia JO, Yeh FC, Vettel JM, Verstynen T. Local connectome phenotypes predict social,
+health, and cognitive factors. Network Neuroscience. 2017; 0(0):1–20.
+24.
+Medaglia JD, Huang W, Karuza EA, Kelkar A, Thompson-Schill SL, Ribeiro A, et al. Functional align-
+ment with anatomical networks is associated with cognitive flexibility. Nature Human Behaviour. 2017;
+1:1.
+25.
+Keller TA, Just MA. Structural and functional neuroplasticity in human learning of spatial routes. Neuro-
+Image. 2016; 125:256–266. https://doi.org/10.1016/j.neuroimage.2015.10.015 PMID: 26477660
+26.
+van den Bos W, Rodriguez CA, Schweitzer JB, McClure SM. Adolescent impatience decreases with
+increased frontostriatal connectivity. Proceedings of the National Academy of Sciences. 2015; 112(29):
+E3765–E3774. https://doi.org/10.1073/pnas.1423095112
+27.
+McKenna BS, Theilmann RJ, Sutherland AN, Eyler LT. Fusing Functional MRI and Diffusion Tensor
+Imaging Measures of Brain Function and Structure to Predict Working Memory and Processing Speed
+Performance among Inter-episode Bipolar Patients. Journal of the International Neuropsychological
+Society. 2015; 21(5):330–341. https://doi.org/10.1017/S1355617715000314 PMID: 26037664
+28.
+Brown CA, Hakun JG, Zhu Z, Johnson NF, Gold BT. White matter microstructure contributes to age-
+related declines in task-induced deactivation of the default mode network. Frontiers in aging neurosci-
+ence. 2015; 7:194. https://doi.org/10.3389/fnagi.2015.00194 PMID: 26500549
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+22 / 25
+ 29.
+Muraskin J, Dodhia S, Lieberman G, Garcia JO, Verstynen T, Vettel JM, et al. Brain dynamics of post-
+task resting state are influenced by expertise: Insights from baseball players. Human Brain Mapping.
+2016; 37(12):4454–4471. https://doi.org/10.1002/hbm.23321 PMID: 27448098
+30.
+Muraskin J, Sherwin J, Lieberman G, Garcia JO, Verstynen T, Vettel JM, et al. Fusing Multiple Neuroim-
+aging Modalities to Assess Group Differences in Perception—Action Coupling. Proceedings of the
+IEEE. 2017; 105(1):83–100. https://doi.org/10.1109/JPROC.2016.2574702 PMID: 28713174
+31.
+Bassett DS, Sporns O. Network neuroscience. Nature Neuroscience. 2017; 20(3):353–364. https://doi.
+org/10.1038/nn.4502 PMID: 28230844
+32.
+Feldt S, Bonifazi P, Cossart R. Dissecting functional connectivity of neuronal microcircuits: experimental
+and theoretical insights. Trends in Neurosciences. 2011; 34(5):225–236. https://doi.org/10.1016/j.tins.
+2011.02.007 PMID: 21459463
+33.
+Cao M, Wang JH, Dai ZJ, Cao XY, Jiang LL, Fan FM, et al. Topological organization of the human brain
+functional connectome across the lifespan. Developmental Cognitive Neuroscience. 2014; 7(Supple-
+ment C):76–93. https://doi.org/10.1016/j.dcn.2013.11.004 PMID: 24333927
+34.
+Menon V. Large-scale brain networks and psychopathology: a unifying triple network model. Trends in
+Cognitive Sciences. 2011; 15(10):483–506. https://doi.org/10.1016/j.tics.2011.08.003 PMID: 21908230
+35.
+Cole MW, Yarkoni T, Repovs
+ˇ G, Anticevic A, Braver TS. Global Connectivity of Prefrontal Cortex Pre-
+dicts Cognitive Control and Intelligence. Journal of Neuroscience. 2012; 32(26):8988–8999. https://doi.
+org/10.1523/JNEUROSCI.0536-12.2012 PMID: 22745498
+36.
+Breakspear M. Dynamic models of large-scale brain activity. Nature Neuroscience. 2017; 20(3):340.
+https://doi.org/10.1038/nn.4497 PMID: 28230845
+37.
+Honey CJ, Sporns O, Cammoun L, Gigandet X, Thiran JP, Meuli R, et al. Predicting human resting-
+state functional connectivity from structural connectivity. Proceedings of the National Academy of Sci-
+ences. 2009; 106(6):2035–2040. https://doi.org/10.1073/pnas.0811168106
+38.
+Sanz-Leon P, Knock SA, Spiegler A, Jirsa VK. Mathematical framework for large-scale brain network
+modeling in The Virtual Brain. NeuroImage. 2015; 111(Supplement C):385–430. https://doi.org/10.
+1016/j.neuroimage.2015.01.002 PMID: 25592995
+39.
+Bansal K, Nakuci J, Muldoon SF. Personalized brain network models for assessing structure-function
+relationships. Current Opinion in Neurobiology. 2018; 52:1–13. https://doi.org/10.1016/j.conb.2018.04.
+014
+40.
+Stefanovski L, Ghani A, McIntosh AR, Ritter P. Linking connectomics and dynamics in the human brain.
+e-Neuroforum. 2016; 7(3):64–70. https://doi.org/10.1007/s13295-016-0027-1
+41.
+Adhikari MH, Raja Beharelle A, Griffa A, Hagmann P, Solodkin A, McIntosh AR, et al. Computational
+Modeling of Resting-State Activity Demonstrates Markers of Normalcy in Children with Prenatal or Peri-
+natal Stroke. Journal of Neuroscience. 2015; 35(23):8914–8924. https://doi.org/10.1523/JNEUROSCI.
+4560-14.2015 PMID: 26063923
+42.
+Alstott J, Breakspear M, Hagmann P, Cammoun L, Sporns O. Modeling the Impact of Lesions in the
+Human Brain. PLOS Computational Biology. 2009; 5(6):1–12. https://doi.org/10.1371/journal.pcbi.
+1000408
+43.
+Hutchings F, Han CE, Keller SS, Weber B, Taylor PN, Kaiser M. Predicting Surgery Targets in Tempo-
+ral Lobe Epilepsy through Structural Connectome Based Simulations. PLOS Computational Biology.
+2015; 11(12):1–24. https://doi.org/10.1371/journal.pcbi.1004642
+44.
+Sinha N, Dauwels J, Kaiser M, Cash SS, Brandon Westover M, Wang Y, et al. Predicting neurosurgical
+outcomes in focal epilepsy patients using computational modelling. Brain. 2017; 140(2):319–332.
+https://doi.org/10.1093/brain/aww299 PMID: 28011454
+45.
+Muldoon SF, Pasqualetti F, Gu S, Cieslak M, Grafton ST, vettel JM, et al. Stimulation-based control of
+dynamic brain networks. PLoS Comput Biol. 2016; 12(9):e1005076. https://doi.org/10.1371/journal.
+pcbi.1005076 PMID: 27611328
+46.
+Spiegler A, Hansen ECA, Bernard C, McIntosh AR, Jirsa VK. Selective activation of resting state net-
+works following focal stimulation in a connectome-based network model of the human brain Stimulation
+in connectome-based brain models. eNeuro. 2016; 3(5):e0068–16. https://doi.org/10.1523/ENEURO.
+0068-16.2016
+47.
+Wilson HR, Cowan JD. Excitatory and Inhibitory Interactions in Localized Populations of Model Neu-
+rons. Biophys J. 1972; 12(1):1–24. https://doi.org/10.1016/S0006-3495(72)86068-5 PMID: 4332108
+48.
+Wilson HR, Cowan JD. A mathematical theory of the functional dynamics of cortical and thalamic ner-
+vous tissue. Kybernetik. 1973; 13(2):55–80. https://doi.org/10.1007/BF00288786 PMID: 4767470
+49.
+Ferreri F, Rossini P. TMS and TMS-EEG techniques in the study of the excitability, connectivity, and
+plasticity of the human motor cortex. Rev Neurosci. 2013; 24(4):431–442. https://doi.org/10.1515/
+revneuro-2013-0019 PMID: 23907420
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+23 / 25
+ 50.
+Krieger-Redwood K, Jefferies E. TMS interferes with lexical-semantic retrieval in left inferior frontal
+gyrus and posterior middle temporal gyrus: Evidence from cyclical picture naming. Neuropsychologia.
+2014; 64(Supplement C):24–32. https://doi.org/10.1016/j.neuropsychologia.2014.09.014 PMID:
+25229872
+51.
+Snyder HR, Munakata Y. So many options, so little time: The roles of association and competition in
+underdetermined responding. Psychonomic Bulletin & Review. 2008; 15(6):1083–1088. https://doi.org/
+10.3758/PBR.15.6.1083
+52.
+Hagmann P, Cammoun L, Gigandet X, Meuli R, Honey CJ, Wedeen VJ, et al. mapping the structural
+core of human cerebral cortex. PLoS Biology. 2008; 6(7):e159. https://doi.org/10.1371/journal.pbio.
+0060159 PMID: 18597554
+53.
+Dronkers ND, Wilkins DP, Van Valin Nelson RD Jr, Redfern BD, Jaeger JJ. Lesion analysis of the brain
+areas involved in language comprehension. Cognition. 2004; 92:145–177. https://doi.org/10.1016/j.
+cognition.2003.11.002 PMID: 15037129
+54.
+Whitney C, Kirk M, O’Sullivan J, Lambon Ralph MA, Jefferies E. The Neural Organization of Semantic
+Control: TMS Evidence for a Distributed Network in Left Inferior Frontal and Posterior Middle Temporal
+Gyrus. Cerebral Cortex. 2011; 21(5):1066–1075. https://doi.org/10.1093/cercor/bhq180 PMID:
+20851853
+55.
+Costafreda SG, Fu CHY, Lee L, Everitt B, Brammer MJ, David AS. A systematic review and quantitative
+appraisal of fMRI studies of verbal fluency: Role of the left inferior frontal gyrus. Human Brain Mapping.
+2006; 27(10):799–810. https://doi.org/10.1002/hbm.20221 PMID: 16511886
+56.
+Snyder HR, Feigenson K, Thompson-Schill SL. Prefrontal Cortical Response to Conflict during Seman-
+tic and Phonological Tasks. Journal of Cognitive Neuroscience. 2007; 19(5):761–775. https://doi.org/
+10.1162/jocn.2007.19.5.761 PMID: 17488203
+57.
+Kramer MA, Eden UT, Cash SS, Kolaczyk ED. Network inference with confidence from multivariate
+time series. Phys Rev E. 2009; 79:061916. https://doi.org/10.1103/PhysRevE.79.061916
+58.
+Feldt S, Osterhage H, Mormann F, Lehnertz K, Zochowski M. Internetwork and intranetwork communi-
+cations during bursting dynamics: Applications to seizure prediction. Phys Rev E. 2007; 76:021920.
+https://doi.org/10.1103/PhysRevE.76.021920
+59.
+Roux FE, Lubrano V, Lauwers-Cances V, Giussani C, De
+´monet JF. Cortical areas involved in Arabic
+number reading. Neurology. 2008; 70(3):210–217. https://doi.org/10.1212/01.wnl.0000297194.14452.
+a0 PMID: 18195265
+60.
+Turken AU, Dronkers NF. The Neural Architecture of the Language Comprehension Network: Converg-
+ing Evidence from Lesion and Connectivity Analyses. Front Syst Neurosci. 2011; 5:1. https://doi.org/10.
+3389/fnsys.2011.00001 PMID: 21347218
+61.
+Nathaniel-James DA, Frith CD. The Role of the Dorsolateral Prefrontal Cortex: Evidence from the
+Effects of Contextual Constraint in a Sentence Completion Task. Neuroimage. 2002; 16:1094–1102.
+https://doi.org/10.1006/nimg.2002.1167 PMID: 12202096
+62.
+Holland SK, Plante E, Byars AW, Strawsburg RH, Schmithorst VJ, Ball WS Jr. Normal fMRI Brain Acti-
+vation Patterns in Children Performing a Verb Generation Task. Neuroimage. 2001; 14:837–843.
+https://doi.org/10.1006/nimg.2001.0875 PMID: 11554802
+63.
+Eldaief MC, Press DZ, Pascual-Leone A. Transcranial magnetic stimulation in neurology. Neurology:
+Clinical Practice. 2013; 3(6):519–526.
+64.
+Gu S, Pasqualetti F, Cieslak M, Telesford Q, Yu A, Kahn A, et al. Controllability of structural brain net-
+work. Nat Commun. 2015; 27(8):1471–1491.
+65.
+Restrepo JG, Ott E, Hunt BR. Onset of synchronization in large networks of coupled oscillators. Phys
+Rev E. 2005; 71:036151. https://doi.org/10.1103/PhysRevE.71.036151
+66.
+Meghanathan N. Spectral radius as a measure of variation in node degree for complex network graphs.
+7th International Conference on u- and e- Service, Science and Technology. 2014; p. 30–33.
+67.
+Huang L, Lai YC, Gatenby RA. Alternating synchronizability of complex clustered networks with regular
+local structure. Phys Rev E. 2008; 77:016103. https://doi.org/10.1103/PhysRevE.77.016103
+68.
+Chen G, Duan Z. Network synchronizability analysis: A graph-theoretic approach. Chaos: An Interdisci-
+plinary Journal of Nonlinear Science. 2008; 18(3):037102. https://doi.org/10.1063/1.2965530
+69.
+Just MA, Carpenter C Patricia, Keller TA, eddy F William, Thulborn KR. Brain activation modulated by
+sentence comprehension. Science. 1996; 274:114–116. https://doi.org/10.1126/science.274.5284.114
+PMID: 8810246
+70.
+Betzel RF, Gu S, Medaglia JD, Pasqualetti F, Bassett DS. Optimally controlling the human connectome:
+the role of network topology. Scientific Reports. 2016; 6:30770. https://doi.org/10.1038/srep30770
+PMID: 27468904
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+24 / 25
+ 71.
+Snyder HR, Banich MT, Munakata Y. Choosing Our Words: Retrieval and Selection Processes Recruit
+Shared Neural Substrates in Left Ventrolateral Prefrontal Cortex. Journal of Cognitive Neuroscience.
+2011; 23(11):3470–3482. https://doi.org/10.1162/jocn_a_00023 PMID: 21452939
+72.
+Snyder HR, Kaiser RH, Whisman MA, Turner AEJ, Guild RM, Munakata Y. Opposite effects of anxiety
+and depressive symptoms on executive function: The case of selecting among competing options. Cog-
+nition and Emotion. 2014; 28(5):893–902. https://doi.org/10.1080/02699931.2013.859568 PMID:
+24295077
+73.
+Huang YZ, Edwards MJ, Rounis E, Bhatia KP, Rothwell JC. Theta Burst Stimulation of the Human
+Motor Cortex. Neuron. 2005; 45(2):201–206. https://doi.org/10.1016/j.neuron.2004.12.033 PMID:
+15664172
+74.
+Yeh FC, Wedeen VJ, Tseng WYI. Estimation of fiber orientation and spin density distribution by diffu-
+sion deconvolution. NeuroImage. 2011; 55(3):1054–1062. https://doi.org/10.1016/j.neuroimage.2010.
+11.087 PMID: 21232611
+75.
+Fischl B. FreeSurfer. NeuroImage. 2012; 62(2):774–781. https://doi.org/10.1016/j.neuroimage.2012.
+01.021 PMID: 22248573
+76.
+Cammoun L, Gigandet X, Meskaldji D, Thiran JP, Sporns O, Do KQ, et al. Mapping the human connec-
+tome at multiple scales with diffusion spectrum MRI. Journal of Neuroscience Methods. 2012; 203
+(2):386–397. https://doi.org/10.1016/j.jneumeth.2011.09.031 PMID: 22001222
+77.
+Cieslak M, Grafton ST. Local termination pattern analysis: a tool for comparing white matter morphol-
+ogy. Brain Imaging and Behavior. 2014; 8(2):292–299. https://doi.org/10.1007/s11682-013-9254-z
+PMID: 23999931
+78.
+Newman MEJ. Networks: An Introduction. Oxford University Press; 2010.
+Data-driven brain network models differentiate variability across language tasks
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1006487
+October 17, 2018
+25 / 25

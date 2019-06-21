@@ -1,0 +1,1390 @@
+ 1
+3
+Toward better public health reporting using existing off the shelf
+4
+approaches: A comparison of alternative cancer detection approaches
+5
+using plaintext medical data and non-dictionary based feature selection
+6
+7
+8
+Suranga N. Kasthurirathne a,⇑, Brian E. Dixon b,c, Judy Gichoya d, Huiping Xu c, Yuni Xia d, Burke Mamlin b,d,
+9
+Shaun J. Grannis b,d
+10
+a Indiana University School of Informatics and Computing, Indianapolis, IN, USA
+11
+b Regenstrief Institute, Indianapolis, IN, USA
+12
+c Indiana University Fairbanks School of Public Health, Indianapolis, IN, USA
+13
+d Indiana University School of Medicine, Indianapolis, IN, USA
+14
+15
+16
+17
+1 9
+a r t i c l e
+i n f o
+20
+Article history:
+21
+Received 30 April 2015
+22
+Revised 18 January 2016
+23
+Accepted 20 January 2016
+24
+Available online xxxx
+25
+Keywords:
+26
+Public health reporting
+27
+Decision models
+28
+Cancer
+29
+Pathology
+30
+Feature selection
+31
+Data preprocessing
+32
+3 3
+a b s t r a c t
+34
+Objectives: Increased adoption of electronic health records has resulted in increased availability of free
+35
+text clinical data for secondary use. A variety of approaches to obtain actionable information from
+36
+unstructured free text data exist. These approaches are resource intensive, inherently complex and rely
+37
+on structured clinical data and dictionary-based approaches. We sought to evaluate the potential to
+38
+obtain actionable information from free text pathology reports using routinely available tools and
+39
+approaches that do not depend on dictionary-based approaches.
+40
+Materials and methods: We obtained pathology reports from a large health information exchange and
+41
+evaluated the capacity to detect cancer cases from these reports using 3 non-dictionary feature selection
+42
+approaches, 4 feature subset sizes, and 5 clinical decision models: simple logistic regression, naïve bayes,
+43
+k-nearest neighbor, random forest, and J48 decision tree. The performance of each decision model was
+44
+evaluated using sensitivity, specificity, accuracy, positive predictive value, and area under the receiver
+45
+operating characteristics (ROC) curve.
+46
+Results: Decision models parameterized using automated, informed, and manual feature selection
+47
+approaches yielded similar results. Furthermore, non-dictionary classification approaches identified can-
+48
+cer cases present in free text reports with evaluation measures approaching and exceeding 80–90% for
+49
+most metrics.
+50
+Conclusion: Our methods are feasible and practical approaches for extracting substantial information
+51
+value from free text medical data, and the results suggest that these methods can perform on par, if
+52
+not better, than existing dictionary-based approaches. Given that public health agencies are often
+53
+under-resourced and lack the technical capacity for more complex methodologies, these results represent
+54
+potentially significant value to the public health field.
+55
+� 2016 Published by Elsevier Inc.
+56
+57
+58
+59
+1. Introduction
+60
+The widespread adoption of electronic medical records has
+61
+resulted in increased availability of free text clinical data, usually
+62
+in the form of plaintext reports dictated or typed by clinicians,
+63
+for secondary use. Because free text clinical data must be con-
+64
+verted to actionable information to realize its full value, analyzing
+65
+and extracting pertinent information from unstructured clinical
+66
+text has become an increasingly important activity within the
+67
+healthcare industry.
+68
+Various approaches for obtaining actionable information from
+69
+unstructured free text generally attempt to address the challenges
+70
+of both identifying and contextualizing concepts of interest, so-
+71
+called ‘‘named entities”. Identifying named entities, a process ter-
+72
+med ‘‘named entity recognition” (NER), can be performed using
+73
+either dictionary-based or non-dictionary approaches. Dictionary-
+74
+based approaches for NER rely on medical ontologies while non-
+75
+dictionary approaches derive named entities from less formal
+76
+sources such as clinician’s empirical knowledge or from source
+77
+data being analyzed.
+http://dx.doi.org/10.1016/j.jbi.2016.01.008
+1532-0464/� 2016 Published by Elsevier Inc.
+⇑ Corresponding author at: Indiana University School of Informatics and Com-
+puting, 535 W. Michigan Street, IT 475, Indianapolis, IN 46202, USA. Tel.: +1 (317)
+278 4636.
+E-mail address: snkasthu@iupui.edu (S.N. Kasthurirathne).
+Journal of Biomedical Informatics xxx (2016) xxx–xxx
+Contents lists available at ScienceDirect
+Journal of Biomedical Informatics
+journal homepage: www.elsevier.com/locate/yjbin
+YJBIN 2503
+No. of Pages 8, Model 5G
+29 January 2016
+Please cite this article in press as: S.N. Kasthurirathne et al., Toward better public health reporting using existing off the shelf approaches: A comparison of
+alternative cancer detection approaches using plaintext medical data and non-dictionary based feature selection, J Biomed Inform (2016), http://dx.doi.
+org/10.1016/j.jbi.2016.01.008
+ 78
+While dictionary-based approaches have the advantage of using
+79
+lists of pre-vetted entities that reflect concepts of interest, no sin-
+80
+gle medical ontology has been designed to comprehensively reflect
+81
+entities for a specific illness/condition, nor grouped in a hierarchi-
+82
+cal structure that makes their selection an efficient process. Conse-
+83
+quently, deriving concepts from existing ontologies to accurately
+84
+identify specific conditions requires considerable expertise and
+85
+manual effort.
+86
+Achieving accurate NER in plaintext reports is a significant bot-
+87
+tleneck in text mining, especially when using dictionary based
+88
+approaches [12]. Dictionary based NER performance measures
+89
+have been found to be well below levels acceptable for routine
+90
+use in clinical and research contexts [11,18]. Further, given that
+91
+controlled vocabularies and ontologies routinely evolve (Bodenrei-
+92
+der, 2008); Vreeman [20], dictionary based approaches for NER
+93
+often require manual curation to accurately reflect constantly
+94
+changing terminology. These challenges suggest that dictionary-
+95
+based approaches require high maintenance, and may not yield a
+96
+satisfactory cost benefit when applied in the medical domain. Con-
+97
+versely, performing NER using non-dictionary machine learning
+98
+approaches (Jiang et. al., 2011) can mitigate the challenges of
+99
+dictionary-based methods by leveraging data on hand to minimize
+100
+the reliance on complex and constantly changing sources of exter-
+101
+nal knowledge.
+102
+Although new approaches for processing unstructured clinical
+103
+data are routinely published, there remains a paucity of practical,
+104
+generalizable,
+evidence-based
+best
+practices
+addressing
+105
+approaches for obtaining actionable information from unstruc-
+106
+tured clinical text. Further, much of the work performed in this
+107
+space has been conducted in the clinical informatics realm, and
+108
+there is shortage of methodology studies specifically addressing
+109
+needs in the public health realm.
+110
+Consequently, this study seeks to assess the practical use of
+111
+existing ‘‘off the shelf” text analysis and information-mining meth-
+112
+ods to generate actionable information from free text clinical
+113
+resources to address problems affecting the population/public
+114
+health space. As a demonstration of our work, we sought to assess
+115
+how these approaches could improve case reporting to cancer reg-
+116
+istries using unstructured clinical data.
+117
+Cancer registries play a significant supporting role in public
+118
+health activities by integrating cancer case information for multi-
+119
+ple purposes including determining population-based cancer inci-
+120
+dence, initiating survival and mortality reporting, identifying at-
+121
+risk populations, and supporting research studies on comparabil-
+122
+ity, clustering, and the adequacy of cancer surveillance [2,23].
+123
+However, cancer reporting activities are often delayed and incom-
+124
+plete [1,6,23], yielding delayed ascertainment of cases, which lim-
+125
+its the value of cancer registry data and its use [19]. Prior studies
+126
+have demonstrated that automated methods for identifying a vari-
+127
+ety of public health reportable cases can effectively improve the
+128
+timeliness and completeness of case reporting [8,15].
+129
+The purpose of this study was to evaluate the accuracy of cancer
+130
+case identification within plaintext clinical reports using off the
+131
+shelf tools and machine learning NER approaches. By evaluating
+132
+alternate approaches that vary the level of clinician expertise
+133
+required, we sought to assess the performance of various auto-
+134
+mated cancer case detection approaches having varying levels of
+135
+human guidance and pave the way for further research into prac-
+136
+tical applications for the public health space.
+137
+2. Materials and methods
+138
+We sought to evaluate our work using data collected by the
+139
+Indiana Network for Patient Care (INPC), a large Health Information
+140
+Exchange (HIE) serving major hospitals of Indiana [14]. The INPC
+141
+serves public health by scrutinizing incoming HL7 laboratory mes-
+142
+sages for results of public health interest using dictionary-based
+143
+approaches, and reports them to the state and county health
+144
+departments [16]. However, it has no mechanism to perform sim-
+145
+ilar reporting using plaintext data. We sought to assess non-
+146
+dictionary cancer detection using plaintext pathology reports col-
+147
+lected by the INPC. Pathology reports were used due to (a) their
+148
+completeness and availability and (b) their suitability for identify-
+149
+ing cancer diagnoses.
+150
+We sampled 7000 heterogeneous plaintext pathology reports
+151
+distributed across seven diverse health systems, representing over
+152
+30 hospitals within the INPC. Clinicians performed a manual
+153
+review of these reports and tagged them as either positive or neg-
+154
+ative for the presence of a cancer diagnosis. Next, we sought to
+155
+identify specific tokens associated with the presence or absence
+156
+of a cancer diagnosis using these labeled results.
+157
+2.1. Preparation of the master feature vector
+158
+A Perl script was written to parse each plaintext report and
+159
+identify the number of unique tokens present in the entire report
+160
+set. Of these, tokens that appear only once or twice in the entire
+161
+set of reports were removed due to their low prevalence. We also
+162
+identified and removed all stop words appearing in the token list
+163
+using the Perl Lingua Stopwords module [5]. Next, we used the
+164
+Negex algorithm [3] to identify the context of use (positive or neg-
+165
+ative) for each remaining token. The remaining tokens were
+166
+stemmed using the Perl Lingua Stem module [4]. We counted the
+167
+presence of each token in positive and negated contexts and used
+168
+this data to prepare an input vector for each pathology report. Each
+169
+token was represented by two digits in the master feature vector –
+170
+the number of positive occurrences and the number of negative
+171
+occurrences of each token per report. Subsets of the master feature
+172
+vector would be used for decision modeling based on token subsets
+173
+selected by each feature selection approach.
+174
+2.2. Selection of feature subsets
+175
+We used 3 non-dictionary feature selection approaches: (a)
+176
+manual, (b) informed, and (c) automated to create feature subsets
+177
+from the master feature vector.
+178
+2.2.1. Manual feature selection
+179
+Clinicians selected feature subsets based on their domain
+180
+expertise. Two experienced clinicians independently created prior-
+181
+itized lists of tokens that would suggest the presence of a cancer
+182
+diagnosis in a pathology report. The clinicians then compared their
+183
+ranked lists and resolved any conflicts. In the event of a disagree-
+184
+ment, a third clinician served as a tiebreaker. Using this process,
+185
+we identified 20 top tokens for automated cancer case detection.
+186
+2.2.2. Informed feature selection
+187
+In contrast to the manual feature selection approach, the
+188
+informed approach provided clinicians with summary statistics
+189
+for each token. Combining this information with their own domain
+190
+expertise, two clinicians independently reviewed and selected sub-
+191
+sets of prioritized tokens for analysis. A third clinician adjudicated
+192
+any disagreements. The summary statistics supplied to clinicians
+193
+to aid in feature selection included:
+194
+Positive Coverage ¼ PX=RP
+ð1Þ
+Negative Coverage ¼ NX=RN
+ð2Þ
+Coverage Ratio ¼ ðPX=RPÞ=ðNX=RNÞ
+ð3Þ
+Combined Term Frequency ¼ ðOX=RALLÞ
+ð4Þ
+Inverse Document Frequency ¼ logðRALL=RXÞ
+ð5Þ
+196
+196
+2
+S.N. Kasthurirathne et al. / Journal of Biomedical Informatics xxx (2016) xxx–xxx
+YJBIN 2503
+No. of Pages 8, Model 5G
+29 January 2016
+Please cite this article in press as: S.N. Kasthurirathne et al., Toward better public health reporting using existing off the shelf approaches: A comparison of
+alternative cancer detection approaches using plaintext medical data and non-dictionary based feature selection, J Biomed Inform (2016), http://dx.doi.
+org/10.1016/j.jbi.2016.01.008
+ 197
+where
+198
+199
+PX = Number of positive reports containing token ‘X’
+200
+NX = Number of negative reports containing token ‘X’
+201
+RX = Number of reports containing token ‘X’
+202
+RP = Number of reports positive for cancer
+203
+RN = Number of reports negative for cancer
+204
+RALL = Number of reports under evaluation
+205
+OX = Number of occurrences of a token across all reports
+206
+207
+2.2.3. Automated feature selection
+208
+Information gain, also referred to as Kullback–Leibler diver-
+209
+gence, is a criterion commonly used for feature selection in
+210
+machine learning [17,21,22]. For automated feature selection we
+211
+eliminated human guidance, and instead ranked all tokens across
+212
+all pathology reports according to their discriminating power as
+213
+measured by information gain. Subsets of the tokens with highest
+214
+information gain were used as features to identify cancer cases.
+215
+2.3. Feature subset sizes
+216
+We hypothesized that different feature subset sizes would yield
+217
+varying performance metrics, including sensitivity, specificity,
+218
+accuracy and positive predictive value (PPV). To test this hypothe-
+219
+sis we chose feature subset sizes of 5, 10, 15, and 20. These sizes
+220
+were chosen because they were both feasible to implement and
+221
+permitted us to measure performance metrics within an accept-
+222
+able operating range (see Appendix A).
+223
+2.4. Decision models
+224
+As shown in Fig. 1, we randomly selected 700 (10%) of the plain-
+225
+text reports as hold-out test data. The remaining 6300 reports
+226
+(90%) were used to train 5 different decision models using alterna-
+227
+tive feature selection approaches and feature subset sizes against
+228
+the manually reviewed gold standard. Once trained, each decision
+229
+model was tested using the 10% hold-out test data. Each of the
+230
+decision models was selected based on their relative strengths
+231
+and their track record of successful use across the public health
+232
+domain. The 5 clinical decision models selected for our study were
+233
+simple logistic regression (SLR), naïve bayes (NB), k-nearest neigh-
+234
+bor (KNN), random forest (RF), and J48 decision tree (J48). For this
+235
+study we used version 3.6.11 of Weka to test implementations of
+236
+each model (Hall et. al., 2009).
+237
+2.4.1. Simple logistic regression (SLR)
+238
+An advantage of the SLR decision model is that it does not rely
+239
+on assumptions of normality for predictor variables. SLR models
+240
+are often low complexity, especially when no or few interaction
+241
+terms and variable transformations are used. Therefore, over fitting
+242
+is rarely an issue for this method.
+243
+2.4.2. K-nearest neighbor (KNN)
+244
+KNN is a non-parametric method that uses instance-based
+245
+learning. KNN is readily interpretable in that neighbors can provide
+246
+an explanation for the classification result [9].
+247
+2.4.3. Naïve bayes (NB)
+248
+The NB classifier is a simple probabilistic classifier based on the
+249
+Bayes’ theorem. NB assumes independence among features, an
+250
+assumption that may not be valid in all cases. However, the algo-
+251
+rithm is also simple to use, often more accurate than decision tree
+252
+learners, and converges faster than other more discriminative
+253
+models.
+254
+2.4.4. Random forrest (RF)
+255
+RF is an ensemble of un-pruned classification or regression trees
+256
+induced from bootstrap samples of training data using random fea-
+257
+ture selection in the tree induction process. RF generally demon-
+258
+strates a substantial performance improvement over single tree
+259
+classifiers such as CART and C4.5, and can overcome the problem
+260
+of over fitting. While RF classifiers generally exhibit excellent per-
+261
+formance, their models are often complex, which minimizes
+262
+interpretability.
+263
+2.4.5. J48 classifier (J48)
+264
+J48 is a tree classification algorithm, and is an implementation
+265
+of the C4.5 statistical classifier algorithm used to generate pruned
+266
+or un-pruned decision trees [24]. Unlike RF, the results of the J48
+267
+decision tree are readily interpretable.
+268
+2.5. Statistical analysis
+269
+By applying the 3 feature selection approaches and the 4 feature
+270
+subset sizes to the master feature vector, we extracted 12 (3 � 4)
+271
+different data sets for decision model building and evaluation. Each
+272
+of these 12 feature sets was applied to 5 different decision models
+273
+for a total of 60 (12 � 5) analyses.
+274
+To evaluate the performance of each of these 60 analyses, we
+275
+compared the results produced by each decision model with speci-
+Fig. 1. The complete study approach from the selection of alternative feature subsets to the evaluation of results.
+S.N. Kasthurirathne et al. / Journal of Biomedical Informatics xxx (2016) xxx–xxx
+3
+YJBIN 2503
+No. of Pages 8, Model 5G
+29 January 2016
+Please cite this article in press as: S.N. Kasthurirathne et al., Toward better public health reporting using existing off the shelf approaches: A comparison of
+alternative cancer detection approaches using plaintext medical data and non-dictionary based feature selection, J Biomed Inform (2016), http://dx.doi.
+org/10.1016/j.jbi.2016.01.008
+ 276
+fic feature selection approaches and feature subset sizes to the
+277
+manual review result. The accuracy of these methods, evaluated
+278
+using sensitivity, specificity, PPV, and overall accuracy, were esti-
+279
+mated using proportions and 95% confidence intervals. To account
+280
+for the clustering effect of multiple methods applied to the same
+281
+pathology report and assess the effects of feature selection
+282
+approaches, feature subset size, and decision model on the accu-
+283
+racy of cancer detection, we used a marginal logistic regression
+284
+using generalized estimating equations (Leisenring W, Pepe MS &
+285
+Longton G, 1997; Leisenring W Alono T, Pepe MS, 2000). For each
+286
+accuracy metric we included main effects, two-way interactions,
+287
+and 3-way interaction of the 3 factors in the model to allow differ-
+288
+ential effects of a factor as other factors vary. The standard errors of
+289
+the accuracy measures were calculated using the robust sandwich
+290
+variance estimation methods. Comparison of these accuracy met-
+291
+rics across the 60 analyses was performed using a multiple com-
+292
+parison
+approach
+with
+a
+Bonferroni
+adjustment.
+We
+also
+293
+evaluated accuracy using the receiver operating characteristics
+294
+(ROC) curve and the area under the ROC curve (AUC). The point
+295
+estimate and the 95% confidence interval of the AUC, as well as
+296
+the comparison of multiple AUCs, were performed using a non-
+297
+parametric approach [7]. All statistical analyses were performed
+298
+using the SAS 9.4 (SAS Institute Inc, Cary, NC).
+299
+3. Results
+300
+Manual review identified 1950 (27.86%) of the total 7000
+301
+pathology reports as cancer positive, and the remaining 5050
+302
+(72.14%) as cancer negative. We identified a total of 17,601 unique
+303
+tokens across all reports. Of these, a total of 8121 tokens appeared
+304
+only once or twice in the entire report set and were removed due
+305
+to their low prevalence. The remaining 9480 tokens were evalu-
+306
+ated using the 3 aforementioned feature selection approaches,
+307
+and subsets of 5, 10, 15 and 20 tokens selected (Appendix A).
+308
+Among the 6300 training set reports, 1757 (27.89%) were manually
+309
+reviewed as cancer positive, while among the 700 hold-out test
+310
+reports, 193 (27.57%) were manually reviewed as cancer positive.
+311
+The performance of each of the 60 decision models across the met-
+312
+rics of sensitivity, specificity, accuracy and PPV are as follows.
+313
+3.1. Sensitivity
+314
+Sensitivity measures the likelihood that a true positive case is
+315
+correctly identified as positive. It is an important metric to imple-
+316
+menters because a higher sensitivity implies greater confidence
+317
+that all positive cases can be identified.
+318
+Fig. 2 shows the sensitivity and 95% confidence interval for each
+319
+of the 60 analyses determined by combinations of feature selection
+320
+approach, feature subset size, and decision model. A majority of the
+321
+models produced sensitivity values greater than 70% when feature
+322
+subset size was equal or greater to 10.
+323
+When evaluating the effect of feature subset size with fixed fea-
+324
+ture selection approach and decision model, we found that sensi-
+325
+tivity increased significantly with informed feature selection
+326
+when feature subset size increased from 5 to 10 tokens, but did
+327
+not increase further as token subset size increased to 10, 15, and
+328
+20. Alternatively, varying the feature subset size had no effect on
+329
+sensitivity when using automated and manual feature selection,
+330
+for all decision models except KNN. With automated feature selec-
+331
+tion, the sensitivity of KNN decreased significantly as feature sub-
+332
+set size increased from 10 to 20. All 3 feature subset selection
+333
+approaches performed similarly when using 10, 15, or 20 tokens,
+334
+regardless of the decision models. When using 5 tokens, automated
+335
+feature selection yielded greater sensitivity than manual feature
+336
+selection when using J48, KNN, and RF algorithms. Among the 5
+337
+algorithms, RF and J48 tended to yield greater sensitivity than
+338
+the other three algorithms.
+339
+3.2. Specificity
+340
+Specificity measures the likelihood that a negative case is cor-
+341
+rectly identified as negative. It is important to implementers who
+342
+need to ensure that negative cases are not incorrectly identified
+343
+as positive.
+344
+Fig. 3 shows the specificity and 95% confidence intervals of the
+345
+60
+analyses.
+Specificity
+generally
+exceeded
+90%
+for
+all
+60
+346
+approaches. Increasing the feature subset size did not significantly
+347
+improve the specificity for any combination of feature selection
+348
+approach and decision model. All 3 feature selection approaches
+349
+yielded similar specificities with a fixed feature subset size and
+350
+decision model. Likewise, we found no significant difference in
+351
+specificity across decision models.
+352
+3.3. Accuracy
+353
+Accuracy is a measure of the overall performance, which is
+354
+important to implementers who must ensure that the correct sta-
+355
+tus of all potential cases are correctly identified as either positive
+356
+or negative.
+357
+Fig. 4 shows the overall accuracy and 95% confidence intervals
+358
+of the 60 analyses. The overall accuracy for each combination of
+359
+decision model, feature selection approach and feature subset size
+360
+exceeded 85%. We again find that increased feature subset size was
+361
+not associated with significantly improved accuracy, regardless of
+362
+the feature selection approach or the decision model. The feature
+363
+selection approaches yielded similar overall accuracy. However,
+364
+we found that the performance of KNN models built using manual
+Fig. 2. Estimated sensitivity and 95% confidence interval across each (a) feature selection approach (b) feature subset size and (c) decision model.
+4
+S.N. Kasthurirathne et al. / Journal of Biomedical Informatics xxx (2016) xxx–xxx
+YJBIN 2503
+No. of Pages 8, Model 5G
+29 January 2016
+Please cite this article in press as: S.N. Kasthurirathne et al., Toward better public health reporting using existing off the shelf approaches: A comparison of
+alternative cancer detection approaches using plaintext medical data and non-dictionary based feature selection, J Biomed Inform (2016), http://dx.doi.
+org/10.1016/j.jbi.2016.01.008
+ 365
+and automated feature selection methods decreased when feature
+366
+subset size increased to 20. Comparison of decision models with a
+367
+fixed feature subset size and feature selection suggests that RF, J48,
+368
+and SLR are on average more accurate than NB and KNN.
+369
+3.4. Positive predictive value (PPV)
+370
+PPV is another important metric, which measures the likelihood
+371
+that a positively identified case is truly positive.
+372
+Values for PPV and the 95% confidence intervals for the 60 anal-
+373
+yses are shown in Fig. 5. With the exception of one decision model,
+374
+all PPV measures exceeded 75%. Results of the PPV analyses were
+375
+similar to the analysis of specificities. Increasing feature subset size
+376
+did not significantly improve the PPV regardless of the feature
+377
+selection approach or the decision model. The 3 feature selection
+378
+approaches yielded similar PPV values and there was no significant
+379
+difference in PPV values across decision models.
+380
+3.5. Area under the ROC curve (AUC)
+381
+The area under the ROC curve for each of the 60 analyses is
+382
+shown in Fig. 6. We note that the area under the ROC curve for each
+383
+combination of decision model, feature selection approach and fea-
+384
+ture subset size exceeded 75%. We found that increased feature
+385
+subset size was usually not associated with significantly improved
+386
+accuracy. However, the NB and KNN algorithms revealed a
+387
+decrease in AUC while RF, J48, and SLR methods showed an
+388
+increasing trend as feature subset size increased. The 3 feature
+389
+selection approaches yielded similar overall accuracy when using
+390
+a fixed feature subset size for a specific decision model. Compar-
+391
+ison of decision models with a fixed feature selection showed
+392
+that RF, J48, and SLR were overall more accurate than NB and
+393
+KNN when using more than 5 tokens. For additional details, ROC
+394
+curves for all 5 decision models using each of the 3 feature selec-
+395
+tion approaches and a feature subset size of 10 are shown in
+396
+Appendix B.
+Fig. 3. Estimated specificity and 95% confidence interval across each (a) feature selection approach (b) feature subset size and (c) decision model.
+Fig. 4. Estimated accuracy and 95% confidence interval across each (a) feature selection approach (b) feature subset size and (c) decision model.
+Fig. 5. Estimated PPV and 95% confidence interval across each (a) feature selection approach (b) feature subset size and (c) decision model.
+S.N. Kasthurirathne et al. / Journal of Biomedical Informatics xxx (2016) xxx–xxx
+5
+YJBIN 2503
+No. of Pages 8, Model 5G
+29 January 2016
+Please cite this article in press as: S.N. Kasthurirathne et al., Toward better public health reporting using existing off the shelf approaches: A comparison of
+alternative cancer detection approaches using plaintext medical data and non-dictionary based feature selection, J Biomed Inform (2016), http://dx.doi.
+org/10.1016/j.jbi.2016.01.008
+ 397
+4. Discussion
+398
+Our
+results
+indicate
+that
+non-dictionary
+classification
+399
+approaches can identify cancer cases present in plaintext reports
+400
+with performance measures approaching and exceeding 80–90%
+401
+for most metrics. We also noted significant differences across each
+402
+of
+the
+measures
+reported
+by
+alternative
+feature
+selection
+403
+approaches, subset size and decision model combinations. Based
+404
+on these results, we sought to identify combinations that could
+405
+be used to optimize results for each measurement.
+406
+To optimize for overall sensitivity, we recommend decision
+407
+models built with any feature selection approach and algorithm,
+408
+but with feature subset sizes of 10 or greater.
+409
+For optimized specificity, accuracy and PPV, decision models
+410
+built using any feature selection approach, algorithm and feature
+411
+subset size generally produced statistically similar results. How-
+412
+ever, for each of the measures, we note that decision models built
+413
+using NB, automated feature selection and a feature subset size of
+414
+10 yielded less accurate models than those built using SLR, auto-
+415
+mated feature selection and a feature subset size of 10.
+416
+Our results indicate that fully automated feature selection
+417
+approaches yield results that are similar to those returned by
+418
+informed or manual feature selection approaches. Therefore,
+419
+potential users could further reduce implementation effort by
+420
+adopting an automated feature selection approach. We also found
+421
+that the performance of each decision model did not necessarily
+422
+increase as the feature subset size continued to increase. While
+423
+increasing feature subset size from 5 to 10 yielded significant dif-
+424
+ferences in results, increasing further from 10 to 15 to 20 features
+425
+did not generally produce significant improvements. Therefore,
+426
+adopting a larger feature subset size may not always be worth
+427
+the additional effort and may even have a negative impact on
+428
+results. Consequently, to establish an optimal feature subset size
+429
+for particular analyses we recommend that implementers of this
+430
+methodology perform a sensitivity analysis examining a range of
+431
+feature subset sizes from 5 to a point where the incremental gains
+432
+in accuracy diminish.
+433
+It is also notable that in comparison to other algorithms, the per-
+434
+formance of NB and KNN tended to show a statistically significant
+435
+decline in performance when 20 features were used. We speculate
+436
+that this is because the NB algorithm assumes conditional indepen-
+437
+dence of features, which is likely invalid for this dataset [13]. The
+438
+conditional dependence among features becomes more complex
+439
+as the number of tokens increases, which negatively impacts the
+440
+performance of the algorithm. The default assumption of linear
+441
+scaling for each additional feature may lead to inaccuracies for
+442
+KNN distance measures, particularly when increasing numbers of
+443
+noisy or less discriminating features are added. We hypothesize
+444
+that improved feature scaling using a method such as mutual infor-
+445
+mation [10] may increase KNN performance for this application.
+446
+This work describes a generalizable process that can be used to
+447
+develop tailored classification tools for a variety of health care use
+448
+cases. The tokens that this analysis identified will likely differ from
+449
+the tokens that others uncover in their clinical data. Thus, this pro-
+450
+cess can potentially be applied to a variety of data sources with
+451
+application to other domains. For example, this methodology was
+452
+recently used to identify cases of salmonella in free text microbiol-
+453
+ogy reports with similar performance characteristics described in
+454
+this analysis (Kirbiyik et al., 2015).
+455
+We identified some challenges with our approach. The results of
+456
+the manual feature selection method depended on the clinical
+457
+expertise of the reviewers and their familiarity with pathology
+458
+report content. Our aim was to evaluate the best practical approach
+459
+that could be adopted across health care systems that lack suffi-
+460
+cient domain experts capable of performing highly accurate man-
+461
+ual feature selection. We believe that our use of clinicians for
+462
+this study produced results that could be replicated across other
+463
+healthcare systems. A second limitation of the study is that our
+464
+results are specific to the plaintext reports used for our analysis.
+465
+However, the pathology reports extracted for our study were
+466
+obtained from the Indiana Network or Patient Care (INPC), a large
+467
+Health Information Exchange. We believe that the quality of
+468
+pathology reports extracted from this HIE is sufficiently heteroge-
+469
+neous, diverse, and of compatible quality and completeness to data
+470
+collected by other healthcare systems, and should therefore serve
+471
+as an acceptable test dataset compatible across a majority of other
+472
+healthcare facilities.
+473
+We also sought to determine the potential for performing auto-
+474
+mated cancer case detection using non dictionary approaches. It
+475
+may be argued that using a dictionary-based approach may have
+476
+been more accurate than our approach. However, because our
+477
+methods resulted in performance measures exceeding 80–90%,
+478
+any marginal improvement in performance may not support the
+479
+considerable
+implementation
+effort
+required
+to
+deploy
+480
+dictionary-based approaches.
+481
+We identified several opportunities for improvement that war-
+482
+rant further study. Given the need to recruit already encumbered
+483
+clinicians to review and evaluate patient reports, the preparation
+484
+of a gold standard for classification purposes poses a considerable
+485
+challenge for our work. We propose to evaluate the results of our
+486
+classification efforts against that of clustering algorithms that do
+487
+not require a gold standard, and assess the feasibility of imple-
+488
+menting a clustering approach that is easier to adopt, and requires
+489
+less expert intervention to implement. Secondly, while our study
+490
+indicated that the use of a non-dictionary, free text approach could
+491
+yield satisfactory results, we did not formally compare perfor-
+492
+mance to dictionary-based approaches under similar circum-
+493
+stances. Future work will compare our results against those
+494
+obtained via a dictionary-based approach, and assess which
+495
+approach yields better results.
+Fig. 6. Estimated area under the ROC curve and 95% confidence interval across each (a) feature selection approach, (b) feature subset size, and (c) decision model.
+6
+S.N. Kasthurirathne et al. / Journal of Biomedical Informatics xxx (2016) xxx–xxx
+YJBIN 2503
+No. of Pages 8, Model 5G
+29 January 2016
+Please cite this article in press as: S.N. Kasthurirathne et al., Toward better public health reporting using existing off the shelf approaches: A comparison of
+alternative cancer detection approaches using plaintext medical data and non-dictionary based feature selection, J Biomed Inform (2016), http://dx.doi.
+org/10.1016/j.jbi.2016.01.008
+ 496
+In summary, these results help inform processes for extracting
+497
+information from unstructured clinical text and can contribute to
+498
+evidence-based best practices for application in other related
+499
+fields. They can inform the public health informatics space by pro-
+500
+viding evidence-based guidance for extracting information from
+501
+unstructured clinical documents. Given that public and population
+502
+health stakeholders are often under resourced, and that these
+503
+results
+represent
+feasible,
+practical,
+‘‘lower
+complexity”
+504
+approaches to extracting substantial value from unstructured clin-
+505
+ical text, these results can contribute significant value to the public
+506
+health field. Future work will explore the generalization of these
+507
+approaches to support other health data analytics applications.
+508
+5. Conclusion
+509
+Our efforts demonstrate the value of leveraging well-known
+510
+methods to address the challenge of automated cancer case detec-
+511
+tion within plaintext pathology reports using non-dictionary fea-
+512
+ture selection approaches, and the feasibility of doing so with
+513
+varying levels of human intervention. Further, this work can be
+514
+extended to support other public health reportable cases. Our
+515
+approach has the potential to reduce the effort required for public
+516
+health reporting, and could also be leveraged by healthcare provi-
+517
+ders who must comply with state required communicable disease
+518
+reporting laws, but lack adequate resources to do so using methods
+519
+already in use. We also believe that more evidence based perfor-
+520
+mance evaluations are needed to guide existing work, and that
+521
+the success of our efforts raises a poignant argument for the pur-
+522
+suit of such studies.
+523
+Conflicts of interest
+524
+The authors would like to declare no conflicts of interest.
+Appendix A
+Manual
+Informed
+Automated
+Top 5 features
+metastases/metastatic
+cancer
+tumor
+malignant
+carcinoma
+carcinoma
+neoplasm/neoplastic
+malignancy
+invasion
+ca
+metastases/metastasis
+slide
+carcinoma
+metastatic
+cell
+Top 10 features
+tumor
+adenocarcinoma
+metastat
+cancer
+invasion/invasive
+lymph
+stage
+neoplasia/neoplasms
+node
+in-situ
+neoplastic
+return
+nodule/node/nodular
+tumo
+adenocarcinoma
+Top 15 features
+adenoma
+differenitated
+margin
+invasive/invade
+germ
+involv
+necrosis/necrotic
+nucle
+consult
+atypia/atypical
+stage
+differenti
+abnormal
+undifferentiated
+mass
+Top 20 features
+irregular
+invade
+cassett
+aggressive
+mitotic
+phone
+dysmorphic
+node
+left
+hyperplastic
+perineural
+grade
+grade
+situ
+microscop
+Appendix B
+S.N. Kasthurirathne et al. / Journal of Biomedical Informatics xxx (2016) xxx–xxx
+7
+YJBIN 2503
+No. of Pages 8, Model 5G
+29 January 2016
+Please cite this article in press as: S.N. Kasthurirathne et al., Toward better public health reporting using existing off the shelf approaches: A comparison of
+alternative cancer detection approaches using plaintext medical data and non-dictionary based feature selection, J Biomed Inform (2016), http://dx.doi.
+org/10.1016/j.jbi.2016.01.008
+ 525
+Appendix C. Supplementary material
+526
+Supplementary data associated with this article can be found, in
+527
+the online version, at http://dx.doi.org/10.1016/j.jbi.2016.01.008.
+528
+References
+529
+[1] L. Barlow, K. Westergren, L. Holmberg, M. Talback, The completeness of the
+530
+Swedish Cancer Register: a sample survey for year 1998, Acta Oncol. 48 (1)
+531
+(2009) 27–33, http://dx.doi.org/10.1080/02841860802247664.
+532
+[2] R.J. Black, F. Bray, J. Ferlay, D.M. Parkin, Cancer incidence and mortality in the
+533
+European Union: Cancer registry data and estimates of national incidence for
+534
+1990, Eur. J. Cancer 33 (7) (1997) 1075–1107, http://dx.doi.org/10.1016/
+535
+S0959-8049(96)00492-3.
+536
+[3] W.W. Chapman, W. Bridewell, P. Hanbury, G.F. Cooper, B.G. Buchanan, A
+537
+simple algorithm for identifying negated findings and diseases in discharge
+538
+summaries, J. Biomed. Inform. 34 (5) (2001) 301–310, http://dx.doi.org/
+539
+10.1006/jbin.2001.1029.
+540
+[4] cpan.org., Lingua::Stem, 2014 <http://search.cpan.org/dist/Lingua-Stem/lib/
+541
+Lingua/Stem.pod>.
+542
+[5] cpan.org., Lingua::StopWords, 2014 <http://search.cpan.org/~creamyg/Lingua-
+543
+StopWords-0.09/lib/Lingua/StopWords.pm> (Retrieved 8, 2014).
+544
+[6] R.D. Cress, A.M. Zaslavsky, D.W. West, R.E. Wolf, M.C. Felter, J.Z. Ayanian,
+545
+Completeness of information on adjuvant therapies for colorectal cancer in
+546
+population-based cancer registries, Med. Care 41 (9) (2003) 1006–1012, http://
+547
+dx.doi.org/10.1097/01.mlr.0000083740.12949.88.
+548
+[7] E.R. DeLong, D.M. DeLong, D.L. Clarke-Pearson, Comparing the areas under two
+549
+or more correlated receiver operating characteristic curves: a nonparametric
+550
+approach, Biometrics (1988) 837–845.
+551
+[8] B.E. Dixon, J.J. McGowan, S.J. Grannis, Electronic laboratory data quality and
+552
+the value of a health information exchange to support public health reporting
+553
+processes, in: AMIA Annu Symp Proc, 2011, pp. 322–330.
+554
+[9] S. Dreiseitl, L. Ohno-Machado, Logistic regression and artificial neural network
+555
+classification models: a methodology review, J. Biomed. Inform. 35 (5–6)
+556
+(2002) 352–359, http://dx.doi.org/10.1016/S1532-0464(03)00034-0.
+557
+[10] P.J. García-Laencina, J.-L. Sancho-Gómez, A.R. Figueiras-Vidal, M. Verleysen, K
+558
+nearest neighbours with mutual information for simultaneous classification
+559
+and missing data imputation, Neurocomputing 72 (7) (2009) 1483–1493.
+560
+[11] N. Kang, Z. Afzal, B. Singh, E.M. van Mulligen, J.A. Kors, Using an ensemble
+561
+system to improve concept extraction from clinical records, J. Biomed. Inform.
+562
+45 (3) (2012) 423–428, http://dx.doi.org/10.1016/j.jbi.2011.12.009.
+563
+[12] M. Krauthammer, G. Nenadic, Term identification in the biomedical literature,
+564
+J.
+Biomed.
+Inform.
+37
+(6)
+(2004)
+512–526,
+http://dx.doi.org/10.1016/j.
+565
+jbi.2004.08.004.
+566
+[13] D.D. Lewis, Naive (Bayes) at Forty: The Independence Assumption in
+567
+Information Retrieval Machine Learning: ECML, vol. 98, Springer, 1998, pp.
+568
+4–15.
+569
+[14] C.J. McDonald, J.M. Overhage, M. Barnes, G. Schadow, L. Blevins, P.R. Dexter, B.
+570
+Mamlin, The Indiana network for patient care: a working local health
+571
+information infrastructure, Health Aff. 24 (5) (2005) 1214–1220.
+572
+[15] J.M. Overhage, S. Grannis, C.J. McDonald, A comparison of the completeness
+573
+and timeliness of automated electronic laboratory reporting and spontaneous
+574
+reporting of notifiable conditions, Am. J. Public Health 98 (2) (2008) 344–350,
+575
+http://dx.doi.org/10.2105/ajph.2006.092700.
+576
+[16] M.J. Overhage, J. Suico, C.J. McDonald, Electronic laboratory reporting: barriers,
+577
+solutions and findings, J. Publ. Health Manage. Pract. 7 (6) (2001) 60–66.
+578
+[17] D. Polani, Kullback–Leibler divergence, Encyclopedia Syst. Biol. (2013) 1087–
+579
+1088.
+580
+[18] I. Spasic
+´, J. Livsey, J.A. Keane, G. Nenadic
+´, Text mining of cancer-related
+581
+information: review of current status and future directions, Int. J. Med.
+582
+Informatics
+83
+(9)
+(2014)
+605–623,
+http://dx.doi.org/10.1016/j.
+583
+ijmedinf.2014.06.009.
+584
+[19] L. Teppo, E. Pukkala, M. Lehtonen, Data quality and quality control of a
+585
+population-based cancer registry. Experience in Finland, Acta Oncol. 33 (4)
+586
+(1994) 365–369.
+587
+[20] Vreeman, D. J. 2007. Keeping up with changing source system terms in a local
+588
+health information infrastructure: running to stand still, vol. 10.
+589
+[21] J. Yang, Z. Qu, Z. Liu, Improved feature-selection method considering the
+590
+imbalance problem in text categorization, Sci. World J. (2014).
+591
+[22] Y. Yang, J.O. Pedersen, A comparative study on feature selection in text
+592
+categorization, Paper Presented at the ICML, 1997.
+593
+[23] R. Zanetti, I. Schmidtmann, L. Sacchetto, F. Binder-Foucard, A. Bordoni, D. Coza,
+594
+et al., Completeness and timeliness: cancer registries could/should improve
+595
+their performance. Eur. J. Cancer (0). http://dx.doi.org/10.1016/j.ejca.2013.11.
+596
+040.
+597
+[24] Y. Zhao, Y. Zhang, Comparison of decision tree methods for finding active
+598
+objects, Adv. Space Res. 41 (12) (2008) 1955–1959.
+599
+8
+S.N. Kasthurirathne et al. / Journal of Biomedical Informatics xxx (2016) xxx–xxx
+YJBIN 2503
+No. of Pages 8, Model 5G
+29 January 2016
+Please cite this article in press as: S.N. Kasthurirathne et al., Toward better public health reporting using existing off the shelf approaches: A comparison of
+alternative cancer detection approaches using plaintext medical data and non-dictionary based feature selection, J Biomed Inform (2016), http://dx.doi.
+org/10.1016/j.jbi.2016.01.008

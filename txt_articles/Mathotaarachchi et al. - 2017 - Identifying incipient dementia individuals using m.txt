@@ -1,0 +1,1398 @@
+ Accepted Manuscript
+Identifying incipient dementia individuals using machine learning and amyloid imaging
+Sulantha Mathotaarachchi, Tharick A. Pascoal, Monica Shin, Andrea L. Benedet, Min
+Su Kang, Thomas Beaudry, Vladimir S. Fonov, Serge Gauthier, Pedro Rosa-Neto
+PII:
+S0197-4580(17)30229-4
+DOI:
+10.1016/j.neurobiolaging.2017.06.027
+Reference:
+NBA 9976
+To appear in:
+Neurobiology of Aging
+Received Date: 6 March 2017
+Revised Date:
+20 June 2017
+Accepted Date: 30 June 2017
+Please cite this article as: Mathotaarachchi, S., Pascoal, T.A., Shin, M., Benedet, A.L., Kang, M.S.,
+Beaudry, T., Fonov, V.S., Gauthier, S., Rosa-Neto, P., for the Alzheimer’s Disease Neuroimaging
+Initiative, Identifying incipient dementia individuals using machine learning and amyloid imaging,
+Neurobiology of Aging (2017), doi: 10.1016/j.neurobiolaging.2017.06.027.
+This is a PDF file of an unedited manuscript that has been accepted for publication. As a service to
+our customers we are providing this early version of the manuscript. The manuscript will undergo
+copyediting, typesetting, and review of the resulting proof before it is published in its final form. Please
+note that during the production process errors may be discovered which could affect the content, and all
+legal disclaimers that apply to the journal pertain.
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Identifying incipient dementia individuals using machine learning and amyloid imaging.  
+ 
+Authors:  Sulantha Mathotaarachchi1,4, Tharick A. Pascoal1, Monica Shin1, Andrea L. Benedet1, 
+Min Su Kang1, Thomas Beaudry1, Vladimir S. Fonov4, Serge Gauthier2,3,5,6, Pedro Rosa-
+Neto1,2,3,4,5,6* for the Alzheimer’s Disease Neuroimaging Initiative† 
+Affiliations: 
+1Translational Neuroimaging Laboratory, McGill University Research Centre for Studies in 
+Aging (MCSA), Douglas Research Institute, McGill University. 
+2McGill University Research Centre for Studies in Aging (MCSA), Douglas Research Institute, 
+McGill University. 
+3Douglas Research Institute, McGill University. 
+4McConnell Brain Imaging Centre, Montreal Neurological Institute, McGill University. 
+5Department of Psychiatry, McGill University. 
+3Department of Neurology & Neurosurgery, McGill University. 
+ 
+* Correspondence: Corresponding author: Pedro Rosa-Neto, MD, PhD. 
+Translational Neuroimaging Laboratory, McGill University Research Centre for Studies in 
+Aging, 
+6875 La Salle Blvd - FBC room 3149, Montreal, QC, Canada H4H 1R3. 
+Email: pedro.rosa@mcgill.ca 
+†Data used in preparation of this article were obtained from the Alzheimer’s Disease 
+Neuroimaging Initiative (ADNI) database (adni.loni.usc.edu). As such, the investigators within 
+the ADNI contributed to the design and implementation of ADNI and/or provided data but did 
+not participate in analysis or writing of this report. A complete listing of ADNI investigators can 
+be found at: http://adni.loni.usc.edu/wp-
+content/uploads/how_to_apply/ADNI_Acknowledgement_List.pdf 
+ 
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+ 
+Abstract: Identifying individuals destined to develop Alzheimer’s dementia within time frames 
+acceptable for clinical trials constitutes an important challenge to design studies to test emerging 
+disease-modifying therapies. Although amyloid-β protein is the core pathological feature of 
+Alzheimer’s disease, biomarkers of neuronal degeneration are the only ones believed to provide 
+satisfactory predictions of clinical progression within short time frames. Here, we propose a 
+machine learning based probabilistic method designed to assess the progression to dementia 
+within 24 months, based on the regional information from a single amyloid Positron Emission 
+Tomography scan. Importantly, the proposed method was designed to overcome the inherent 
+adverse imbalance proportions between stable and progressive mild cognitive impairment 
+individuals within a short observation period. The novel algorithm obtained an accuracy of 84%, 
+and an under receiver operating characteristic curve of 0.91 outperforming existing algorithms 
+using the same biomarker measures and previous studies using multiple biomarker modalities. 
+With its high accuracy, this algorithm has immediate applications for population enrichment in 
+clinical trials designed to test disease modifying-therapies aiming to mitigate the progression to 
+Alzheimer’s disease dementia. 
+ 
+Keywords: Alzheimer’s disease, mild cognitive impairment, prediction, amyloid, random forest, 
+random under sampling  
+ 
+Highlights 
+• New prediction algorithm to predict progression to Alzheimer’s dementia is proposed.  
+• Uses data sampling to overcome class imbalance challenge present in clinical cohorts.  
+• Proposed algorithm reached accuracy of 84% and AUC of 0.91 for testing sample.  
+• Has immediate application to enrich populations in clinical trials.  
+• Open access tool available at http://predictalz.tnlmcgill.ca/PredictAlz_Amy.  
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Introduction 
+Alzheimer’s Disease is the most common form of dementia, accounting for approximately 60-
+80% of the cases with alarming economic and social costs (Pouryamout et al., 2012). It is well 
+understood that Alzheimer’s disease pathophysiology follows a gradual course with pathologies 
+developing over decades prior to symptom onset (Braak and Braak, 1991; Mosconi et al., 2007). 
+Thus, there is an increased interest to advance the disease modifying clinical trials to the pre-
+dementia stages of Alzheimer’s disease given the better chances of obtaining tangible disease 
+modifying effects. This has been encouraged by the identification of biomarkers to detect the 
+pathological signatures at the early stages of the disease (Buerger et al., 2006; Fagan et al., 2006; 
+McEvoy and Brewer, 2010; Morris et al., 2009). However, given the high prevalence of 
+cognitively normal elderly individuals carrying the Alzheimer’s disease pathophysiology, 
+accurately identifying individuals who are in the early stages of Alzheimer’s disease has been a 
+significant challenge. Thus, the development of effective clinical trials has been severely 
+hampered by not being able to recruit individuals who have higher likelihood of developing 
+Alzheimer’s disease (Holland et al., 2012) within a time period acceptable to conduct a study.  
+Identification of effective biomarkers signatures to determine the progression of dementia has 
+been a significant challenge to accurately predict the short-term clinical progression. It is 
+believed that the biomarkers of neurodegeneration such as glucose metabolism and brain atrophy 
+would be the most effective, as the other pathological markers such as brain amyloid-β 
+deposition and formation of hyper-phosphorylated tau tangles occur years or decades prior to the 
+symptom onset (Clifford R. Jack et al., 2010; Jack et al., 2013). However, numerous studies 
+based on neurodegenerative biomarkers have indicated a decrease in ability to predict the clinical 
+progression when the observation time is more than 18 months. Given that the accumulation of 
+Aβ in the brain is a hallmark characteristic of Alzheimer’s disease, amyloid-based biomarkers 
+can be assumed to provide a better sensitivity to Alzheimer’s disease pathology over a longer 
+observation period (Trzepacz et al., 2014).  
+Studies conducted to evaluate the utility of amyloid biomarkers have used the cerebrospinal fluid 
+(CSF) Aβ measurements due to the relatively higher availability compared to amyloid PET 
+biomarkers. These studies have often combined other CSF measurements such as tau and p-tau 
+concentrations and MRI biomarkers (Apostolova et al., 2014; Davatzikos et al., 2011; Hall et al., 
+2015; Yang et al., 2012; Young et al., 2012) to accommodate for the limited dimensionality 
+offered by the CSF measurements. However, the possibility to regionally assess Alzheimer’s 
+disease pathophysiology and the increased availability of amyloid PET images in large-scale 
+aging studies have enabled the evaluation of this imaging biomarker as a diagnostic tool.  
+As the earliest detectable clinical stage of the trajectory towards dementia, mild cognitive 
+impairment (MCI) provides an attractive point of entry to disease modifying interventions 
+(Markesbery, 2010). However, not all MCI individuals carry Alzheimer’s disease 
+pathophysiology and progress to Alzheimer’s disease in an optimal time frame for clinical trial. 
+Thus, identification of biomarker signatures of MCI individuals on the verge of progression to 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+dementia and predicting the likelihood of conversion, has immediate application in disease 
+modifying clinical trials by including those individuals with high likelihood to progress. This 
+will increase the statistical power of the clinical trial by reducing false positives and would 
+directly impact the associated costs. Furthermore, these information, would also provide 
+important prognostic information for the patients and their families to plan and manage treatment 
+and care (Gelosa and Brooks, 2012).  
+The prediction of the clinical progression to dementia from MCI phase constitutes a challenge 
+due to the considerably lower number of progressive MCI (pMCI) individuals compared to the 
+stable MCI (sMCI) individuals, invariably creating imbalanced classes (pMCI, sMCI). In a 
+classification study, if the number of samples from a class (sMCI) greatly outnumbers the other 
+classes (pMCI), the classifier tends to favor the overrepresented majority class (sMCI) by 
+ignoring incorrect prediction in the minority class (pMCI). This constitutes a challenge known as 
+the “class imbalance problem” and leads to decreased sensitivity of the prediction, which has 
+been currently overlooked in Alzheimer’s disease research. While there are a number of 
+techniques developed to address this challenge, such as class weight adjusting, over sampling the 
+minority class and under sampling the majority class (Japkowicz and Stephen, 2002), the latter is 
+identified to perform the best (Seiffert et al., 2010, 2008). Random Under Sampling (RUS) is a 
+method of under sampling, which will train each of its base learners with the full minority class 
+and a randomly under sampled majority class. By doing this, each base learner is trained with a 
+balanced set of samples from both pMCI and sMCI classes, removing the bias towards any 
+particular class.  
+Amyloid PET images used in the study are [18F]Florbetapir PET scans acquired from the 
+Alzheimer's Disease Neuroimaging Initiative (ADNI). The study cohort presented a pMCI rate of 
+15.75%, similar to the rates presented by other cohort studies and community studies (Mitchell 
+and Shiri-Feshki, 2009). This presents the aforementioned class imbalanced challenge. Current 
+study utilizes RUS, to overcome this challenge. The novel prediction algorithm is presented as 
+Random Under Sampled Random Forest (RUSRF) and is used to evaluate the utility of amyloid 
+PET as a diagnostic tool.  
+The present study aims to evaluate the utility of amyloid PET imaging as an early detection tool 
+for individuals in the Alzheimer’s disease pathway. Specifically, we aim to predict if an MCI 
+individual will progress to Alzheimer’s disease or remain MCI within a time period of 24 months 
+based on the amyloid PET measurements at baseline.  We further believe that the proposed 
+technique can be used to complement the multibiomarker enrichment strategies for clinical trials 
+(Wolz et al., 2016).  
+This novel technique capitalizes on an optimized feature extraction method for amyloid PET, and 
+a method for addressing the class imbalance problem in the context of a random forest machine 
+learning classifier (Breiman, 2001). We further compare the performance of RUSRF with other 
+widely used prediction algorithms such as the SVM, L1 and L2 regularized logistic regression, 
+and Random Forest. We believe that the novel RUSRF algorithm will outperform these widely-
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+used prediction algorithms and that the amyloid PET biomarker might serve as an important 
+early diagnostic tool in both research and clinical environments.  
+ 
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Materials and Methods 
+Subjects and data acquisition 
+Data used in the preparation of this article were obtained from the ADNI database. ADNI was 
+launched in 2003 as a public-private partnership, led by Principal Investigator Michael W. 
+Weiner, MD. The primary goal of ADNI has been to test whether serial magnetic resonance 
+imaging (MRI), positron emission tomography (PET), other biological markers, and clinical and 
+neuropsychological assessment can be combined to measure the progression of mild cognitive 
+impairment (MCI) and early Alzheimer’s disease (Alzheimer’s disease). 
+We selected 273 ADNI-GO/2 participants meeting the criteria for single-domain or multi-
+domain amnestic MCI and acquired their [18F]Florbetapir PET, demographic, APOE4 genotype 
+information and the clinical diagnosis with the corresponding diagnosis information for the 
+subsequent 24-month follow-up visit (mean follow-up time: 24.37 months, standard deviation: 
+1.51 months). For PET image processing purposes, the matching T1-weighted MRI images were 
+also obtained. The eligibility criteria of MCI were participants with mini-mental state 
+examination (MMSE) score equal to or greater than 24, a clinical dementia rating of 0.5, 
+subjective and objective memory loss, normal activities of daily living, and the absence of other 
+neuropsychiatric disorders including Alzheimer’s disease (Petersen, 2003).  
+The subjects were categorized into 2 groups, stable MCI (sMCI) and progressive MCI (pMCI), 
+based on the diagnosis on their follow-up visit. If a subject was diagnosed to be Alzheimer’s 
+disease in the follow-up visit, that subject was categorized as pMCI, and if the subject remained 
+MCI at the 24-month follow-up visit, he or she was categorized as sMCI. Out of the 273 
+individuals used in the study, only 43 (15.75%) individuals were diagnosed as probable 
+Alzheimer’s disease in their follow-up visit and were categorized as pMCI. Demographical 
+information of the sample of individuals used in the study is presented in Table 1.   
+Image processing 
+The acquired T1-weighted MRI images were processed using the CIVET image processing 
+pipeline (Ad-Dab’bagh et al., 2006; Zijdenbos et al., 2002), where the images underwent non-
+uniformity correction (Sled et al., 1998), brain masking (Smith, 2002), linear and nonlinear 
+registration to the ICBM 152 Template (Fonov et al., 2009; Mazziotta et al., 1995) using the 
+ANIMAL (Collins et al., 1995; Collins and Evans, 1997; Robbins et al., 2004) image registration 
+algorithm. Downloaded [18F]Florbetapir PET images were already pre-processed to perform 
+motion correction and to acquire uniform spatial resolution according to the steps outlined in 
+(Online: http://adni.loni.usc.edu/methods/pet-analysis/pre-processing/, Accessed: 28-03-2016). 
+The PET images were then registered to the subjects’ own T1 weighted MRI images and were 
+spatial normalized to the ICBM 152 template. They were then normalized for the regional 
+intensities from the cerebellum grey matter and the global white matter to generate 
+[18F]Florbetapir PET SUVR images. 
+Subject classification 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Two sets of subjects were generated from the total set of individuals as training set (STrain) and 
+testing set (STest) (Table 1). The training set was used in the feature selection step and training the 
+machine learning algorithm, while the testing set was used solely to evaluate the performance of 
+the trained machine learning algorithm. Since the testing set is not used in the feature selection 
+step or in training, we void any bias or adverse effect from “double dipping” in the prediction of 
+progression to Alzheimer’s disease. The ratio between the sMCI and pMCI individuals was 
+preserved in both the training set and the testing set. 
+Feature selection 
+To identify the brain regions from where the PET SUVR values are read as features for the 
+predictors, we employed a voxel-wise logistic regression analysis. For each brain voxel, the 
+following logistic function was solved: 
+ 
+where 
+= probability of progressing to Alzheimer’s disease in 24 months. Then, for each voxel, 
+the scaled increase in odds (scaled odds ratio) for a one standard deviation (
+) increase in 
+[18F]Florbetapir PET SUVR was calculated as follows: 
+ 
+Anatomically significant brain regions with OR������ > 1.5 were selected based upon expert 
+opinion, and PET SUVR intensities from these regions were extracted as the mean of a 3x3x3 
+cluster of voxels. The above regional PET SUVR intensities along with age, gender, and APOE4 
+genotype status were fed into the predictors as features. 
+Prediction 
+Prediction was performed using the novel algorithm, Random Under-Sampled Random Forest 
+(RUSRF), based on the Random Forest classifier (Breiman, 2001). The novel algorithm uses 
+sampling techniques to train multiple Random Forest predictors to calculate the final prediction. 
+The primary goal of the present application is to predict progression to Alzheimer’s disease, 
+however, the population contains only 15.71% pMCI individuals. This constitutes a class 
+imbalance problem with a majority sMCI class. In this case, the predictors tend to be biased to 
+predict the majority class (sMCI) and to ignore the misclassification in the minority class (pMCI) 
+(Yen and Lee, 2009). To overcome this, the novel algorithm utilizes a data sampling technique 
+named “random under-sampling”, where the majority class is randomly sampled to create a 
+pseudo training set with equal proportions in all the classes. This technique is closely related to 
+the RUSBoost technique (Seiffert et al., 2008), however, the base classifier used in the present 
+study is Random Forest, and the iterative boosting method is not employed as the Random Forest 
+classifier uses feature bagging to achieve independence and randomness.  
+ln
+π
+1− π
+
+
+
+
+
+ = β0 +β1 *[18F]Florbetapir +β2 * Age+β3 *Gender +β4 * APOE4
+π
+σ
+Odds RatioScaled(ORScaled)= e
+β1*σ
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+In summary, RUSRF algorithm will train � number of Random Forest predictors with individual 
+pseudo training sets with equal class distributions. The number of minority class samples (��) 
+in a pseudo training set is equal to the total number of minority class samples in the original 
+training set. Thus, all � Random Forest predictors are trained for all the minority class instances. 
+The number of majority class samples are calculated to be a fraction (�) higher than the number 
+of samples in the minority class. The final probability prediction is calculated as the mean 
+probability across all the � Random Forests, and the final prediction is calculated as the final 
+probability prediction greater than 0.5.  
+The implementation of the RUSRF algorithm was done in python programming language using 
+the Random Forest implementation in the scikit-learn library (Online: http://scikit-
+learn.org/stable/, Accessed: 28-04-2016). 
+Performance evaluation and comparison 
+RUSRF algorithm has two primary parameters to be optimized based on the application, which 
+are the number of Random Forest predictors and the number of decision trees in each of the 
+Random Forest predictor. To estimate the best combination of these two parameters, we 
+employed a nested cross validation technique (Huttunen et al., 2012; Moradi et al., 2015). The 
+outer cross validation step divided the training set (������) in to 10 subsets (������
+�
+; � = 1 … 10) 
+preserving the class ratios of the original population (stratified cross validation). In each training 
+step �, ������
+�
+ was subdivided (using stratified cross validation) into 10 subsets (������
+��
+; � =
+1 … 10), and was passed to RUSRF algorithm with a tuple of parameters (number of Random 
+Forest predictors, number of trees in each predictor) selected from a grid of parameter 
+combinations for training. The best set of parameters was selected based on the AUC from the 
+internal 10-fold cross validation. The performance of the predictor was then evaluated based on 
+the AUC, accuracy (number of correct classifications divided by the total number of samples (in 
+�����)), F1 score (harmonic mean of precision and recall), sensitivity (number of correctly 
+classified pMCI subjects divided by the total pMCI subjects), and specificity (number of 
+correctly classified sMCI subjects divided by the total sMCI subjects) for the original test set 
+(�����). These values were calculated based on the predictions of each outer cross validation step 
+�, on the testing set (�����). By evaluating the performance based on the original test set (�����), 
+we recorded the true generalization ability of the RUSRF predictor.  
+To examine the performance gain from the RUSRF predictor, we trained four other widely used 
+classifiers such as Support Vector Machine (SVM), logistic regression with L1 regularization, 
+logistic regression with L2 regularization, and Random Forest (Breiman, 2001) using the same 
+set of features and compared with the performance of RUSRF. Evaluating the optimum 
+parameters and the performance for these widely-used classifiers were also done using a nested 
+cross validation as described above. McNemar’s �� test was performed to compare each of the 
+classifiers against random predictors. The random predictors were developed by training each of 
+the classification algorithms with a randomly permuted training set to disrupt the relationships 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+between the class labels and input features. Furthermore, a paired t-test was performed to 
+compare AUC and F1 scores of the RUSRF predictor against the other four predictors, while 
+McNemar’s �� test was used to compare the sensitivity and specificity. However, the overall 
+accuracy of each predictor was not used as a measure of comparison because it can misinterpret 
+the performance when the sample has imbalanced class probabilities. The resulting p values were 
+Bonferroni adjusted to correct for multiple comparisons. The classification analysis was carried 
+out in python programming language using the scikit-learn library, and the statistical analysis 
+was carried out using the R programming language.  
+In a binary classification, Random Forest algorithm performs implicit feature selection based on 
+the parameter called “Gini importance” (Breiman, 2001), which is calculated as the accumulated 
+decrease in “Gini impurity �(�)” . This is defined as; �(�) =  1 − ��
+� − ��
+�. Here �� = 
+��
+� , which 
+is the fraction of the �� samples from class � = �0, 1� out of the total n samples at a node � in a 
+binary decision tree in Random Forest. The decrease in Gini impurity results from splitting the 
+node by a threshold �� on variable �, and sending the samples to two sub nodes �� and �� is 
+calculated as ∆ �(�) =  �(�) − ���(��) − ���(��), where �� = 
+��
+� and �� = 
+��
+� , the relative sample 
+fractions at nodes �� and ��. The optimum split is then determined, which results in the maximum 
+decrease in Gini impurity at node �. The accumulation of these decreases in Gini impurity for all 
+nodes � in all trees � in the Forest, is known as the Gini importance (��) for variable �. 
+ 
+This measure indicates how often a variable is used for a split and how large its discriminative 
+power is in the classification study. In the RUSRF algorithm, the mean of this measure across all 
+the Random Forests, �, is used as the measure of feature importance for variable �. 
+ 
+Steps followed in the present study are summarized in Figure 1.  
+ 
+ 
+IG(α)=
+∆iα(t,T)
+t
+∑
+T
+∑
+Importance(α)= 1
+K
+∆iα(t,T,K)
+t
+∑
+T
+∑
+K
+∑
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Results  
+Demographic information of the individuals included in this study is summarized in Table 1. Out 
+of the 273 individuals, 43 (15.75%) were diagnosed with probable Alzheimer’s disease after the 
+24-month follow-up and were categorized as pMCI.  
+Voxel wise logistic regression analysis resulted in a scaled odds ratio map with the highest 
+values in the Orbitofrontal Cortex, Mid Frontal Cortex, Mid Temporal Cortex, Temporal 
+Occipital Junction, Posterior Cingulate Cortex, Angular Gyrus, Precuneus, Putamen, and the 
+Nucleus Accumbens (Figure 2). Standard Uptake Value Ratio (SUVR) values from bilateral 
+brain regions were extracted as described above and subsequently averaged to be used as 
+regional SUVRs. These regional SUVR values were then used as features on the predictors 
+together with age, gender, and APOE4 gene status.  
+Predictive performances from the five predictors are shown in Table 2. The RUSRF predictor 
+has the highest predictive performance for both stable MCI and progressive MCI individuals 
+based on the average area under the receiver operating characteristic curve (AUC) (0.906 (+/- 
+0.009)) and F1 score (0.583 (+/- 0.044)). The RUSRF AUC score is significantly different from 
+both the Support Vector Machine (SVM) and L2 logistic regression at p<0.0025 and from 
+Random Forest at p<0.0125. Furthermore, the RUSRF F1 score is significantly different from 
+SVM at p<0.0025 and from L2 logistic regression at p<0.0125. The sensitivity of the RUSRF 
+predictor only differed from the SVM predictor at p<0.025. The RUSRF specificity was different 
+from L2 logistic regression at p<0.0125 and from SVM, L1 logistic regression, and Random 
+Forest at p<0.025. The p value thresholds used here for statistical significance were Bonferroni 
+adjusted for multiple comparisons.  
+According to McNemar’s �� test (Table 3), only the RUSRF predictor showed a statistically 
+significant difference with the random predictor at p<0.01. Both regularized logistic regression 
+predictors were significantly different at p<0.1. However, the Random Forest predictor and the 
+SVM predictor were not significantly different from the random predictor. The �� statistic for 
+the SVM predictor cannot be calculated as the output from the predictions from both SVM and 
+the random predictor were identical. The SVM prediction for each test case, which was 
+calculated as the mean of the prediction from all 10 iterations was 0. This, resulted in an 
+exaggerated accuracy of 84.15% (all true 0 cases correctly predicted – specificity of 100%).  
+Figure 3a shows the receiver operating characteristic (ROC) curves for the four predictors with 
+their respective AUC values. The ROC curve for the novel RUSRF predictor dominated the 
+other curves with an area of 0.91, followed by the L1 logistic predictor, Random Forest 
+predictor, and the L2 logistic predictor. The AUC < 0.5 for the SVM predictor (Table 2) 
+indicated that the SVM predictor is a predictor for the stable MCI class but not for the 
+progressive MCI class.  
+The relative feature importance from the novel RUSRF predictor is shown in Figure 3b. The 
+most important features indicated the brain regions with the highest contribution to predict the 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+pMCI class. Aβ accumulations measured by [18F]Florbetapir PET SUVR in the Temporal 
+Occipital Junction, Mid Temporal Cortex, Mid Frontal Cortex , and Precuneus were the most 
+important features followed by the accumulation in other brain regions and age, gender, and 
+APOE4 gene status. The feature importance from the Random Forest classifier indicated the 
+same four regions to be the most important features (Supplementary Table 1). 
+ 
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Discussion  
+We have presented a novel algorithm for predicting the progression from MCI to Alzheimer’s 
+disease dementia using baseline amyloid PET measurements. The novel RUSRF algorithm uses 
+the Random Forest classifier as its base classifier along with advanced data sampling techniques 
+to overcome inherent problems of the data sample to improve the prediction accuracy. This 
+algorithm was shown to provide advantages as demonstrated by higher AUC and F1 score when 
+compared to the other widely used prediction algorithms such as SVM, regularized logistic 
+regression, and Random Forest. Furthermore, our preliminary data suggested, that this algorithm 
+could perform comparably to the methods employed using MRI, FDG PET, CSF biomarkers and 
+their combinations (Table 3). It is important to emphasize that the evaluation of the prediction 
+algorithms, employed a completely independent testing sample, which was never used in training 
+or feature selection steps. This method of evaluation resembles expected outcomes in an 
+application (clinical and research) environment, which can be considered encouraging to be used 
+for early diagnosis of Alzheimer’s disease.  
+Using the RUSRF algorithm, we obtained AUC and F1 scores of 0.906 (0.009) and 0.583 
+(0.044), respectively, for the independent testing set. Generally, the progression to Alzheimer’s 
+disease dementia of a MCI population within 24 months lies around 16.2% (Mitchell and Shiri-
+Feshki, 2009). Thus, in a prediction study, the pMCI class (the subset of individuals progressing 
+to Alzheimer’s disease) is expected to lie close to the same proportion, creating imbalanced 
+classes. If the methods to overcome this challenge is not involved, the prediction algorithm will 
+ignore the errors in the minority class (Japkowicz and Stephen, 2002). This can result in 
+exaggerated accuracies, as the predictor can be biased towards the majority class, but it can also 
+result in lower sensitivity for the minority class. In the present study, pMCI individuals were 
+only 15.75% of the sample. Therefore, comparing the prediction accuracy based on the overall 
+accuracy will lead to incorrect conclusions due to the adverse bias towards the majority class 
+(sMCI). In other words, a classifier predicting sMCI, regardless of the input features, will result 
+in 84.25% overall accuracy as there will only be 15.75% incorrect predictions (pMCI individuals 
+predicted as sMCI; 0% accuracy in pMCI class). To this regard, we have excluded the overall 
+accuracy as a measure to compare predictors used in this study; however, we used McNemar’s 
+�� test to compare the sensitivity and the specificity. It is important to mention that the majority 
+of studies conducted to predict the progression of Alzheimer’s disease dementia from MCI have 
+not considered whether their samples represent the imbalanced proportions of the population (see 
+Table 3). This can lead to inconsistent results when the studies are used in a clinical setting as the 
+models have been trained and tested on a heightened representation of the pMCI population. 
+Given that the population used in the present study is a closer representation of the MCI 
+population, the results of the study can be considered transferable to clinical use in early 
+diagnosis.  
+McNemar’s �� test was used to evaluate the statistical significant difference between each 
+predictor used in the study (RUSRF, SVM, regularized logistic regression, and Random Forest) 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+against a random predictor. The random predictor was created by training each of the algorithms 
+(RUSRF, SVM, regularized logistic regression, and Random Forest) with a randomly permuted 
+set of features derived from the original training set. By doing this, the relationship between the 
+features and the classes are completely disrupted, and the predictor is trained to learn a random 
+pattern. A statistically significant difference from a random predictor was only observed in the 
+RUSRF predictor at p < 0.01, indicating that the novel algorithm was able to learn the 
+classification patterns with a significant difference to a randomly trained classifier. Both 
+regularized logistic regression algorithms showed differences at p < 0.1, indicating a trend. This 
+may be due to the limited number of samples used in the testing set and the skewed proportions 
+of sMCI and pMCI individuals. However, neither the Random Forest predictor nor the SVM 
+predictor showed a significant difference from a random predictor, indicating their failure to 
+learn the prediction relationships from the training set.  
+McNemar’s �� test and paired t-test were used to compare the performance of the RUSRF 
+algorithm with other prediction algorithms. The AUC score can be considered a single metric for 
+classifier performance when dealing with highly unequal sample sizes (Eskildsen et al., 2013). 
+The RUSRF algorithm achieved the highest AUC score and was significantly different to both 
+SVM and L2 logistic regression at p < 0.0025 and to Random Forest at p < 0.0125. Although the 
+AUC of RUSRF was nominally higher than the AUC of L1 logistic regression, it was not 
+significantly different. However, the standard deviation of the AUC in L1 logistic regression was 
+considerably greater than that of RUSRF. This indicates that the performance of the L1 logistic 
+regression is more sensitive to the noise presented in the input features (Frome et al., 2007; Fu et 
+al., 2006), which can lead to inconsistent results in a clinical setting when used in early 
+diagnosis. We also used the F1 score to compare the predictor performance as it considers both 
+the precision and recall to construct the metric. The RUSRF predictor achieved the highest F1 
+score and was significantly different from SVM at p < 0.0025 and from L2 logistic regression at 
+p < 0.0125. The F1 score of RUSRF was nominally higher compared to both L1 logistic 
+regression and Random Forest but was not significant. However, in the case of Random Forest, 
+this can be due to the high precision resulting from a high specificity even with a lower 
+sensitivity value. It is important to mention that the F1 score can be influenced by skewed class 
+proportions (Jeni et al., 2013) and needs to be considered when used as a performance measure. 
+Both AUC and F1 scores were compared using paired t-tests with Bonferroni adjusted thresholds 
+for inference.  
+Comparing the sensitivity and specificity between RUSRF and the other predictors was 
+performed using the McNemar’s �� test. The sensitivity of the RUSRF predictor was 
+significantly higher only when compared to the SVM predictor. This can be greatly due to the 
+low number of pMCI individuals (n=13) in the test set, as the statistic is calculated considering 
+only the pMCI individuals. Furthermore, both L1 and L2 logistic regression predictors were 
+nominally higher than the sensitivity of RUSRF. However, given the number of pMCI 
+individuals, misclassification of even one individual can cause the sensitivity metric to fluctuate 
+substantially. Although the specificity of both the SVM and the Random Forest predictors were 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+higher than RUSRF, their sensitivities were not acceptable for any clinical or research use. 
+Among the RUSRF and logistic regression predictors, RUSRF achieved the highest specificity 
+and was significantly different from L2 logistic regression at p < 0.0125 and from L1 logistic 
+regression at p < 0.025. Although the SVM classifier is used widely in many applications, our 
+analysis indicated that, at its current configuration with a radial basis kernel, it produced a very 
+low sensitivity and is not suitable in identifying progressive MCI individuals. However, the 
+SVM classifier can be trained with a number of kernel functions such as the polynomial kernel 
+functions, sigmoid kernel functions, and linear kernel functions, and this would lead to increased 
+sensitivity and overall classification performance.  
+Direct comparisons with other similar studies conducted to assess the predictive capability of 
+amyloid imaging based biomarkers cannot be performed due to a number of reasons (see 
+summarized comparison in Table 3). Most studies (Brück et al., 2013; Hatashita and Yamasaki, 
+2013; Clifford R Jack et al., 2010; Wolk et al., 2009) have used [11C]PiB PET as the imaging 
+biomarker, as it was commonly used prior to the introduction of [18F]-based radio ligands (except 
+the authors of (Waragai et al., 2009), have used [11C]BF-227 PET). Both (Teipel et al., 2015) and 
+(Schreiber et al., 2015) have used [18F]Florbetapir PET, however, (Teipel et al., 2015) have used 
+both [18F]FDG PET and MRI biomarkers in combination with amyloid PET as the input features 
+for the predictor. Furthermore, studies with similar observation periods (Brück et al., 2013; 
+Ewers et al., 2012; Clifford R Jack et al., 2010; Waragai et al., 2009) have reported much higher 
+progression rates. These increased rates may be due to the low number of subjects included 
+(Waragai et al., 2009) by specialized memory clinics (Brück et al., 2013) and the lower baseline 
+Mini-Mental State Examination scores reported (Brück et al., 2013; Ewers et al., 2012; Clifford 
+R Jack et al., 2010; Waragai et al., 2009).  
+Nevertheless, these studies except for (Teipel et al., 2015) have not used any model evaluation 
+technique, such as cross validation, to assess how their models will generalize to an independent 
+data set, which is of paramount importance to be successfully used as an early diagnosis tool in a 
+clinical environment. We obtained a higher overall accuracy, AUC, and sensitivity compared to 
+the accuracy reported by (Teipel et al., 2015). The low sensitivity values reported in (Teipel et 
+al., 2015) may be due the lower proportion of pMCI individuals included in the study, leading to 
+a bias towards the majority sMCI group. The novel algorithm introduced in this study 
+compensates for this ‘imbalanced class problem’ by using data sampling techniques as 
+mentioned earlier.  
+Compared to several previous studies using not only Aβ PET based biomarkers, the algorithm 
+introduced here seems promising with a recorded average AUC of 0.906 for an independent test 
+set (accuracy: 0.84, sensitivity: 0.708, specificity: 0.865). Often, studies use performance 
+measures (AUC, accuracy, sensitivity and specificity) based only on cross validation; however, 
+this makes the prediction model biased towards the data set used, as all the samples are used for 
+training at some point in the analysis. The present study uses a completely independent testing 
+set to evaluate the true generalization capability of the model presented. The independent testing 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+set is not used in the feature extraction step or the model training steps. By evaluating the 
+performance of the prediction model based on a completely independent testing set, we can 
+retrieve the true expected performance of the model when used in a clinical environment as an 
+early diagnostic tool. The generalization capability can be further improved by training the 
+model on data acquired from multiple cohorts, as using a test set from the same cohort can add 
+bias to the prediction model.  
+The most important characteristic of the present study is its ability to overcome the inherent 
+imbalance of proportion between pMCI and sMCI individuals and performing comparably or 
+even better than the previous studies. Studies conducted by Cho et al., 2012; Davatzikos et al., 
+2011; Misra et al., 2009; Teipel et al., 2015 used cohorts with imbalanced proportions similar to 
+the present study to train their prediction models, which resulted in lower sensitivity scores and 
+lower AUC values.  
+One other important outcome from the present study is the relative predictive capability of the 
+investigated brain regions (Figure 3b) based on Aβ retention. Our study indicated that the four 
+brain regions, the Temporal Occipital Junction, Mid Temporal Cortex, Mid Frontal Cortex and 
+Precuneus to have the highest predictive ability. Other studies conducted with Aβ PET based 
+biomarkers also identified similar regions to have the highest difference between individuals 
+progressing to Alzheimer’s disease and sMCI individuals (Brück et al., 2013; Koivunen et al., 
+2011; Teipel et al., 2015). These regions are known to show Aβ deposition in relatively later 
+stages of the course of Alzheimer’s disease. This agrees with the idea that the regions with early 
+deposition of Aβ such as the posterior cingulate cortex, already reaches a plateau in the MCI 
+stage, adding little information to discriminate individuals progressing to Alzheimer’s disease, 
+whereas regions with later build-up are more relevant in discriminating stable and progressing 
+MCI individuals. Interestingly, the feature selection technique identified sub-cortical structures 
+such as the Putamen and the Nucleus Accumbens to be used as features for classification. It is 
+worth to emphasize, that patients with AD, have shown increased deposition of Aβ in these 
+subcortical brain regions occurring later in the disease spectrum (Ishibashi et al., 2014). 
+Furthermore, these regions receive projections from different prefrontal sub-regions, mainly 
+from the medial prefrontal cortex (Ferry et al., 2000; Ongür and Price, 2000), and their 
+associations to with behavioral characteristics and cognitive performance are well known (de 
+Jong et al., 2012; Diekhof et al., 2012). When evaluating the brain Aβ deposition, the consensus 
+of the field of Alzheimer’s disease is to use the average deposition from the brain regions 
+characteristic of Alzheimer’s disease. However, this method averages the Aβ deposition in brain 
+regions which accumulate in different stages of Alzheimer’s disease, and will result in a sub 
+optimal discriminating capability compared to the method introduced in the article (see 
+Supplementary material for results of RUSRF performance with average brain Aβ deposition). 
+Identifying the relative importance of Aβ deposition in various brain regions provides many 
+benefits to research studies of anti-amyloid agents to evaluate the treatment’s effect in preventing 
+or slowing the progression to Alzheimer’s disease.  
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+It is important to mention several limitations of the present study. Any Alzheimer’s disease study 
+involving in-vivo data suffers from the inherent uncertainty of the diagnosis (Eskildsen et al., 
+2013). This is because the diagnosis of Alzheimer’s disease can only be confirmed with autopsy 
+data. Therefore, any clinical diagnosis will always be “probable Alzheimer’s disease”. It is 
+estimated that around 10% of this “probable Alzheimer’s disease” diagnosis can be mislabeled 
+“Lewy Body disease” or “Frontotemporal dementia” (Ranginwala et al., 2008). Thus, the 
+patterns learnt by the predictor might not be specific to Alzheimer’s disease; however, this has 
+been partially addressed by using an Alzheimer’s disease specific biomarker such as Aβ PET 
+compared to a general neurodegenerative biomarker such as MRI or glucose metabolism.  
+It is important to emphasize that the population included in this analysis represents a select group 
+of amnestic MCI individuals motivated to participate in a dementia study, as such, for reasons 
+related to the study inclusion criteria these individuals may not represent the general MCI 
+population. Therefore, it would be highly desirable to replicate our findings in a population-
+based cohort. Furthermore, the predictor presented here is biased to the [18F]Florbetapir PET 
+acquisition protocol followed by ADNI, as the training and testing was done using only the data 
+acquired from the ADNI database. Hence, clinical implementations of the present study will still 
+require additional reliability assessments by training the predictor using multiple acquisition 
+protocols to increase the robustness of the prediction. Similarly, the feature extraction step 
+included identifying brain regions with a scaled odds ratio above 1.5, based on the expert 
+opinion. The rationale behind this step was to select the anatomically significant brain regions 
+with an increase of odds for developing Alzheimer’s disease of 50% for each 1 standard 
+deviation increase of SUVR. However, this step can add bias towards the subjective opinion of 
+the expert and can be avoided by selecting brain regions based on the opinion of multiple experts 
+or by using an automated cluster based technique. Furthermore, due to the computational cost of 
+performing multiple voxel-wise logistic regression analyses, the feature selection technique 
+employed a single voxel-wise logistic regression analysis including all the subjects (excluding 
+the ones used as the final test dataset). However, the stability of the identified regions can be 
+further increased by employing an under-sampling technique in identifying the features. 
+In conclusion, we present a novel algorithm to predict the progression to Alzheimer’s disease 
+dementia within MCI individuals based on their Aβ PET measurements. The predictor presented 
+here achieved a high rate of accuracy with an AUC of 0.906 for an independent test set. The 
+novel algorithm overcomes the inherent imbalance of proportions between stable and progressive 
+MCI seen in a population of MCI individuals, making it ideally suited for a clinical environment 
+as an early diagnostic tool. Demonstration of such a tool using the data presented in the current 
+article can be found at http://predictalz.tnlmcgill.ca/PredictAlz_Amy. 
+ 
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Acknowledgments: Data collection and sharing for this project was funded by the ADNI 
+(National Institutes of Health Grant U01 AG024904) and DOD ADNI (Department of Defense 
+award number W81XWH-12-2-0012). ADNI is funded by the National Institute on Aging, the 
+National Institute of Biomedical Imaging and Bioengineering, and through generous 
+contributions from the following: AbbVie, Alzheimer’s Association; Alzheimer’s Drug 
+Discovery Foundation; Araclon Biotech; BioClinica, Inc.; Biogen; Bristol-Myers Squibb 
+Company; CereSpir, Inc.; Eisai Inc.; Elan Pharmaceuticals, Inc.; Eli Lilly and Company; 
+EuroImmun; F. Hoffmann-La Roche Ltd and its affiliated company Genentech, Inc.; Fujirebio; 
+GE Healthcare; IXICO Ltd.; Janssen Alzheimer Immunotherapy Research & Development, 
+LLC.; Johnson & Johnson Pharmaceutical Research & Development LLC.; Lumosity; 
+Lundbeck; Merck & Co., Inc.; Meso Scale Diagnostics, LLC.; NeuroRx Research; Neurotrack 
+Technologies; Novartis Pharmaceuticals Corporation; Pfizer Inc.; Piramal Imaging; Servier; 
+Takeda Pharmaceutical Company; and Transition Therapeutics. The Canadian Institutes of 
+Health Research also provides funds to support ADNI clinical sites in Canada. Private sector 
+contributions are facilitated by the Foundation for the National Institutes of Health 
+(www.fnih.org). The grantee organization is the Northern California Institute for Research and 
+Education, and the study is coordinated by the Alzheimer's Disease Cooperative Study at the 
+University of California, San Diego. ADNI data were disseminated by the Laboratory for Neuro 
+Imaging at the University of Southern California. Funding: This work was supported by the 
+Canadian Institutes of Health Research (CIHR) [MOP-11-51-31], Canadian Consortium of 
+Neurodegeneration and Aging, the Alan Tiffin Foundation, the Alzheimer's Association [NIRG-
+12-92090, NIRP-12-259245], the Fonds de Recherche du Québec – Santé (P-RN), and the Centre 
+for Studies on Prevention of Alzheimer’s Disease (StoP-AD Centre). 
+ 
+Conflict of Interest: Authors declare no conflicts of interest. 
+ 
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+References 
+Ad-Dab’bagh, Y., Einarson, D., Lyttelton, O., Muehlboeck, J.S., Mok, K., Ivanov, O., Vincent, 
+R.D., Lepage, C., Lerch, J., Fombonne, E., Evans, A.C., 2006. The CIVET Image-
+Processing Environment: A Fully Automated Comprehensive Pipeline for Anatomical 
+Neuroimaging Research, in: Corbetta, M. (Ed.), Proceedings of the 12th Annual Meeting of 
+the Human Brain Mapping Organization. Neuroimage, Florence, Italy. 
+Apostolova, L.G., Hwang, K.S., Kohannim, O., Avila, D., Elashoff, D., Jack, C.R., Shaw, L., 
+Trojanowski, J.Q., Weiner, M.W., Thompson, P.M., 2014. ApoE4 effects on automated 
+diagnostic classifiers for mild cognitive impairment and Alzheimer’s disease. NeuroImage 
+Clin. 4, 461–472. doi:10.1016/j.nicl.2013.12.012 
+Braak, H., Braak, E., 1991. Neuropathological stageing of Alzheimer-related changes. Acta 
+Neuropathol. 82, 239–259. doi:10.1007/BF00308809 
+Breiman, L., 2001. Random Forests. Mach. Learn. 45, 5–32. doi:10.1023/A:1010933404324 
+Brück, A., Virta, J.R., Koivunen, J., Koikkalainen, J., Scheinin, N.M., Helenius, H., Någren, K., 
+Helin, S., Parkkola, R., Viitanen, M., Rinne, J.O., 2013. [11C]PIB, [18F]FDG and MR 
+imaging in patients with mild cognitive impairment. Eur. J. Nucl. Med. Mol. Imaging 40, 
+1567–72. doi:10.1007/s00259-013-2478-8 
+Buerger, K., Ewers, M., Pirttilä, T., Zinkowski, R., Alafuzoff, I., Teipel, S.J., DeBernardis, J., 
+Kerkman, D., McCulloch, C., Soininen, H., Hampel, H., 2006. CSF phosphorylated tau 
+protein correlates with neocortical neurofibrillary pathology in Alzheimer’s disease. Brain 
+129, 3035–41. doi:10.1093/brain/awl269 
+Cho, Y., Seong, J.-K., Jeong, Y., Shin, S.Y., 2012. Individual subject classification for 
+Alzheimer’s disease based on incremental learning using a spatial frequency representation 
+of cortical thickness data. Neuroimage 59, 2217–30. doi:10.1016/j.neuroimage.2011.09.085 
+Chupin, M., Gérardin, E., Cuingnet, R., Boutet, C., Lemieux, L., Lehéricy, S., Benali, H., 
+Garnero, L., Colliot, O., 2009. Fully automatic hippocampus segmentation and 
+classification in Alzheimer’s disease and mild cognitive impairment applied on data from 
+ADNI. Hippocampus 19, 579–87. doi:10.1002/hipo.20626 
+Collins, D.L., Evans, A.C., 1997. Animal: Validation and Applications of Nonlinear 
+Registration-Based Segmentation. Int. J. Pattern Recognit. Artif. Intell. 11, 1271–1294. 
+doi:10.1142/S0218001497000597 
+Collins, D.L., Holmes, C.J., Peters, T.M., Evans, A.C., 1995. Automatic 3-D model-based 
+neuroanatomical segmentation. Hum. Brain Mapp. 3, 190–208. 
+doi:10.1002/hbm.460030304 
+Coupé, P., Eskildsen, S.F., Manjón, J. V, Fonov, V.S., Collins, D.L., 2012. Simultaneous 
+segmentation and grading of anatomical structures for patient’s classification: application to 
+Alzheimer’s disease. Neuroimage 59, 3736–47. doi:10.1016/j.neuroimage.2011.10.080 
+Cuingnet, R., Gerardin, E., Tessieras, J., Auzias, G., Lehéricy, S., Habert, M.-O., Chupin, M., 
+Benali, H., Colliot, O., 2011. Automatic classification of patients with Alzheimer’s disease 
+from structural MRI: a comparison of ten methods using the ADNI database. Neuroimage 
+56, 766–81. doi:10.1016/j.neuroimage.2010.06.013 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Davatzikos, C., Bhatt, P., Shaw, L.M., Batmanghelich, K.N., Trojanowski, J.Q., 2011. Prediction 
+of MCI to AD conversion, via MRI, CSF biomarkers, and pattern classification. Neurobiol. 
+Aging 32, 2322.e19-27. doi:10.1016/j.neurobiolaging.2010.05.023 
+de Jong, L.W., Wang, Y., White, L.R., Yu, B., van Buchem, M.A., Launer, L.J., 2012. Ventral 
+striatal volume is associated with cognitive decline in older people: a population based MR-
+study. Neurobiol. Aging 33, 424.e1-10. doi:10.1016/j.neurobiolaging.2010.09.027 
+Diekhof, E.K., Kaps, L., Falkai, P., Gruber, O., 2012. The role of the human ventral striatum and 
+the medial orbitofrontal cortex in the representation of reward magnitude ? An activation 
+likelihood estimation meta-analysis of neuroimaging studies of passive reward expectancy 
+and outcome processing. Neuropsychologia 50, 1252–1266. 
+doi:10.1016/j.neuropsychologia.2012.02.007 
+Doyle, O.M., Westman, E., Marquand, A.F., Mecocci, P., Vellas, B., Tsolaki, M., Kłoszewska, 
+I., Soininen, H., Lovestone, S., Williams, S.C.R., Simmons, A., 2014. Predicting 
+progression of Alzheimer’s disease using ordinal regression. PLoS One 9, e105542. 
+doi:10.1371/journal.pone.0105542 
+Eskildsen, S.F., Coupé, P., García-Lorenzo, D., Fonov, V., Pruessner, J.C., Collins, D.L., 2013. 
+Prediction of Alzheimer’s disease in subjects with mild cognitive impairment from the 
+ADNI cohort using patterns of cortical thinning. Neuroimage 65, 511–521. 
+doi:10.1016/j.neuroimage.2012.09.058 
+Ewers, M., Insel, P., Jagust, W.J., Shaw, L., Trojanowski, J.Q., Aisen, P., Petersen, R.C., Schuff, 
+N., Weiner, M.W., 2012. CSF biomarker and PIB-PET-derived beta-amyloid signature 
+predicts metabolic, gray matter, and cognitive changes in nondemented subjects. Cereb. 
+Cortex 22, 1993–2004. doi:10.1093/cercor/bhr271 
+Fagan, A.M., Mintun, M.A., Mach, R.H., Lee, S.-Y., Dence, C.S., Shah, A.R., LaRossa, G.N., 
+Spinner, M.L., Klunk, W.E., Mathis, C.A., DeKosky, S.T., Morris, J.C., Holtzman, D.M., 
+2006. Inverse relation between in vivo amyloid imaging load and cerebrospinal fluid 
+Abeta42 in humans. Ann. Neurol. 59, 512–9. doi:10.1002/ana.20730 
+Ferry, A.T., Ongür, D., An, X., Price, J.L., 2000. Prefrontal cortical projections to the striatum in 
+macaque monkeys: evidence for an organization related to prefrontal networks. J. Comp. 
+Neurol. 425, 447–70. 
+Fonov, V., Evans, A., McKinstry, R., Almli, C., Collins, D., 2009. Unbiased nonlinear average 
+age-appropriate brain templates from birth to adulthood. Neuroimage 47, S102. 
+doi:10.1016/S1053-8119(09)70884-5 
+Frome, A., Sha, F., Singer, Y., Malik, J., 2007. Learning globally-consistent local distance 
+functions for shape-based image retrieval and classification. Proc. IEEE Int. Conf. Comput. 
+Vis. doi:10.1109/ICCV.2007.4408839 
+Fu, H., Ng, M.K., Nikolova, M., Barlow, J.L., 2006. Efficient Minimization Methods of Mixed 
+l2-l1 and l1-l1 Norms for Image Restoration. SIAM J. Sci. Comput. 27, 1881–1902. 
+doi:10.1137/040615079 
+Gaser, C., Franke, K., Klöppel, S., Koutsouleris, N., Sauer, H., 2013. BrainAGE in Mild 
+Cognitive Impaired Patients: Predicting the Conversion to Alzheimer’s Disease. PLoS One 
+8, e67346. doi:10.1371/journal.pone.0067346 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Gelosa, G., Brooks, D., 2012. The prognostic value of amyloid imaging. Eur. J. Nucl. Med. Mol. 
+Imaging 39, 1207–1219. doi:10.1007/s00259-012-2108-x 
+Hall, A., Mattila, J., Koikkalainen, J., Lötjonen, J., Wolz, R., Scheltens, P., Frisoni, G., Tsolaki, 
+M., Nobili, F., Freund-levi, Y., Minthon, L., Frölich, L., Hampel, H., Visser, P.J., Soininen, 
+H., 2015. Predicting progression from cognitive impairment to Alzheimer’s disease with the 
+Disease State Index. Curr. Alzheimer Res. 12, 69–79. 
+Hatashita, S., Yamasaki, H., 2013. Diagnosed mild cognitive impairment due to Alzheimer’s 
+disease with PET biomarkers of beta amyloid and neuronal dysfunction. PLoS One 8, 
+e66877. doi:10.1371/journal.pone.0066877 
+Holland, D., McEvoy, L.K., Desikan, R.S., Dale, A.M., 2012. Enrichment and Stratification for 
+Predementia Alzheimer Disease Clinical Trials. PLoS One 7. 
+doi:10.1371/journal.pone.0047739 
+Huttunen, H., Manninen, T., Kauppi, J.-P., Tohka, J., 2012. Mind reading with regularized 
+multinomial logistic regression. Mach. Vis. Appl. 24, 1311–1325. doi:10.1007/s00138-012-
+0464-y 
+Ishibashi, K., Ishiwata, K., Toyohara, J., Murayama, S., Ishii, K., 2014. Regional analysis of 
+striatal and cortical amyloid deposition in patients with Alzheimer’s disease. Eur. J. 
+Neurosci. 40, 2701–2706. doi:10.1111/ejn.12633 
+Jack, C.R., Knopman, D.S., Jagust, W.J., Petersen, R.C., Weiner, M.W., Aisen, P.S., Shaw, 
+L.M., Vemuri, P., Wiste, H.J., Weigand, S.D., Lesnick, T.G., Pankratz, V.S., Donohue, 
+M.C., Trojanowski, J.Q., 2013. Tracking pathophysiological processes in Alzheimer’s 
+disease: an updated hypothetical model of dynamic biomarkers. Lancet. Neurol. 12, 207–16. 
+doi:10.1016/S1474-4422(12)70291-0 
+Jack, C.R., Knopman, D.S., Jagust, W.J., Shaw, L.M., Aisen, P.S., Weiner, M.W., Petersen, 
+R.C., Trojanowski, J.Q., 2010. Hypothetical model of dynamic biomarkers of the 
+Alzheimer’s pathological cascade. Lancet Neurol. 9, 119–128. doi:10.1016/S1474-
+4422(09)70299-6 
+Jack, C.R., Wiste, H.J., Vemuri, P., Weigand, S.D., Senjem, M.L., Zeng, G., Bernstein, M.A., 
+Gunter, J.L., Pankratz, V.S., Aisen, P.S., Weiner, M.W., Petersen, R.C., Shaw, L.M., 
+Trojanowski, J.Q., Knopman, D.S., 2010. Brain beta-amyloid measures and magnetic 
+resonance imaging atrophy both predict time-to-progression from mild cognitive 
+impairment to Alzheimer’s disease. Brain 133, 3336–48. doi:10.1093/brain/awq277 
+Japkowicz, N., Stephen, S., 2002. The class imbalance problem: A systematic study. Intell. Data 
+Anal. 
+Jeni, L. a., Cohn, J.F., De La Torre, F., 2013. Facing Imbalanced Data--Recommendations for 
+the Use of Performance Metrics. 2013 Hum. Assoc. Conf. Affect. Comput. Intell. Interact. 
+245–251. doi:10.1109/ACII.2013.47 
+Koikkalainen, J., Lötjönen, J., Thurfjell, L., Rueckert, D., Waldemar, G., Soininen, H., 2011. 
+Multi-template tensor-based morphometry: application to analysis of Alzheimer’s disease. 
+Neuroimage 56, 1134–44. doi:10.1016/j.neuroimage.2011.03.029 
+Koivunen, J., Scheinin, N., Virta, J.. R., Aalto, S., Vahlberg, T., Nagren, Helin, S., Parkkola, R., 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Viitanen, M., Rinne, J.. O., Någren, K., Helin, S., Parkkola, R., Viitanen, M., Rinne, J.. O., 
+2011. Amyloid PET imaging in patients with mild cognitive impairment: a 2-year follow-up 
+study. Neurology 76, 1085–90. doi:10.1212/WNL.0b013e318212015e 
+Lebedev, A. V, Westman, E., Van Westen, G.J.P., Kramberger, M.G., Lundervold, A., Aarsland, 
+D., Soininen, H., Kłoszewska, I., Mecocci, P., Tsolaki, M., Vellas, B., Lovestone, S., 
+Simmons, A., 2014. Random Forest ensembles for detection and prediction of Alzheimer’s 
+disease with a good between-cohort robustness. NeuroImage. Clin. 6, 115–25. 
+doi:10.1016/j.nicl.2014.08.023 
+Markesbery, W.R., 2010. Neuropathologic alterations in mild cognitive impairment: A review. J. 
+Alzheimer’s Dis. 
+Mazziotta, J.C., Toga, A.W., Evans, A., Fox, P., Lancaster, J., 1995. A probabilistic atlas of the 
+human brain: theory and rationale for its development. The International Consortium for 
+Brain Mapping (ICBM). Neuroimage 2, 89–101. 
+McEvoy, L.K., Brewer, J.B., 2010. Quantitative structural MRI for early detection of 
+Alzheimer’s disease. Expert Rev. Neurother. 10, 1675–88. doi:10.1586/ern.10.162 
+Misra, C., Fan, Y., Davatzikos, C., 2009. Baseline and longitudinal patterns of brain atrophy in 
+MCI patients, and their use in prediction of short-term conversion to AD: results from 
+ADNI. Neuroimage 44, 1415–22. doi:10.1016/j.neuroimage.2008.10.031 
+Mitchell, A.J., Shiri-Feshki, M., 2009. Rate of progression of mild cognitive impairment to 
+dementia--meta-analysis of 41 robust inception cohort studies. Acta Psychiatr. Scand. 119, 
+252–65. doi:10.1111/j.1600-0447.2008.01326.x 
+Moradi, E., Pepe, A., Gaser, C., Huttunen, H., Tohka, J., 2015. Machine learning framework for 
+early MRI-based Alzheimer’s conversion prediction in MCI subjects. Neuroimage 104, 
+398–412. doi:10.1016/j.neuroimage.2014.10.002 
+Morris, J.C., Roe, C.M., Grant, E.A., Head, D., Storandt, M., Goate, A.M., Fagan, A.M., 
+Holtzman, D.M., Mintun, M.A., 2009. Pittsburgh compound B imaging and prediction of 
+progression from cognitive normality to symptomatic Alzheimer disease. Arch. Neurol. 66, 
+1469–75. doi:10.1001/archneurol.2009.269 
+Mosconi, L., Brys, M., Glodzik-Sobanska, L., De Santi, S., Rusinek, H., de Leon, M.J., 2007. 
+Early detection of Alzheimer’s disease using neuroimaging. Exp. Gerontol. 42, 129–38. 
+doi:10.1016/j.exger.2006.05.016 
+Ongür, D., Price, J.L., 2000. The organization of networks within the orbital and medial 
+prefrontal cortex of rats, monkeys and humans. Cereb. Cortex 10, 206–19. 
+Petersen, R.C. (Ed), 2003. Mild cognitive impairment: Aging to Alzheimer’s disease. Oxford 
+University Press. 
+Pouryamout, L., Dams, J., Wasem, J., Dodel, R., Neumann, A., 2012. Economic evaluation of 
+treatment options in patients with Alzheimer’s disease: a systematic review of cost-
+effectiveness analyses. Drugs 72, 789–802. doi:10.2165/11631830-000000000-00000 
+Querbes, O., Aubry, F., Pariente, J., Lotterie, J.-A., Démonet, J.-F., Duret, V., Puel, M., Berry, I., 
+Fort, J.-C., Celsis, P., 2009. Early diagnosis of Alzheimer’s disease using cortical thickness: 
+impact of cognitive reserve. Brain 132, 2036–47. doi:10.1093/brain/awp105 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Ranginwala, N.A., Hynan, L.S., Weiner, M.F., White, C.L., 2008. Clinical criteria for the 
+diagnosis of Alzheimer disease: still good after all these years. Am. J. Geriatr. Psychiatry 
+16, 384–8. doi:10.1097/JGP.0b013e3181629971 
+Retico, A., Bosco, P., Cerello, P., Fiorina, E., Chincarini, A., Fantacci, M.E., 2014. Predictive 
+Models Based on Support Vector Machines: Whole-Brain versus Regional Analysis of 
+Structural MRI in the Alzheimer’s Disease. J. Neuroimaging n/a-n/a. doi:10.1111/jon.12163 
+Robbins, S., Evans, A.C., Collins, D.L., Whitesides, S., 2004. Tuning and comparing spatial 
+normalization methods. Med. Image Anal. 8, 311–23. doi:10.1016/j.media.2004.06.009 
+Schreiber, S., Landau, S.M., Fero, A., Schreiber, F., Jagust, W.J., 2015. Comparison of Visual 
+and Quantitative Florbetapir F 18 Positron Emission Tomography Analysis in Predicting 
+Mild Cognitive Impairment Outcomes. JAMA Neurol. 72, 1183–90. 
+doi:10.1001/jamaneurol.2015.1633 
+Seiffert, C., Khoshgoftaar, T.M., Van Hulse, J., Napolitano, A., 2010. RUSBoost: A hybrid 
+approach to alleviating class imbalance. IEEE Trans. Syst. Man, Cybern. Part ASystems 
+Humans 40, 185–197. doi:10.1109/TSMCA.2009.2029559 
+Seiffert, C., Khoshgoftaar, T.M., Van Hulse, J., Napolitano, A., 2008. RUSBoost: Improving 
+classification performance when training data is skewed, in: 2008 19th International 
+Conference on Pattern Recognition. IEEE, pp. 1–4. doi:10.1109/ICPR.2008.4761297 
+Sled, J.G., Zijdenbos, A.P., Evans, A.C., 1998. A nonparametric method for automatic correction 
+of intensity nonuniformity in MRI data. IEEE Trans. Med. Imaging 17, 87–97. 
+doi:10.1109/42.668698 
+Smith, S.M., 2002. Fast robust automated brain extraction. Hum. Brain Mapp. 17, 143–55. 
+doi:10.1002/hbm.10062 
+Teipel, S.J., Kurth, J., Krause, B., Grothe, M.J., 2015. The relative importance of imaging 
+markers for the prediction of Alzheimer’s disease dementia in mild cognitive impairment - 
+Beyond classical regression. NeuroImage. Clin. 8, 583–93. doi:10.1016/j.nicl.2015.05.006 
+Trzepacz, P.T., Yu, P., Sun, J., Schuh, K., Case, M., Witte, M.M., Hochstetler, H., Hake, A., 
+2014. Comparison of neuroimaging modalities for the prediction of conversion from mild 
+cognitive impairment to Alzheimer’s dementia. Neurobiol. Aging 35, 143–51. 
+doi:10.1016/j.neurobiolaging.2013.06.018 
+Waragai, M., Okamura, N., Furukawa, K., Tashiro, M., Furumoto, S., Funaki, Y., Kato, M., 
+Iwata, R., Yanai, K., Kudo, Y., Arai, H., 2009. Comparison study of amyloid PET and 
+voxel-based morphometry analysis in mild cognitive impairment and Alzheimer’s disease. 
+J. Neurol. Sci. 285, 100–108. doi:10.1016/j.jns.2009.06.005 
+Westman, E., Muehlboeck, J.-S., Simmons, A., 2012. Combining MRI and CSF measures for 
+classification of Alzheimer’s disease and prediction of mild cognitive impairment 
+conversion. Neuroimage 62, 229–38. doi:10.1016/j.neuroimage.2012.04.056 
+Wolk, D.A., Price, J.C., Saxton, J.A., Snitz, B.E., James, J.A., Lopez, O.L., Aizenstein, H.J., 
+Cohen, A.D., Weissfeld, L.A., Mathis, C.A., Klunk, W.E., De-Kosky, S.T., DeKoskym, 
+S.T., 2009. Amyloid imaging in mild cognitive impairment subtypes. Ann. Neurol. 65, 557–
+68. doi:10.1002/ana.21598 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Wolz, R., Julkunen, V., Koikkalainen, J., Niskanen, E., Zhang, D.P., Rueckert, D., Soininen, H., 
+Lötjönen, J., 2011. Multi-Method Analysis of MRI Images in Early Diagnostics of 
+Alzheimer’s Disease. PLoS One 6, e25446. doi:10.1371/journal.pone.0025446 
+Wolz, R., Schwarz, A.J., Gray, K.R., Yu, P., Hill, D.L.G., Alzheimer’s Disease Neuroimaging 
+Initiative, 2016. Enrichment of clinical trials in MCI due to AD using markers of amyloid 
+and neurodegeneration. Neurology 1–7. doi:10.1212/WNL.0000000000003126 
+Yang, X., Tan, M.Z., Qiu, A., 2012. CSF and brain structural imaging markers of the 
+Alzheimer’s pathological cascade. PLoS One 7, e47406. doi:10.1371/journal.pone.0047406 
+Ye, J., Farnum, M., Yang, E., Verbeeck, R., Lobanov, V., Raghavan, N., Novak, G., DiBernardo, 
+A., Narayan, V.A., 2012. Sparse learning and stability selection for predicting MCI to AD 
+conversion using baseline ADNI data. BMC Neurol. 12, 46. doi:10.1186/1471-2377-12-46 
+Yen, S.J., Lee, Y.S., 2009. Cluster-based under-sampling approaches for imbalanced data 
+distributions. Expert Syst. Appl. 36, 5718–5727. 
+Young, J., Modat, M., Cardoso, M.J., Ashburner, J., Ourselin, S., 2012. Classification of 
+Alzheimer’s disease patients and controls with Gaussian processes. 2012 9th IEEE Int. 
+Symp. Biomed. Imaging 1523–1526. doi:10.1109/ISBI.2012.6235862 
+Zhang, D., Shen, D., 2012. Predicting future clinical changes of MCI patients using longitudinal 
+and multimodal biomarkers. PLoS One 7, e33182. doi:10.1371/journal.pone.0033182 
+Zijdenbos, A.P., Forghani, R., Evans, A.C., 2002. Automatic “pipeline” analysis of 3-D MRI 
+data for clinical trials: Application to multiple sclerosis. IEEE Trans Med Imaging 21, 
+1280–1291. doi:Doi 10.1109/Tmi.2002.806283 
+ 
+ 
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Tables 
+Table 1. Demographics of subjects included in the study and their classification in to training 
+and testing sets. 
+ 
+sMCI 
+pMCI 
+N (273) 
+230 
+43 
+Age (SD) 
+71.45(7.52) 
+73.25(7.65) 
+Males (Females) 
+135(95) 
+23(20) 
+Education(SD) 
+16.2(2.71) 
+15.86(2.81) 
+APOE 4 Positive (Neg) *** 
+81(149) 
+33(10) 
+MMSE (SD)*** 
+28.22(1.64) 
+26.91(1.87) 
+Training (������)( pMCI Ratio) 
+161 
+30(15.71%) 
+Testing (�����)( pMCI Ratio) 
+69 
+13(15.85%) 
+ 
+Table 2. Summary of performance of the predictors used. The statistical significance is 
+measured compared to the RUSRF predictor. *p < 0.025, **p < 0.0125, ***p < 0.0025. Across 
+these methods, RUSRF had the best AUC and F1score. 
+Predictor 
+AUC 
+Accuracy 
+F1 Score 
+Sensitivity Specificity 
+vs Random 
+Predictor 
+McNemar's �� p 
+SVM 
+0.436 
+(0.24)*** 
+0.834 
+(0.023) 
+0.091 
+(0.193)*** 
+0.1 
+(0.212)* 
+0.972 
+(0.061)* 
+NA 
+L1 logistic 
+0.874 
+(0.047) 
+0.752 
+(0.043) 
+0.523 
+(0.051) 
+0.846 
+(0.051) 
+0.735 
+(0.046)* 
+8.1990e-02* 
+L2 logistic 
+0.871 
+(0.007)*** 
+0.751 
+(0.02) 
+0.522 
+(0.023) ** 
+0.854 
+(0.024) 
+0.732 
+(0.023)** 
+6.7250e-02* 
+Random 
+Forest 
+0.872 
+(0.03)** 
+0.89 
+(0.014) 
+0.514 
+(0.076) 
+0.369 
+(0.071) 
+0.988 
+(0.009)* 
+3.7110e-01 
+RUSRF 
+0.906 
+(0.009) 
+0.84 
+(0.012) 
+0.583 
+(0.044) 
+0.708 
+(0.079) 
+0.865 
+(0.007) 
+3.8670e-04*** 
+ 
+Table 3. Summary of several previous studies performed to predict progression to Alzheimer’s 
+disease dementia from MCI. 
+Study 
+Data 
+Validation 
+Result (ACC – Accuracy, 
+SEN – Sensitivity, SPE - 
+Specificity) 
+(Waragai et al., 
+2009) 
+Total: 13, sMCI: 7, pMCI: 6 
+Follow-up: 27 months 
+[11C]BF-227 PET 
+No 
+validation 
+SEN: 100%, SPE: 71% 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+(Hatashita and 
+Yamasaki, 2013) 
+Total: 68, sMCI: 38,  
+pMCI: 30 
+Follow-up:19.2 months 
+[11C]PIB PET 
+No 
+validation 
+SEN: 97%, SPE: 42% 
+(Brück et al., 
+2013) 
+Total: 29, sMCI: 12, pMCI: 17 
+Follow-up: 24 months 
+[11C]PIB PET and [18F]FDG 
+PET 
+No 
+validation 
+SEN: 88%, SPE: 71% 
+(Wolk et al., 
+2009) 
+Total: 26, sMCI: 21, pMCI: 5 
+Follow-up: 21.2 months 
+[11C]PIB PET 
+No 
+validation 
+SEN: 100%, SPE: 55% 
+(Ewers et al., 
+2012) 
+Total: 131, sMCI: 56, pMCI:75 
+Follow-up: 24 months 
+[11C]PIB PET 
+No 
+validation 
+SEN: 81%, SPE: 83% 
+(Clifford R Jack 
+et al., 2010) 
+Total: 218, sMCI: 125, pMCI: 
+93 
+Follow-up: 24 months 
+[11C]PIB PET 
+No 
+validation 
+SEN: 50%, SPE: 81% 
+(Schreiber et al., 
+2015) 
+Total: 401, sMCI: 340, pMCI: 
+61 
+Follow-up: 19.2 months 
+[18F]Florbetapir PET 
+No 
+validation 
+SEN: 87%, SPE: 50% 
+(Teipel et al., 
+2015) 
+Total: 127, sMCI: 88, pMCI: 39 
+Follow-up: 17.3 months 
+[18F]Florbetapir PET, [18F]FDG 
+PET and MRI 
+Cross 
+validation 
+ACC: 72% 
+SEN: 30%, SPE: 90% 
+AUC: 0.70 
+(Moradi et al., 
+2015) 
+Total: 264, sMCI: 100, pMCI: 
+164 
+Follow-up: 0-36 months 
+MRI and cognition 
+Cross 
+validation 
+ACC:82% 
+SEN: 87%, SPE: 74% 
+AUC: 0.90 
+(Misra et al., 
+2009) 
+Total: 103, sMCI: 76, pMCI: 27 
+Follow-up: 0-36 months 
+MRI 
+Cross 
+validation 
+ACC: 75-80% 
+AUC: 0.77 
+(Davatzikos et al., 
+2011) 
+Total: 239, sMCI: 170, pMCI: 
+69 
+Follow-up: 0-36 months 
+MRI and CSF 
+Cross 
+validation 
+ACC: 62% 
+AUC: 0.73 
+(Ye et al., 2012) 
+Total: 319, sMCI: 177, pMCI: 
+142 
+MRI, genetic and cognitive 
+Cross 
+validation 
+AUC: 0.86 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+measures 
+(Zhang and Shen, 
+2012) 
+Total: 88, sMCI: 50, pMCI: 38 
+Follow-up: 0-24 months 
+MRI, [18F]FDG PET and CSF  
+Cross 
+validation 
+ACC: 78%  
+SEN: 79%, SPE: 78% 
+AUC: 0.77 
+(Gaser et al., 
+2013) 
+Total: 195, sMCI: 62, pMCI: 
+133 
+Follow-up: 0-36 months 
+MRI 
+Independent 
+test set 
+AUC: 0.78 
+(Cuingnet et al., 
+2011) 
+Total: 210, sMCI: 134, pMCI: 
+76 
+Follow-up: 0-18 months 
+MRI 
+Independent 
+test set 
+ACC: 67% 
+SEN: 62%, SPE: 69% 
+(Eskildsen et al., 
+2013) 
+Total: 388, sMCI: 227, pMCI: 
+161 
+Follow-up: 0-48 months 
+MRI 
+Cross 
+validation 
+AUC: 0.71* 
+*follow-up period matched 
+to present study 
+(Wolz et al., 
+2011) 
+Total: 405, sMCI: 238, pMCI: 
+167 
+Follow-up: 0-48 moths 
+MRI 
+Cross 
+validation 
+ACC: 68% 
+SEN: 67%, SPE: 69% 
+(Chupin et al., 
+2009) 
+Total: 210, sMCI: 134, pMCI: 
+76 
+Follow-up: 0-18 months 
+MRI 
+Independent 
+test set 
+ACC: 64% 
+SEN: 60%, SPE: 65% 
+(Cho et al., 2012) 
+Total: 203, sMCI: 131, pMCI: 
+72 
+Follow-up: 0-18 months 
+MRI 
+Independent 
+test set 
+ACC: 71% 
+SEN: 63%, SPE: 76% 
+(Coupé et al., 
+2012) 
+Total: 405, sMCI: 238, pMCI: 
+167 
+Follow-up: 0-48 months 
+MRI 
+Cross 
+validation 
+ACC: 74% 
+SEN: 73%, SPE: 74% 
+(Westman et al., 
+2012) 
+Total: 318, sMCI: 256, pMCI: 
+62 
+Follow-up: 0-12 months 
+MRI 
+Cross 
+validation 
+ACC: 59% 
+SEN: 74%, SPE: 56% 
+(Querbes et al., 
+2009) 
+Total: 122, sMCI: 50, pMCI: 72 
+Follow-up: 0-24 months 
+MRI 
+Cross 
+validation 
+ACC: 73% 
+SEN: 75%, SPE: 69% 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+(Koikkalainen et 
+al., 2011) 
+Total: 369, sMCI: 215, pMCI: 
+154 
+Follow-up (mean): 18.1 months 
+MRI 
+Cross 
+validation 
+ACC: 72% 
+SEN: 77%, SPE: 71% 
+(Retico et al., 
+2014) 
+Total: 302, sMCI: 166, pMCI: 
+136 
+Follow-up: 0-24 months 
+MRI 
+Independent 
+test set 
+ACC: 66% 
+SEN: 70%, SPE: 62% 
+AUC: 0.71 
+(Doyle et al., 
+2014) 
+Total: 226, sMCI: 164, pMCI: 
+62 
+Follow-up: 0-12 months 
+MRI 
+Independent 
+test set 
+(different 
+cohort) 
+ACC: 82% 
+SEN: 81%, SPE: 72% 
+AUC: 0.81 
+(Lebedev et al., 
+2014) 
+Total: 139, sMCI: 16, pMCI: 
+123  
+Follow-up: 0-24 months 
+MRI 
+Independent 
+test set 
+ACC: 82% 
+SEN: 83%, SPE: 81% 
+AUC: 0.83 
+This study 
+Total: 263, sMCI: 230, pMCI: 
+43 
+Follow-up: 24 months 
+[18F]Florbetapir PET 
+Independent 
+test set 
+ACC: 84% 
+SEN: 71%, SPE: 87% 
+AUC: 0.91 
+ 
+ 
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Figure Legends 
+Figure 1. Summary of the steps followed to train the RUSRF algorithm to predict progression of 
+dementia.   
+Figure 2. Regions with the highest odds ratio values. 1). Mid Frontal Cortex, 2). Angular Gyrus, 
+3). Posterior Cingulate Cortex 4). Orbitofrontal Cortex, 5). Precuneus, 6). Temporal Occipital 
+Junction 7). Mid Temporal Cortex, 8). Putamen and 9). Nucleus Accumbens are indicated. 
+ 
+Figure 3. a). ROC curves for the four predictors with corresponding AUC values. The ROC 
+curve was plotted for the median performing predictor from the cross-validation steps. The 
+highest AUC was recorded with the curve for RUSRF. b). Relative feature importance from the 
+RUSRF predictor. The Temporal Occipital Junction, Mid Temporal Cortex, Mid Frontal Cortex 
+and Precuneus shows the highest importance for the prediction. 
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Identifying incipient dementia individuals using machine learning and amyloid imaging.  
+ 
+Authors:  Sulantha Mathotaarachchi1,4, Tharick A. Pascoal1, Monica Shin1, Andrea L. Benedet1, 
+Min Su Kang1, Thomas Beaudry1, Vladimir S. Fonov4, Serge Gauthier2,3,5,6, Pedro Rosa-
+Neto1,2,3,4,5,6* for the Alzheimer’s Disease Neuroimaging Initiative† 
+Affiliations: 
+1Translational Neuroimaging Laboratory, McGill University Research Centre for Studies in 
+Aging (MCSA), Douglas Research Institute, McGill University. 
+2McGill University Research Centre for Studies in Aging (MCSA), Douglas Research Institute, 
+McGill University. 
+3Douglas Research Institute, McGill University. 
+4McConnell Brain Imaging Centre, Montreal Neurological Institute, McGill University. 
+5Department of Psychiatry, McGill University. 
+3Department of Neurology & Neurosurgery, McGill University. 
+ 
+* Correspondence: Corresponding author: Pedro Rosa-Neto, MD, PhD. 
+Translational Neuroimaging Laboratory, McGill University Research Centre for Studies in 
+Aging, 
+6875 La Salle Blvd - FBC room 3149, Montreal, QC, Canada H4H 1R3. 
+Email: pedro.rosa@mcgill.ca 
+†Data used in preparation of this article were obtained from the Alzheimer’s Disease 
+Neuroimaging Initiative (ADNI) database (adni.loni.usc.edu). As such, the investigators within 
+the ADNI contributed to the design and implementation of ADNI and/or provided data but did 
+not participate in analysis or writing of this report. A complete listing of ADNI investigators can 
+be found at: http://adni.loni.usc.edu/wp-
+content/uploads/how_to_apply/ADNI_Acknowledgement_List.pdf 
+ 
+ 
+ 
+ MANUSCRIPT
+ 
+ACCEPTED
+ACCEPTED MANUSCRIPT
+Highlights 
+• New prediction algorithm to predict progression to Alzheimer’s dementia is proposed.  
+• Uses data sampling to overcome class imbalance challenge present in clinical cohorts.  
+• Proposed algorithm reached accuracy of 84% and AUC of 0.91 for testing sample.  
+• Has immediate application to enrich populations in clinical trials.  
+• Open access tool available at http://predictalz.tnlmcgill.ca/PredictAlz_Amy. 
+ 

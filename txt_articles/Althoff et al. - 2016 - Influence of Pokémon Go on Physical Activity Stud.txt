@@ -1,0 +1,1327 @@
+ Influence of Pokémon Go on Physical Activity:
+Study and Implications
+Tim Althoff∗
+Stanford University
+althoff@cs.stanford.edu
+Ryen W. White
+Microsoft Research
+ryenw@microsoft.com
+Eric Horvitz
+Microsoft Research
+horvitz@microsoft.com
+ABSTRACT
+Background:
+Physical activity helps people maintain a healthy
+weight and reduces the risk for several chronic diseases. Although
+this knowledge is widely recognized, adults and children in many
+countries around the world do not get recommended amounts of
+physical activity. While many interventions are found to be ineffec-
+tive at increasing physical activity or reaching inactive populations,
+there have been anecdotal reports of increased physical activity due
+to novel mobile games that embed game play in the physical world.
+The most recent and salient example of such a game is Pokémon
+Go, which has reportedly reached tens of millions of users in the
+US and worldwide.
+Objective:
+Quantify the impact of Pokémon Go on physical ac-
+tivity.
+Methods:
+We study the effect of Pokémon Go on physical ac-
+tivity through a combination of signals from large-scale corpora of
+wearable sensor data and search engine logs for 32 thousand users
+over a period of three months. Pokémon Go players are identifi
+ed
+through search engine queries and activity is measured through ac-
+celerometry.
+Results:
+We fi
+nd that Pokémon Go leads to signifi
+cant increases
+in physical activity over a period of 30 days, with particularly en-
+gaged users (i.e., those making multiple search queries for details
+about game usage) increasing their activity by 1,473 steps a day on
+average, a more than 25% increase compared to their prior activity
+level (p < 10−15). In the short time span of the study, we esti-
+mate that Pokémon Go has added a total of 144 billion steps to US
+physical activity. Furthermore, Pokémon Go has been able to in-
+crease physical activity across men and women of all ages, weight
+status, and prior activity levels showing this form of game leads to
+increases in physical activity with signifi
+cant implications for pub-
+lic health. In particular, we fi
+nd that Pokémon Go is able to reach
+low activity populations while all four leading mobile health apps
+studied in this work largely draw from an already very active popu-
+lation. While challenges remain in sustaining engagement of users
+over the long-term, if Pokémon Go was able to sustain the engage-
+ment of its current user base, the game could have a measurable
+∗Research done during an internship at Microsoft Research.
+ACM ISBN .
+DOI:
+effect on life expectancy, adding an estimated 2.825 million years
+of additional lifetime to its US users alone.
+Conclusions Mobile apps combining game play with physical ac-
+tivity lead to substantial activity increases, and in contrast to many
+existing interventions and mobile health apps, have the potential to
+reach activity-poor populations.
+Keywords: physical activity, Pokémon Go, wearable
+1.
+INTRODUCTION
+Those who think they have not time for bodily exercise will
+sooner or later have to fi
+nd time for illness.
+Edward Stanley, Earl of Derby, 20 December 1873
+Physical activity is critical to human health. People who are
+physically active tend to live longer, have lower risk for heart dis-
+ease, stroke, Type 2 diabetes, depression, and some cancers, and
+are more likely to maintain a healthy weight (e.g., [20, 32, 46]).
+Recent analyses estimate that physical inactivity contributes to 5.3
+million deaths per year worldwide [16] and that it is responsible for
+a worldwide economic burden of $67.5 billion through health-care
+expenditure and productivity losses [5]. Only 21% of US adults
+meet offi
+cial physical activity guidelines [4, 22] (at least 150 min-
+utes a week of physical activity for adults), and less than 30% of
+US high school students get at least 60 minutes of physical activity
+every day [4]. Efforts to stimulate physical activity hold oppor-
+tunity for improving public health. Numerous studies have called
+for population-wide approaches [26, 27]. However, many inter-
+ventions have been found to be either ineffective [8, 28], to reach
+only populations that were already active [7, 19], or not to be scal-
+able across varying cultural, geographic, social, and economic con-
+texts [26].
+Recently, there have been anecdotal reports of novel mobile games
+leading to increased physical activity, most notably for Pokémon
+Go1 [2] (other examples include Ingress2 and Zombies, Run!3).
+Pokémon Go is a mobile game combining the Pokémon world through
+augmented reality with the real world requiring players to physi-
+cally move around. Pokémon Go was released in the US on July
+6, 2016 and was adopted widely around the world (25 million ac-
+tive users in the US [1] and 40 million worldwide [47]; 500 million
+downloads worldwide [18]). Due to this massive penetration, Poké-
+mon Go can be viewed as intervention for physical activity on a
+societal-scale. However, its effectiveness for stimulating additional
+walking has yet to be determined.
+1http://www.pokemongo.com/
+2https://www.ingress.com/
+3https://www.zombiesrungame.com/
+arXiv:1610.02085v2  [cs.CY]  28 Oct 2016
+ Present Work. We study the influence of Pokémon Go on physical
+activity through a combination of wearable sensor data and search
+engine query logs for 31,793 users over a period of three months.
+Within these users, we identify 1,420 Pokémon Go users based on
+their search activity and measure the effect of playing the game on
+their physical activity (see Section 2). We further compare changes
+in physical activity for Pokémon Go users to changes for large con-
+trol group of US wearable users and to other leading mobile health
+apps. Lastly, we estimate the impact of Pokémon Go on public
+health.
+In summary, our main research questions are:
+1. Is playing Pokémon Go associated with increases in physi-
+cal activity? How large is this effect and how long does it
+persist?
+2. Is this effect restricted to particular subpopulations or is it
+effecting people of all prior activity levels, ages, gender, and
+weight status?
+3. How does Pokémon Go compare to leading mobile health
+apps in terms of its ability to change physical activity?
+4. How has Pokémon Go impacted physical activity in the United
+States and what is its potential impact on public if the game
+was able to sustain the engagement of its users?
+Our study provides guidance on societal-scale interventions rep-
+resented by the Pokémon Go phenomenon and on the possibilities
+for increasing physical activity that could be achieved with addi-
+tional engagement. We see this study on Pokémon Go as a step
+towards effectively leveraging games for public health purposes.
+Mobile games might not be appealing to everyone and therefore
+should be seen as a complement rather than a replacement for the
+interventions considered in the rich body of work on physical ac-
+tivity interventions (e.g., [8, 19, 26, 27, 28, 32]). To the best of
+our knowledge, this is the fi
+rst study to combine large-scale wear-
+able and search sensors to retrospectively evaluate physical activity
+interventions and the fi
+rst to study the effect of Pokémon Go.
+2.
+METHODS
+We leverage and combine data from search engine queries with
+physical activity measurements from wearable devices. Specifi
+-
+cally, we jointly analyze (1) queries to the Bing search engine men-
+tioning “pokemon”. We use this to identify which users are likely
+playing Pokémon Go (see Section 2.1); and (2) physical activity
+as measured through daily number of steps on the Microsoft Band
+(see Section 2.2). We jointly use this data to measure differences in
+physical activity before and after each user shows strong evidence
+of starting to play Pokémon Go.
+The main study population is 31,793 US users of Microsoft prod-
+ucts who have agreed to link data from their Microsoft Band wear-
+ables and their online activities to understand product usage and im-
+prove Microsoft products. In Section 2.1, we show that 1,420 users
+can be classifi
+ed as Pokémon Go players with high confi
+dence. We
+compare changes in physical activity in this population to changes
+in a control group consisting of a random sample of 50,000 US Mi-
+crosoft Band users. For all users, we have self-reported age, gender,
+height and weight, which we will use in Section 3.3 to estimate the
+effect of Pokémon Go on different groups of users. Section 2.1 de-
+tails how we identify Pokémon Go users via strong evidence from
+search logs and Section 2.2 explains the accelerometer-based phys-
+ical activity data. Section 2.3 gives details on study population de-
+mographics and Section 2.4 explains how we measure the impact
+of Pokémon Go on physical activity.
+Non-experiential query
+Experiential query
+pokemon go
+pokemon go iv calculator
+pokemon go death san francisco
+pokemon go teams
+pokemon go robberies
+how to play pokemon go
+couple sues pokemon go
+pokemon go guide
+baltimore pokemon accident
+pokemon go servers
+pokemon games
+pokemon go bot
+bluestacks pokemon go
+pokemon go eevee evolution
+Table 1:
+Representative experiential and non-experiential
+Pokémon Go queries [23].
+“iv” refers to individual val-
+ues which are attribute points of Pokémon determining their
+stamina, attach and strength; “bluestacks” refers to a method
+to play Pokémon Go on a desktop computer instead of the in-
+tended use in the real world; “eeevee” is the name of a Poké-
+mon. See Section 2.1 for more details on the 454 features used.
+2.1
+Identifying Pokémon Go Users Through
+Search Queries
+We collected all queries of the 31,793 users between July 6, 2016
+(US release date of Pokémon Go) and August 23, 2016 (date of sta-
+tistical analysis) that mention the term “pokemon” (ignoring cap-
+italization). We then manually annotated the 454 most frequent
+unique queries in terms of whether they are experiential [23, 45];
+that is, the user is very likely playing Pokémon Go, rather than just
+being interested in it for some other reason such as following up
+on news reports or general interest in the game. This was done by
+an author familiar with the game manually executing each query
+and judging whether the query and search engine results provided
+compelling evidence of someone playing the game. Examples for
+experiential and non-experiential queries are given in Table 1.
+Among the 25,446 users who issued any queries during our time
+of observation, 1,420 or 5.6% issued an experiential query for Poké-
+mon Go. This number very closely matches the estimated fraction
+of regular Pokemon users in the US (5.9% according to [25]) sug-
+gesting that our search-engine based method is effectively detect-
+ing a large number of Pokémon Go users. We use the time of each
+user’s fi
+rst experiential query for Pokémon Go as a proxy for the
+time when they started playing Pokémon Go and denote this time
+as t0.
+Note that our method of identifying Pokémon Go players through
+experiential queries can potentially overestimate t0 if players per-
+form these queries several days after starting to play the game, but
+the opposite is less likely due to the nature of experiential queries
+targeting specifi
+c aspects of game play (see Table 1). However, note
+that any potential overestimates of t0 lead to more conservative es-
+timates of the effect of Pokémon Go since potential game-related
+increases in activity would be counted as activity before t0 (assum-
+ing the effect is non-negative).
+2.2
+Measuring Physical Activity
+We seek to measure the change in physical activity before and
+after the time of the fi
+rst experiential query for Pokémon Go, t0,
+when a user presumably started playing the game (see Section 3).
+We measure physical activity through daily steps as recorded by the
+3 axis accelerometer/gyrometer of the Microsoft Band. Accelero-
+meter-defi
+ned activity measures are preferred over subjective survey-
+based methods, that have been found to overestimate physical ac-
+tivity by up to 700% [37]. We use steps data from 30 days before
+the fi
+rst experiential query (t0) until 30 days after the fi
+rst experi-
+ential query. We note that, at the time of this study, very few users
+had been using Pokémon Go for more than 30 days. Further note
+that all Pokémon Go users included in our dataset have been using
+ Minimum number of exp.
+#Users
+#Days with steps data
+Pokémon Go queries
+1
+792
+36,141
+2
+417
+18,804
+3
+262
+11,916
+4
+199
+9,132
+5
+143
+6,633
+6
+113
+5,186
+7
+85
+3,819
+8
+70
+3,131
+9
+56
+2,512
+10
+50
+2,218
+Table 2: Number of Pokémon Go users and number of days
+of steps tracking for these users included in dataset. We count
+days up to 30 days before and after each user’s fi
+rst experiential
+query, and only consider users with at least one day tracked
+before and after their fi
+rst experiential query.
+Pokémon Go Users
+Wearable Users
+# users
+1,420
+50,000
+# users with suffi
+cient activity data
+792
+26,334
+Median age
+33
+42
+% female
+3.8
+25.7
+% underweight (BMI < 18.5)
+1.1
+1.2
+% normal weight (18.5 ≤ BMI < 25)
+34.2
+31.4
+% overweight (25 ≤ BMI < 30)
+36.5
+38.4
+% obese (30 ≤ BMI)
+28.2
+29.1
+Average daily steps overall
+6,258
+6,435
+Table 3: Dataset statistics. Wearable users refers to random
+sample of US Microsoft Band users. We only consider users
+with at least one day of steps tracking before and after the
+user’s fi
+rst experiential query. BMI refers to body mass index.
+the wearable device for a signifi
+cant amount of time (median 433
+days) such that differences in activity cannot be due to starting to
+use the wearable device. Since not every search engine user who we
+identifi
+ed as a Pokémon Go player is also regularly tracking steps,
+there are 792 users that tracked steps on at least one day before and
+after t0 (see Table 2). Note that the choice of this threshold pa-
+rameter does not signifi
+cantly impact our analysis as we fi
+nd very
+similar results when restricting our analysis to users tracking for
+example seven days before and after t0. We concentrate our anal-
+ysis on this set of users and compare their activity to the control
+group described below.
+Control Group. We further compare the differences in activity
+in the Pokémon Go user population to any changes in the control
+group, a random sample of US Microsoft wearable users. For ex-
+ample, summertime along with improved weather conditions and
+potential vacation time might be linked to increases in the steps of
+the control group as well. Since there are no experiential queries
+for any of the control users, we need to defi
+ne a suitable substi-
+tute for t0 for the control group in order to compare both groups.
+We will use this reference point t0 to measure changes in physical
+activity before and after for both the Pokémon Go user group as
+well as control users. For the Pokémon Go users, t0 corresponds to
+the date of the fi
+rst experiential query for Pokémon Go (e.g., July 6,
+2016, or July 7, 2016, etc.). One could consider using a single point
+in time t0 for all control users, for example the July 6, 2016 release
+date of Pokémon Go. However, this choice would temporarily align
+all control users such that weekend, weather, or other effects could
+lead to confounding. In the Pokémon Go user group, all users have
+potentially different t0 based on their fi
+rst experiential query and
+therefore such effects are not aligned. In order, to match observa-
+−30
+−20
+−10
+0
+10
+20
+30
+Number of days relative to t0
+0
+5000
+10000
+15000
+20000
+Daily steps
+−30
+−20
+−10
+0
+10
+20
+30
+Number of days relative to t0
+0
+5000
+10000
+15000
+20000
+25000
+Daily steps
+Figure 1: Time series of daily steps for two sample users. Both
+cases show signifi
+cant increases in daily steps after the fi
+rst ex-
+periential query for Pokémon Go (t0). While before t0 both
+users take less than 5,000 steps a day, after t0 they regularly
+reach around 15,000 steps a day.
+tion periods between both groups, we therefore use the exact same
+distribution of t0 for control users; that is, for each control user, we
+randomly sample a Pokémon Go user and use the same value for
+t0 for the control user. This ensures that we will compare physical
+activity over matching observation periods.
+Wear Time. Furthermore, we also measure the wear time of the
+activity tracking device for each day in the dataset. Differences in
+recorded number of steps could potentially stem from simply an
+increase in wear time rather than an actual increase of physical ac-
+tivity. However, we fi
+nd that during the study duration the wear
+time for both Pokémon Go and control users was effectively con-
+stant with the ratio between the groups changing by less than one
+percent. Therefore, we attribute any differences in recorded num-
+ber of steps to an actual increase in physical activity due to the
+engagement with Pokémon Go.
+Example Time Series of Physical Activity. Figure 1 displays the
+daily number of steps before and after the user’s fi
+rst experiential
+query for two example users. Both users signifi
+cantly increase their
+activity after their fi
+rst experiential query for Pokémon Go by sev-
+eral thousand steps each day. In Section 3, we analyze whether
+this large increase in physical activity is representative of the study
+population and how it varies across individuals.
+2.3
+Study Population Demographics
+Demographic statistics on identifi
+ed Pokémon Go users and con-
+trol users are displayed in Table 3. We fi
+nd that Pokémon Go users
+are younger than the average user in our wearable dataset, and
+much less often female. Furthermore, there is a signifi
+cant fraction
+of overweight and obese users, similar to the proportion expected
+in the US population [21]. This fraction of overweight and obese
+ users is very similar in the Pokémon Go and control user groups in-
+dicating lack of a selection effect based on weight status. The aver-
+age activity level of Pokémon Go users is below that of the control
+group indicating that that Pokémon Go is attracting users that get
+less than average activity. Note that this difference is unlikely to
+stem from other differences between the two groups since younger
+users are typically more active than older users and males typically
+get more physical activity than females [38] (i.e., we would expect
+a larger number of steps for the Pokémon Go group given the other
+differences).
+2.4
+Measuring the Impact of Pokémon Go
+This section details the methods used to measure the impact of
+Pokémon Go on physical activity.
+2.4.1
+Longitudinal Analysis
+We compare the physical activity levels of Pokémon Go users
+to those of the control group population over time in relation to
+every user’s fi
+rst experiential query (t0). Note that we use randomly
+sampled t0 for users in the control group (see Section 2.2).
+We measure the average number of steps over a period of 30
+days before the fi
+rst experiential query until 30 days after the fi
+rst
+experiential query. Note that on some days a user might not have
+recorded any steps and we ignore this user on that day. We measure
+this average activity separately for the Pokémon Go user group and
+the control group. To improve graph readability, we smooth the
+daily average activity through Gaussian-weighted averaging with a
+window size of seven days, but we report statistical tests on the raw
+data. We estimate 95% confi
+dence intervals through a bootstrap
+with 500 resamples [11].
+2.4.2
+Dose-Response Relationship between Pokémon
+Go and Physical Activity
+Dose-response relationships between the amount of physical ac-
+tivity and various health outcomes have been well established [9,
+17]. We expect that high engagement with Pokémon Go would be
+reflected in a larger number of experiential queries. Particularly en-
+gaged users might also exhibit larger increases in physical activity.
+We quantify the exact effect sizes for these increases and study this
+potential dose-response relationship between the Pokémon Go re-
+lated engagement on a search engine and real-world physical activ-
+ity. We measure the difference in the average number of daily steps
+across all users and days for the 30 days before versus 30 days after
+each user’s fi
+rst experiential query as the effect size.
+2.4.3
+Does Everyone Benefi
+t?
+We measure the effect on individual users’ physical activity af-
+ter starting to play Pokémon Go and relate the magnitude of this
+effect to demographic attributes of the user including age, gender,
+weight status (body mass index; BMI), and prior activity level. We
+investigate whether only certain user groups are benefi
+ting from
+the game or whether the potential health benefi
+ts might apply more
+widely to the game’s user population. We estimate the effect of
+playing Pokémon Go on each individual user defi
+ned as the differ-
+ence in the average number of daily steps 30 days before and 30
+days after the fi
+rst experiential query. We include only Pokémon
+Go users with at least seven days of steps tracking before and after
+this event to reduce noise and apply the same requirement to the
+control group. These constraints result in 677 Pokémon Go users
+and 26,334 control users.
+2.4.4
+Comparison to Existing Health Apps
+We compare the effect of Pokémon Go to the effect of other mo-
+bile health apps. The Microsoft Band can be connected to other
+fi
+tness and health applications and we have data on when these
+connections fi
+rst happen (i.e., explicit knowledge of t0 for users
+of these apps). We study four leading mobile health applications
+with anonymized names for legal reasons. These apps regularly are
+rated among the top health apps on both iOS and Android platforms
+and represent the state-of-the-art in consumer health applications.
+Again, we measure the number of daily steps 30 days before a user
+starts using one of these apps until 30 days after. We only include
+users that started using the health applications after July 1, 2016 to
+control for seasonal effects and make the data comparable with our
+Pokémon Go user group. We only include users that were tracking
+steps on at least 7 days before and after the fi
+rst experiential query
+(for Pokémon Go group) or fi
+rst connecting the health app (for the
+comparison groups). For the four apps, 1,155 users are included for
+app A, 313 for app B, 625 for app C, and 296 users for app D. Note
+that these users had been using the wearable device for a signifi
+cant
+amount of time before connecting to the health app (median time in
+days for the four apps are 87, 57, 103, and 76 days, respectively).
+Therefore, any differences in average activity are likely due to the
+connected health app rather than cumulative effects of starting to
+use a wearable activity tracker.
+2.4.5
+Estimating the Public Health Impact of Poké-
+mon Go
+In order to quantify the effect of Pokémon Go on public health,
+we estimate (1) how many steps were added to US users’ physical
+activity during the fi
+rst 30 days, (2) how many users met physical
+activity guidelines before and after Pokémon Go, and (3) the po-
+tential impact on life expectancy if Pokémon Go could sustain the
+engagement of its users.
+The offi
+cial physical activity guidelines [4, 22] are equivalent to
+approximately 8,000 daily steps [39, 40]. Only 21% of US adults
+meet these guidelines. We use all users tracking steps at least seven
+days before and after their fi
+rst experiential query for Pokémon Go.
+We then measure the fraction of users with more than 8,000 average
+daily steps both 30 days before and after the fi
+rst experiential query.
+This analysis is repeated for Pokémon Go users with at least one
+and at least ten experiential queries, and the control group.
+If there is a substantial impact on physical activity, Pokémon
+Go could have a measurable impact on US life expectancy due to
+well-established health benefi
+ts of physical activity on heart dis-
+ease, stroke, Type 2 diabetes, depression, some cancers, obesity,
+and mortality risk [5, 16, 20, 32, 46]. If we assume that Pokémon
+Go users would be able to sustain an activity increase of 1,000 daily
+steps, this would be associated with a 6% lower mortality risk. Us-
+ing life-table analysis similar to [16] based on mortality risk esti-
+mates from [10] and the United States 2013 Period Life Table [41]
+we estimate the impact on life expectancy based on this reduction
+of mortality risk.
+3.
+RESULTS
+We now present results on the influence of Pokémon Go usage
+on physical activity. We study longitudinal physical activity data in
+Section 3.1. We quantify the dose-response relationship between
+interest in Pokémon Go and physical activity in Section 3.2. Next,
+we examine potentially heterogeneous treatment effects by exam-
+ining various subgroups based on several demographic attributes
+in Section 3.3.
+We compare Pokémon Go to four popular mo-
+bile health apps in terms of their effect on physical activity in Sec-
+ −30
+−20
+−10
+0
+10
+20
+30
+Number of days relative to t0
+5800
+6000
+6200
+6400
+6600
+6800
+Daily number of steps
+Pokemon Go Users
+(w. 1+ exp. queries)
+Control Users
+−30
+−20
+−10
+0
+10
+20
+30
+Number of days relative to t0
+4500
+5000
+5500
+6000
+6500
+7000
+7500
+8000
+8500
+Daily number of steps
+Pokemon Go Users
+(w. 10+ exp. queries)
+Control Users
+Figure 2: Effect of Pokémon Go on physical activity. Plots show
+daily steps in absolute numbers for both Pokémon Go users
+(red) and control users (blue). Top plot shows effect for users
+with at least one experiential query.
+Bottom plot shows ef-
+fect for users with at least ten experiential queries. In par-
+ticular for the users who show signifi
+cant interest in Pokémon
+Go (bottom), we observe large average increases of 1473 steps
+or 26% over the 30 days following on the fi
+rst experiential
+query. Over the same time, the control group (same for both
+plots) decreased their activity by 50 daily steps on average. Er-
+ror bars (shaded) in this and all following plots correspond to
+bootstrapped 95% confi
+dence intervals [11].
+tion 3.4. Lastly, we quantify the impact of Pokémon Go on public
+health in Section 3.5.
+3.1
+Longitudinal Analysis
+Starting to play Pokémon Go is associated with signifi
+cant in-
+creases in physical activity. Changes in average activity level over
+time are illustrated in Figure 2. The top plot shows activity for
+Pokémon Go users with at least one experiential query and the bot-
+tom plot shows activity for Pokémon Go users with at least ten
+experiential queries (i.e., users who expressed signifi
+cant interest
+in details of Pokémon Go commands and operation).
+We observe a signifi
+cant increase in physical activity after the
+fi
+rst experiential query for Pokémon Go users compared to the con-
+trol group. The control group slightly decreased their activity by 50
+daily steps on average (p < 10−20; we use Mann–Whitney U-Tests
+for hypothesis tests unless noted otherwise). In contrast, Pokémon
+Go users increased their activity by 192 daily steps (p < 10−7).The
+plot shows a steep increase on the day of the fi
+rst experiential query
+(t0) suggesting that the observed increased activity indeed stems
+from engaging with Pokémon Go. We fi
+nd that Pokémon Go users
+initially have less activity than the average Microsoft Band user
+in the US (dashed blue line; 178 daily steps less; p < 10−20).
+However, following the start of Pokémon Go play, their activity in-
+creases to a level larger than the control group (65 daily steps more;
+p < 10−20).
+The bottom row in Figure 2 shows similar but much larger effects
+for Pokémon Go users with at least ten experiential queries; that is,
+users who showed signifi
+cant interest in Pokémon Go. These users
+are initially signifi
+cantly less active than the average Microsoft Band
+user in the US, getting 5,756 daily steps compared to 6,435 daily
+steps in the control group (p < 10−20). After they start playing
+Pokémon Go they exhibit a large increase in activity to an aver-
+age of 7,229 daily steps (1,473 daily steps difference; p < 10−15),
+which now is about 13% larger than the control population (p <
+10−20). This observation suggests that there is a dose-response re-
+lationship between interest in Pokémon Go and the effect on phys-
+ical activity, which we analyze in detail in Section 3.2.
+We note that increases in steps before t0 could stem from starts
+with the game in advance of queries about Pokémon Go, as we are
+using the fi
+rst experiential query as a proxy for the start of play.
+If users begin to play without ever issuing a search query about
+Pokémon Go, we could see increases in activity before t0. How-
+ever, since we observe steep increases in activity exactly at t0, this
+suggests that the proxy for starting is valid for most users.
+Note that physical activity for both Pokémon Go user groups (top
+and bottom row) decreases again after about three to four weeks
+after the fi
+rst experiential query. However, also note that the activ-
+ity for the more strongly engaged group (bottom) drops down to a
+higher level than they started out with. This suggests that there
+could be a longer-term behavior change and that future work is
+needed to study long-term effects of Pokémon Go.
+3.2
+Dose-Response Relationship between Poké-
+mon Go and Physical Activity
+We fi
+nd that users that are more engaged with Pokémon Go ex-
+hibit larger increases in physical activity (see Figure 3). For users
+that expressed any interest in Pokémon Go we fi
+nd signifi
+cant in-
+creases in activity compared to the control group which decreases
+their activity by 50 steps a day. Further, we fi
+nd that these in-
+creases in steps scale roughly linearly with the number of expe-
+riential queries from 192 daily steps increase (3%) for users with
+one or more experiential queries up to an increase of 1473 daily
+steps (26%) for users with ten or more experiential queries.
+Furthermore, the linear increase in physical activity with the
+number of experiential Pokémon Go queries strongly suggests that
+activity increases observed in users querying a search engine for
+Pokémon Go are causally explained by their engagement with Poké-
+mon Go. If there were other confounding factors that explained
+the difference in activity between our Pokémon Go group and the
+control group over time and those changes had nothing to do with
+Pokémon Go, then one would not expect to fi
+nd such a clear dose-
+response relationship as given in Figure 3.
+3.3
+Does Everyone Benefi
+t?
+Since this analysis is on user level, we only consider users who
+track their activity at least seven days before and after t0. Over-
+all, the Pokémon Go users increased their activity by 194 daily
+steps (p < 0.01; Wilcoxon Signed-Rank-Test). Over the same
+time period, the control users decreased their activity by 104 steps
+(p < 10−20; Wilcoxon Signed-Rank-Test). Figure 4 illustrates the
+ (0, 3]
+(3, 5]
+(5, 7]
+(7, 100]
+Steps before (in thousands)
+−1000
+−500
+0
+500
+1000
+1500
+Daily steps difference
+Pokemon Go Users
+Control Users
+(10, 20]
+(20, 30]
+(30, 50]
+(50, 70]
+Age
+−1000
+−500
+0
+500
+1000
+1500
+2000
+Daily steps difference
+Pokemon Go Users
+Control Users
+(18.5, 25]
+(25, 30]
+(30, 40]
+BMI
+−200
+−100
+0
+100
+200
+300
+400
+500
+600
+Daily steps difference
+Pokemon Go Users
+Control Users
+Male
+Female
+Gender
+−200
+0
+200
+400
+600
+800
+1000
+1200
+Daily steps difference
+Pokemon Go Users
+Control Users
+Figure 4: Effect sizes of physical activity increase or decrease by user demographics, including prior physical activity level (top left),
+age (top right), body mass index (BMI; bottom left), and gender (bottom right). In all cases, we fi
+nd that Pokémon Go users (red)
+exhibit larger changes then their respective control group (blue; see Section 3.3). These results suggest that physical activity increases
+due to Pokémon Go are not restricted to particular subgroups of users but widely spread across the overall study population.
+effect size split by previous activity level (top left), age (top right),
+body mass index (BMI; bottom left) and gender (bottom right).
+We fi
+nd that Pokémon Go has increased physical activity across
+men and women of all ages, weight status, and prior activity levels.
+In particular, we fi
+nd that both Pokémon Go users and control users
+who are very inactive exhibit large activity increases and users who
+are relatively active even exhibit a decrease in activity on average.
+However, we fi
+nd that Pokémon Go users exhibit larger effects than
+the control across all levels of prior activity (all p < 0.025). We
+fi
+nd the largest differences between the two groups for users that
+previously were sedentary (i.e., below 5,000 daily steps [38]). Fur-
+thermore, Pokémon Go users exhibit bigger increases in activity
+than control users across all age groups (all p < 0.040; except 10-
+20 year old group which was small) though we fi
+nd largest effects
+for younger users between 10 and 30 years. We also fi
+nd that the
+positive effect on physical activity does not vary much across all
+BMI groups, which is encouraging since obese individuals (30 <
+BMI ≤ 40) are typically less active than healthy subjects [6]. The
+activity differences in the Pokémon Go groups were always larger
+than the differences in the control group across all BMI groups (all
+p < 0.021). Lastly, we fi
+nd that activity differences in the Poké-
+mon Go groups were larger than the differences in the control group
+for both men and women (all p < 0.022). Increases for women
+were not signifi
+cantly different from increases for men (p = 0.110;
+note small sample size for women).
+In summary, we fi
+nd that Pokémon Go increased activity all
+across the studied population, largely independent of prior activ-
+ity level, age, weight status, or gender. These results are encour-
+aging since they suggest that any positive effects due to Pokémon
+Go are available even to sedentary, obese, and older users. Effec-
+tively reaching these users with physical activity interventions is
+critical for public health [2].
+3.4
+Comparison to Existing Health Apps
+Pokémon Go leads to larger increases in physical activity than
+other mobile health apps and further attracts more users who are
+not yet very active. The average daily steps over time is visualized
+in Figure 5 (using same smoothing method as before). First, we
+observe that users of all four health apps are signifi
+cantly more ac-
+tive than the average wearable user (6,514 daily steps) even before
+starting to use the health app (6,997-7,616 daily steps; see activity
+before t0 in Figure 5 for apps A,B,C,D). Pokémon Go users were
+less active than the average user (5,901-6,265 daily steps). This
+demonstrates that Pokémon Go app is attracting a different group
+of users which is less active and therefore would see larger health
+benefi
+ts from improving their activity [4, 22]. The temporal pat-
+tern for the health apps do not contribute strong evidence that these
+apps are leading to signifi
+cant behavior change. One exception is
+app A with its users signifi
+cantly increasing their activity at day 0.
+However, this increase in activity is lower compared to the effect
+of Pokémon Go. Users of app A increased their activity on average
+by 111 daily steps or 1.6%. Compare this to 194-1502 daily steps
+or 3.1-25.5% for Pokémon Go users with at least one or ten ex-
+periential queries, respectively. In particular, users demonstrating
+large engagement with Pokémon Go exhibit much larger increases
+in activity than users of any other app in our comparison.
+These results emphasize the special contribution that activity-
+encouraging games could have on physical activity and public health.
+These games attract a wide range of people including those with
+low prior physical activity. We have demonstrated throughout this
+paper that such games can lead to signifi
+cant activity increases.
+3.5
+Estimating the Public Health Impact of
+Pokémon Go
+ 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+Minimum number of experiential Pokemon Go queries
+−200
+0
+500
+1000
+1500
+2000
+Difference in daily steps (after - before)
+Pokemon Go Users
+Control Users
+Figure 3: Effect sizes measuring the difference in average num-
+ber of daily steps between the periods before and after t0, for
+different user populations based on the minimum number of
+experiential queries; that is, towards the right the group of
+users becomes smaller and more and more interested in Poké-
+mon Go. At any level there are signifi
+cant differences between
+the effect for Pokémon Go users (red) and the control users
+(blue). The effect increases linearly with the number of Poké-
+mon Go queries. This dose-response relationship between ex-
+pressed interest in Pokémon Go and physical activity suggests
+that these users are in fact playing Pokémon Go and that play-
+ing the game makes them more active. Confi
+dence intervals for
+control group are too small to be visible.
+−30
+−20
+−10
+0
+10
+20
+30
+Number of days relative to t0
+4500
+5000
+5500
+6000
+6500
+7000
+7500
+8000
+8500
+9000
+Daily number of steps
+App A
+App B
+App C
+App D
+Control Users
+Pokemon Go Users
+(w. 1+ exp. queries)
+Pokemon Go Users
+(w. 10+ exp. queries)
+Figure 5: Comparing the effect of Pokémon Go app to leading
+consumer health apps (A, B, C, D). Pokémon Go users are less
+active than the average wearable user (Control) before starting
+to play but see larger increases in physical activity compared to
+the four consumer health apps.
+Effect on US Physical Activity. On average, users with an expe-
+riential query for Pokémon Go increased their physical activity by
+192 steps a day for the next 30 days (see Section 3.2). Extrapolat-
+ing this average effect size to 25 million Pokémon Go users in the
+US [1], we fi
+nd that Pokémon Go added 144 billion steps within the
+fi
+rst 30 days to US physical activity. This is equivalent to walking
+around the equator 2,724 times or 143 round trips to the moon.
+Effect on Meeting Activity Guidelines. Using all users track-
+ing steps at least seven days before and after their fi
+rst experiential
+query for Pokémon Go, we fi
+nd that that the fraction of users meet-
+ing physical activity guidelines (i.e., getting 8,000 average daily
+steps [39, 40]) stays approximately constant for users with one or
+more experiential queries (22.0% before vs. 21.9% after t0) and
+control users (24.1% before vs. 23.5%). However, for highly en-
+gaged Pokémon Go users with at least ten experiential queries, we
+fi
+nd that during the 30 days after they start playing 160% more
+users achieve 8,000 average daily steps (12.2% before vs. 31.7%
+after; relative increase of 160%).
+For comparison, 21% of US
+adults meet these guidelines [4, 22].
+Effect on Life Expectancy. We found that more engaged users
+exhibited average physical activity increases of up to 1,473 daily
+steps (see Section 3.2). This substantial impact on exercise across
+the society could have a measurable impact on US life expectancy
+due to well-established health benefi
+ts of physical activity [5, 16,
+20, 32, 46]. If we assume that Pokémon Go users, between 15 and
+49 years old, would be able to sustain an activity increase of 1,000
+daily steps, this would be associated with 41.4 days of additional
+life expectancy. Across the 25 million US Pokémon Go users [1],
+this would translate to 2.825 million years additional life added to
+US users.
+4.
+DISCUSSION
+The Pokémon Go phenomenon has reached millions of people
+overnight and dominated news media for weeks after its release [1,
+25, 47]. Health professionals have pointed out potential benefi
+ts in-
+cluding increased physical activity, spending more time outside and
+exploring the neighborhood and city, social interactions, and mas-
+tering game challenges but have also raised concerns such as injury,
+abduction, trespassing, violence, and cost [2, 29]. In this study, we
+have precisely quantifi
+ed the impact of Pokémon Go on physical
+activity and studied the effect on different groups of individuals.
+4.1
+Principal Results
+We fi
+nd that playing the game signifi
+cantly increased physical
+activity on the group-level (see Section 3.1 and Section 3.2) as well
+as the individual-level (see Section 3.3) over an observation period
+of approximately four weeks. The more interest the users showed in
+Pokémon Go (measured through intensity of search queries seek-
+ing details about game usage), the larger the increase of physical
+activity (see Section 3.2). For example, users that issued ten Poké-
+mon Go queries on details of the game within the two months after
+release of the game, increased their activity by 1479 steps a day
+or 26%. These increases are not restricted to already active and
+healthy individuals but also reach individuals with low prior activ-
+ity levels and overweight or obese individuals. Comparing Poké-
+mon Go to existing mobile health apps, we fi
+nd further evidence
+that Pokémon Go is able to reach low activity populations while
+mobile health and fi
+tness apps largely draw from an already active
+population (see Section 3.4). This highlights the promise of game-
+based interventions versus traditional approaches, which have often
+been ineffective for these groups of people [7, 19].
+Given its great popularity, Pokémon Go has signifi
+cantly im-
+pacted US physical activity and added an estimated 144 billion
+steps to US physical activity which is about 2,724 times around
+the world or 143 round trips to the moon.
+Furthemore, highly
+engaged users were almost three times as likely to meet offi
+cial
+activity guidelines in the 30 days after starting to play Pokémon
+Go compared to before. If this user engagement could be sustained,
+ Pokémon Go would have the potential to measurably affect US life
+expectancy.
+Our study shows the large potential impact that activity-encour-
+aging games could have on society. However, we have also high-
+lighted challenges in realizing this potential.
+Most importantly,
+games would need to be able to sustain long-term engagement and
+lead to sustained behavior change. Furthermore, these games might
+not be appealing to everyone (e.g., we observed males to be more
+likely to play the games than females), and clearly these games
+should not replace but complement existing physical activity pro-
+grams (e.g., [8, 19, 26, 27, 28, 32]). Understanding how to design
+games and how to bring together games and health interventions
+will be important to public health in the future. As a fi
+rst step, our
+study helps to provide guidance on what could come of continuous
+engagement and with additional engagement.
+4.2
+Limitations
+Out study is not without limitations. First, the study population
+is not a random sample of US population. Subjects were able to
+afford a wearable device for activity tracking and willing to share
+their data for research purposes. Further, we use individuals search
+queries as a proxy for playing Pokémon Go and consider the num-
+ber of queries as indicating the degree of engagement. However,
+we fi
+nd strong evidence that the proxies for usage and engagement
+are effective. The method identifi
+es a fraction of users that is very
+similar to to independent estimates of Pokémon Go penetration in
+the US (see Section 2.1) and we fi
+nd a strong dose-response rela-
+tionship between the number of Pokémon Go queries and increased
+physical activity (see Section 3.2). Lastly, our follow-up period is
+currently restricted to 30 days. Future work is needed to study the
+long-term effectiveness of games such as Pokémon Go to increase
+physical activity.
+4.3
+Comparison with Prior Work
+The link between physical activity and improved health outcomes
+has been well-established (e.g., [5, 16, 20, 32, 46]). At the same
+time, only a small fraction of people in developed countries meet
+offi
+cial physical activity guidelines [4, 22]. Consumer wearable
+devices for activity tracking are becoming more prevalent in the
+general population. The devices can enable us to better understand
+real-world physical activity and how to best support and encourage
+healthier behaviors [13, 30].
+Few research studies to date have harnessed data obtained from
+consumer wearables to study influences of the devices on physi-
+cal activity. However, a number of medical studies have examined
+accelerometer-defi
+ned activity (e.g., [36, 38]), rather than relying
+on self-report measures. Studies have found that use of pedome-
+ters and activity trackers for self-monitoring can help increase ac-
+tivity [35, 43] but other studies have reported mixed results [42].
+Beyond enabling self-monitoring, encouraging additional activity
+through reminders lead to increased activity only for the fi
+rst week
+after the intervention and did not lead to any signifi
+cant changes
+after six weeks in a randomized controlled trial [42].
+To encourage healthy behavior change, researchers have stud-
+ied the design of “exergames” [12, 31, 33], video games combined
+with exercise activity, and location-based games where game play
+progresses through a player’s location [3]. However, no such game
+has been nearly as popular and widely used as Pokémon Go. Such
+games have yet to be integrated into physical activity programs,
+even though one US college recently announced a physical educa-
+tion class based on Pokémon Go [14].
+There is a growing body of work on using large-scale search
+query logs to identify subjects with particular conditions for re-
+search studies, including such efforts as detecting adverse reactions
+to medications and identifying signals that could help with screen-
+ing for cancer [23, 44, 45]. Other work has studied activity-related
+posts on social media to better understand the sharing of health be-
+haviors [15, 24, 34] but has not yet connected such data to ground-
+truth health behaviors or focused on interventions on a large scale.
+To the best of our knowledge, this is fi
+rst study of the link be-
+tween the usage of Pokémon Go or similar games on physical ac-
+tivity and health. Also, this is the fi
+rst effort to combine data from
+wearable devices with information drawn from search engine queries.
+4.4
+Conclusions
+Novel mobile games which require players to physically move in
+the real world appear to be an effective complement to traditional
+physical activity interventions and they are able to reach millions
+of engaged users. We studied the effect of Pokémon Go on phys-
+ical activity through a combination of large-scale wearable sensor
+data with search engine logs, and showed that the game leads to
+signifi
+cant increases in physical activity over a period of 30 days,
+with particularly engaged users increasing their average activity by
+1,473 steps a day or 26%. Based on our fi
+ndings, we estimate that
+the game has already added an estimated 144 billion steps to US
+physical activity. If engagement with Pokémon Go could be sus-
+tained over the lifetime of its many users, we estimate that the game
+would add an estimated 2.825 million years of additional lifetime
+to its US users. We see great promise for public health in design-
+ing geocentric games like Pokémon Go and in working to sustain
+users’ engagement with them.
+Acknowledgments. The authors thank Jen Hicks for feedback on
+the manuscript.
+5.
+REFERENCES
+[1] R. Allan. Early read: Pokémon Go retention and revenue are
+unprecedented. SurveyMonkey Intelligence Blog. July 15,
+2016. https://www.surveymonkey.com/business/intelligence/
+pokemon-go-retention-revenue/. Accessed on September 1,
+2016.
+[2] American Heart Assocation News. Pokémon Go brings
+video games outside. July 19, 2016. http:
+//news.heart.org/pokemon-go-brings-video-games-outside/,
+2016. Accessed on September 1, 2016.
+[3] N. M. Avouris and N. Yiannoutsou. A review of mobile
+location-based games for learning across physical and virtual
+spaces. J. UCS, 18(15):2120–2142, 2012.
+[4] Centers for Disease Control and Prevention. Facts about
+physical activity. May 23, 2014.
+http://www.cdc.gov/physicalactivity/data/facts.htm.
+Accessed on September 1, 2016.
+[5] D. Ding, K. D. Lawson, T. L. Kolbe-Alexander, E. A.
+Finkelstein, P. T. Katzmarzyk, W. van Mechelen, M. Pratt,
+and Lancet Physical Activity Series 2 Executive Committee
+and others. The economic burden of physical inactivity: A
+global analysis of major non-communicable diseases.
+Lancet, 2016.
+[6] R. Dishman and J. Buckworth. Increasing physical activity:
+A quantitative synthesis. Medicine and Science in Sports and
+Exercise, 28(6):706–719, 1996.
+[7] R. K. Dishman, J. F. Sallis, and D. R. Orenstein. The
+determinants of physical activity and exercise. Public Health
+Reports, 100(2):158, 1985.
+[8] M. Dobbins, K. DeCorby, P. Robeson, H. Husson, and
+D. Tirilis. School-based physical activity programs for
+ promoting physical activity and fi
+tness in children and
+adolescents aged 6-18. The Cochrane Library, 2009.
+[9] A. L. Dunn, M. H. Trivedi, and H. A. O’Neal. Physical
+activity dose–response effects on outcomes of depression
+and anxiety. Medicine & Science in Sports & Exercise, 2001.
+[10] T. Dwyer, A. Pezic, C. Sun, J. Cochrane, A. Venn,
+V. Srikanth, G. Jones, R. Shook, X. Sui, A. Ortaglia, et al.
+Objectively measured daily steps and subsequent long term
+all-cause mortality: The tasped prospective cohort study.
+PloS one, 10(11):e0141274, 2015.
+[11] B. Efron and R. J. Tibshirani. An introduction to the
+bootstrap. CRC press, 1994.
+[12] S. Göbel, S. Hardy, V. Wendel, F. Mehm, and R. Steinmetz.
+Serious games for health: Personalized exergames. In
+Proceedings of the 18th ACM international conference on
+Multimedia, pages 1663–1666. ACM, 2010.
+[13] E. C. Hayden. Mobile-phone health apps deliver data bounty.
+Nature, 531(7595):422–423, 2016.
+[14] Kai Ryssdal and Marketplace staff. A college is offering a
+Pokémon Go class. August 09, 2016.
+http://www.marketplace.org/2016/08/09/tech/fi
+nal-note/
+college-offering-pokemon-go-class. Accessed on September
+1, 2016.
+[15] L. Kendall, A. Hartzler, P. Klasnja, and W. Pratt. Descriptive
+analysis of physical activity conversations on Twitter. In
+CHI’11 Extended Abstracts on Human Factors in Computing
+Systems, pages 1555–1560. ACM, 2011.
+[16] I.-M. Lee, E. J. Shiroma, F. Lobelo, P. Puska, S. N. Blair,
+P. T. Katzmarzyk, and Lancet Physical Activity Series
+Working Group and others. Effect of physical inactivity on
+major non-communicable diseases worldwide: An analysis
+of burden of disease and life expectancy. Lancet,
+380(9838):219–229, 2012.
+[17] I.-M. Lee and P. J. Skerrett. Physical activity and all-cause
+mortality: what is the dose-response relation? Medicine and
+science in sports and exercise, 33(6; SUPP):S459–S471,
+2001.
+[18] M. Lynley. With 500M downloads, Pokémon Go is coming
+to the Apple Watch. TechCrunch. September 7, 2016.
+https://techcrunch.com/2016/09/07/pokemon-go-the-hottest-
+game-on-the-planet-is-coming-to-the-apple-watch/, 2016.
+Accessed on September 7, 2016.
+[19] A. Marshall. Challenges and opportunities for promoting
+physical activity in the workplace. Journal of Science and
+Medicine in Sport, 7(1):60–66, 2004.
+[20] L. Miles. Physical activity and health. Nutrition Bulletin,
+32(4):314–363, 2007.
+[21] National Institute of Diabetes and Digestive and Kidney
+Diseases. Overweight and Obesity Statistics.
+https://www.niddk.nih.gov/health-information/
+health-statistics/Pages/overweight-obesity-statistics.aspx,
+2012. Accessed on September 1, 2016.
+[22] U. D. of Health and H. Services. Physical activity guidelines
+for Americans, 2008.
+[23] J. Paparrizos, R. W. White, and E. Horvitz. Screening for
+pancreatic adenocarcinoma using signals from web search
+logs: Feasibility study and results. Journal of Oncology
+Practice, page JOPR010504, 2016.
+[24] K. Park, I. Weber, M. Cha, and C. Lee. Persistent sharing of
+fi
+tness app status on Twitter. In Proceedings of the 19th ACM
+Conference on Computer-Supported Cooperative Work &
+Social Computing, pages 184–194. ACM, 2016.
+[25] S. Perez. Pokémon Go tops Twitter’s daily users, sees more
+engagement than Facebook. TechCrunch. July 13, 2016.
+https://techcrunch.com/2016/07/13/pokemon-go-tops-
+twitters-daily-users-sees-more-engagement-than-facebook/,
+2016. Accessed on September 1, 2016.
+[26] R. S. Reis, D. Salvo, D. Ogilvie, E. V. Lambert, S. Goenka,
+R. C. Brownson, and Lancet Physical Activity Series 2
+Executive Committee and others. Scaling up physical
+activity interventions worldwide: Stepping up to larger and
+smarter approaches to get people moving. Lancet, 2016.
+[27] J. F. Sallis, A. Bauman, and M. Pratt. Environmental and
+policy interventions to promote physical activity. American
+Journal of Preventive Medicine, 15(4):379–397, 1998.
+[28] J. Salmon, M. L. Booth, P. Phongsavan, N. Murphy, and
+A. Timperio. Promoting physical activity participation
+among children and adolescents. Epidemiologic Reviews,
+29(1):144–159, 2007.
+[29] M. Serino, K. Cordrey, L. McLaughlin, and R. L. Milanaik.
+Pokémon Go and augmented virtual reality games: A
+cautionary commentary for parents and pediatricians.
+Current Opinion in Pediatrics, 2016.
+[30] K. Servick. Mind the phone. Science, 350(6266):1306–1309,
+2015.
+[31] J. Sinclair, P. Hingston, and M. Masek. Considerations for
+the design of exergames. In Proceedings of the 5th
+international conference on Computer graphics and
+interactive techniques in Australia and Southeast Asia, pages
+289–295. ACM, 2007.
+[32] P. B. Sparling, N. Owen, E. V. Lambert, and W. L. Haskell.
+Promoting physical activity: The new imperative for public
+health. Health Education Research, 15(3):367–376, 2000.
+[33] A. E. Staiano and S. L. Calvert. Exergames for physical
+education courses: Physical, social, and cognitive benefi
+ts.
+Child Development Perspectives, 5(2):93–98, 2011.
+[34] R. Teodoro and M. Naaman. Fitter with twitter:
+Understanding personal health and fi
+tness activity in social
+media. In ICWSM, 2013.
+[35] C. Thorup, J. Hansen, M. Grønkjær, J. J. Andreasen,
+G. Nielsen, E. E. Sørensen, and B. I. Dinesen. Cardiac
+patients’ walking activity determined by a step counter in
+cardiac telerehabilitation: Data from the intervention arm of
+a randomized controlled trial. Journal of Medical Internet
+Research, 18(4), 2016.
+[36] R. P. Troiano, D. Berrigan, K. W. Dodd, L. C. Masse,
+T. Tilert, M. McDowell, et al. Physical activity in the United
+States measured by accelerometer. Medicine and Science in
+Sports and Exercise, 40(1):181, 2008.
+[37] J. M. Tucker, G. J. Welk, and N. K. Beyler. Physical activity
+in US adults: Compliance with the physical activity
+guidelines for Americans. American Journal of Preventive
+Medicine, 40(4):454–461, 2011.
+[38] C. Tudor-Locke and D. R. Bassett Jr. How many steps/day
+are enough? Sports Medicine, 34(1):1–8, 2004.
+[39] C. Tudor-Locke, C. L. Craig, W. J. Brown, S. A. Clemes,
+K. De Cocker, B. Giles-Corti, Y. Hatano, S. Inoue, S. M.
+Matsudo, N. Mutrie, J.-M. Oppert, D. A. Rowe, M. D.
+Schmidt, G. M. Schofi
+eld, J. C. Spence, P. J. Teixeira, M. A.
+Tully, and S. N. Blair. How many steps/day are enough? for
+adults. International Journal of Behavioral Nutrition and
+Physical Activity, 8(1):1–17, 2011.
+[40] C. Tudor-Locke, C. Leonardi, W. D. Johnson, P. T.
+Katzmarzyk, and T. S. Church. Accelerometer steps/day
+ translation of moderate-to-vigorous activity. Preventive
+medicine, 53(1):31–33, 2011.
+[41] United States Social Security Administration. 2013 Period
+Life Table. https://www.ssa.gov/oact/STATS/table4c6.html,
+2013. Accessed on September 1, 2016.
+[42] J. B. Wang, L. A. Cadmus-Bertram, L. Natarajan, M. M.
+White, H. Madanat, J. F. Nichols, G. X. Ayala, and J. P.
+Pierce. Wearable sensor/device (Fitbit One) and sms
+text-messaging prompts to increase physical activity in
+overweight and obese adults: A randomized controlled trial.
+Telemedicine and e-Health, 21(10):782–792, 2015.
+[43] J. B. Wang, J. K. Cataldo, G. X. Ayala, L. Natarajan, L. A.
+Cadmus-Bertram, M. M. White, H. Madanat, J. F. Nichols,
+and J. P. Pierce. Mobile and wearable device features that
+matter in promoting physical activity. Journal of Mobile
+Technology in Medicine, 5(2):2–11, 2016.
+[44] R. W. White and E. Horvitz. From health search to
+healthcare: explorations of intention and utilization via query
+logs and user surveys. Journal of the American Medical
+Informatics Association, 21(1):49–55, 2014.
+[45] R. W. White, S. Wang, A. Pant, R. Harpaz, P. Shukla,
+W. Sun, W. DuMouchel, and E. Horvitz. Early identifi
+cation
+of adverse drug reactions from search log data. Journal of
+Biomedical Informatics, 59:42–48, 2016.
+[46] WHO. Global recommendations on physical activity for
+health. World Health Organization, Geneva, 2010.
+[47] J. C. Wong. Pokémon No: game’s daily active users,
+downloads and engagement are down. The Guardian. August
+23, 2016.
+https://www.theguardian.com/technology/2016/aug/23/
+pokemon-go-active-users-down-augmented-reality-games.
+Accessed on September 1, 2016.

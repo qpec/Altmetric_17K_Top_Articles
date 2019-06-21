@@ -1,0 +1,1249 @@
+ Lawrence Berkeley National Laboratory
+Recent Work
+Title
+Brain Modulyzer: Interactive Visual Analysis of Functional Brain Connectivity
+Permalink
+https://escholarship.org/uc/item/3xt3702n
+Journal
+IEEE-ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS, 14(4)
+ISSN
+1545-5963
+Authors
+Murugesan, S
+Bouchard, K
+Brown, JA
+et al.
+Publication Date
+2017-01-01
+DOI
+10.1109/TCBB.2016.2564970
+ 
+Peer reviewed
+eScholarship.org
+Powered by the California Digital Library
+University of California
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+1
+Brain Modulyzer: Interactive Visual Analysis of
+Functional Brain Connectivity
+Sugeerth Murugesan, Kristofer Bouchard, Jesse A. Brown, Bernd Hamann, Member, IEEE,
+William W. Seeley, Andrew Trujillo and Gunther H. Weber, Associate Member, IEEE.
+Abstract—We present Brain Modulyzer, an interactive visual exploration tool for functional magnetic resonance imaging (fMRI) brain
+scans, aimed at analyzing the correlation between different brain regions when resting or when performing mental tasks. Brain Modulyzer
+combines multiple coordinated views—such as heat maps, node link diagrams and anatomical views—using brushing and linking to
+provide an anatomical context for brain connectivity data. Integrating methods from graph theory and analysis, e.g., community detection
+and derived graph measures, makes it possible to explore the modular and hierarchical organization of functional brain networks.
+Providing immediate feedback by displaying analysis results instantaneously while changing parameters gives neuroscientists a powerful
+means to comprehend complex brain structure more effectively and efficiently and supports forming hypotheses that can then be
+validated via statistical analysis. To demonstrate the utility of our tool, we present two case studies—exploring progressive supranuclear
+palsy, as well as memory encoding and retrieval.
+Index Terms—Graph Visualization, Neuroinformatics, Cluster Analysis, Linked Views, Brain Imaging, Functional Magnetic Resonance
+Imaging (fMRI).
+!
+1
+INTRODUCTION
+U
+Nderstanding the large-scale connectivity of the hu-
+man brain is crucial to comprehending the brain’s
+overall cognitive functioning. Connectivity in the human
+brain encompasses multiple spatial scales, ranging from
+individual neurons to entire brain regions and systems.
+When studying large-scale brain organization, neuroscien-
+tists often focus on high-level activity patterns of these spa-
+tially distinct brain regions through non-invasive recording
+procedures, such as functional Magnetic Resonance Imaging
+(fMRI). The correlation of activity between regions yields
+a measure of functional connectivity between regions, pro-
+viding essential information about how neurons and neural
+networks process information.
+Neuroscience has established the existence of a rela-
+tively small number of intrinsic networks, containing sets of
+brain regions, also known as communities, that are densely
+connected within themselves and sparsely connected to
+each other. These networks underlie specific processes such
+as lower- and higher-order vision, hearing, sensory-motor
+processing and spatial processing [1], [2]. Graph-theoretic
+techniques, such as community detection [3], can identify
+these intrinsically connected networks. Furthermore, the
+•
+S. Murugesan, K. Bouchard, and G.H. Weber are with the Computa-
+tional Research Division, Lawrence Berkeley National Laboratory, One
+Cyclotron Road, Berkeley, CA 94720, USA,
+E-mail: �
+smurugesan, ghweber, KEBouchard�
+@lbl.gov.
+•
+S. Murugesan, B. Hamann and G.H. Weber are with the Department of
+Computer Science, University of California, Davis, One Shields Avenue,
+Davis CA 95616, USA,
+E-mail: �
+smuru, ghweber, bhamann�
+@ucdavis.edu
+•
+J. Brown, W. Seeley, and A. Trujillo are with the Memory and Aging
+Center, University of California, San Francisco,CA 94143, USA,
+E-mail: �
+jbrown, wseeley, atrujillo�
+@memory.ucsf.edu.
+Manuscript received May 15, 2015; revised February 4, 2016; accepted April
+25, 2016
+modular structure of the brain is hierarchically organized.
+The study of these hierarchical modules has revealed spe-
+cialized cognitive sub- modules within larger communi-
+ties. These sub-modules dynamically change their coupling
+with each other based on the cognitive process that the brain
+engages in.
+Analyzing the hierarchical and modular nature of brain
+networks is crucially important to obtain answers to rele-
+vant scientific questions. For example, a better understand-
+ing of these networks will allow us to comprehend network
+variation among subjects; network changes during aging [4],
+[5]; differences between networks as a consequence of psy-
+chological and neurological disorders [6], [7], [8], [9], [10].
+While statistical analysis is typically used for the analysis
+of such networks [11], visual analysis techniques utilizing
+graph theoretic methods provide valuable additional means
+to explore brain connectivity patterns.
+Existing visualization methods for functional connec-
+tivity are primarily designed to communicate scientific
+findings, not comprehensively supporting the exploration
+of connectivity data. Moreover, existing tools do not run
+analyses interactively for various parameter combinations
+and do not provide immediate visual feedback about the
+modular structure of brain networks at various hierarchical
+levels. Such a feedback would allow scientists to formulate
+or reject hypotheses early in the analysis process.
+Brain Modulyzer (Fig. 1) solves this challenge and fa-
+cilitates a thorough understanding of the connectivity data
+by integrating multiple coordinated views to introduce
+novel interaction techniques that explore the hierarchical
+and modular properties of functional brain networks. The
+methods and visualization system described in this paper
+are the result of a close collaboration involving neuroscien-
+tists and computer scientists, driven by the need to build
+such a tool. Specifically, our system supports three types
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+2
+A
+B
+C
+D
+E
+F
+Fig. 1. Our system links multiple views showing different data aspects to allow neuroscientists to investigate modular and hierarchical organization
+of brain networks. A) Heat maps show the pairwise correlation matrix between parcellated regions. B) Selecting a region of interest—colored
+green in the figure—and coloring all other parcellated regions based on their correlation shows connectivity in relation to anatomy. C) Node-link
+diagrams—considering only connections above a threshold—show connectivity. D) Integrating community detection and coloring nodes according
+to the community memberships highlights groups of brain regions with strong internal connectivity. E) The community graph provides a high-level
+overview over communities in Fig. 1B by representing them as nodes. F) Dendrograms represent the hierarchical organization of the modules.
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+3
+of views: (i) abstract views show connectivity informa-
+tion (Figs. 1A, 1C) and analysis results (Figs. 1D, 1E, 1F),
+enabling quick identification of patterns of interest; (ii)
+anatomical views relate this information to the anatomy
+(Fig. 1B); and (iii) community analysis computes and iden-
+tifies modules (Figs. 1D, 1E), their hierarchical structure
+(Fig. 1F) and graph theoretic measures, all collectively pro-
+viding overall insight into the topology of the brain net-
+work.
+This paper makes the following contributions:
+• We employ overview+focus+detail visualizations of
+the modular structure and hierarchical organization of
+brain networks. These visualizations explicitly show
+inter- and intra-modular connectivity relationships.
+• We provide methods that dynamically compute various
+topological properties of brain networks such as graph
+statistics, community structure and its associated hier-
+archy, all based on a user-specified connection strength
+threshold.
+• We introduce an integrated system that uses the concept
+of brushing and linking to combine multiple views
+highlighting different data aspects and develop novel
+interaction techniques to explore functional brain con-
+nectivity.
+• We present two case studies that demonstrate the use-
+fulness of our visualization tool.
+2
+BACKGROUND
+2.1
+Functional Connectivity
+Resting state fMRI captures intrinsic brain connectivity
+when the brain is not performing any task [12]. With such
+data, neuroscientists are especially interested in developing
+a better understanding of the impact of diseases on brain
+networks. For example, scientists can better characterize the
+effect of diseases on the cognitive abilities of the human
+brain based on changes reflected in rs-fMRI network data of
+the subjects involved.
+Brain connectivity based on fMRI analysis is defined in
+terms of correlation matrices where each matrix entry ci,j
+encodes the statistical similarity between the time courses of
+parcellated brain regions i and j. Other imaging modalities
+used to study connectivity include diffusion tensor imaging
+(DTI) that map the anatomy of the white matter tracts non-
+invasively.
+2.2
+Modularity Analysis in Functional Brain Networks
+Modularity in complex networks measures the division
+of a network into sets of modules where each module
+possesses dense internal or intra-modular connectivity and
+sparse external or inter-modular connectivtity [13]. Large
+complex systems like brain networks exhibit modular or-
+ganization [4] and have a hierarchical network structure at
+multiple scales [14], [15]. This property of the brain ensures
+that the network is robust, adaptable and able to evolve [14].
+Analysis of modular organization of brain networks typ-
+ically aims at answering high-level questions such as [16]:
+• How diverse are inter—modular connections?
+• How does one module specialized in performing a
+certain task interact with other modules?
+• What nodes in a module are responsible for global
+inter-modular integration?
+Exploring and ultimately answering these questions re-
+quires techniques that dynamically explore both inter-
+modular, and intra-modular connectivity data.
+Visualizations showing the modular organization at
+varying levels are helpful to neuroscientists for gaining
+insights into the topology of the brain network, which
+allows them to come to qualitative conclusions about the
+data. For example, when analyzing the properties of brain
+networks of diseased subjects diagnosed with schizophre-
+nia, the subjects exhibited a significantly reduced hierarchy
+which might indicate that their brain networks were less
+efficiently wired [17].
+3
+RELATED WORK
+We provide a brief review of visualization methods in
+three domains: visual analysis in functional brain networks,
+visualizations in hierarchical modular structures, and visu-
+alization of communities in functional brain networks.
+3.1
+Visual Analysis Tools in Functional Brain Networks
+Functional connectivity data can be visualized as heat
+map—coloring each matrix cell ci,j (see Section 2.1) based
+on a connection strength or as a node link diagram where
+nodes represent brain regions and edges represent matrix
+entries ci,j. The edge between nodes i and j encodes the
+connection strength entry ci,j.
+To visualize this data, prior work mainly used two com-
+mon layout techniques, i.e., spatial and non-spatial layout
+principles. Spatial data layout techniques take into account
+the anatomy of the brain regions while non-spatial tech-
+niques do not.
+Abstract, non-spatial visualization techniques include
+spring embedding graphs, matrix bitmaps and scatter
+plots [18]. Fair et al. [19] and Deshpande et al. [20] used
+spring-embedding algorithms to visualize the brain net-
+work as 2D node-link diagrams. An alternative approach
+to visualizing this non-spatial data is to view directly the
+correlation matrix [21], [22], [23], [24].
+Three-dimensional (3D) node-link diagrams [25], [26],
+[27] that place the nodes at the spatial coordinates of the
+anatomical view address this shortcoming. Tools that utilize
+anatomical 3D spatial information, include the CoCoMac
+Paxinos 3D viewer [26], BrainNet Viewer [28], Brain Voyager
+QX d [29], and Visual Analysis Tool by Li et al. [30]. Al-
+though visualizing functional connectivity data as 3D node-
+link diagrams allows neuroscientists to inspect visually the
+structural patterns in the brain, they lead to cluttered and
+occluded visualizations. One way to overcome such clutter
+and occlusion is to filter edges based on the connection
+strength threshold [25]. Adopting a 2D anatomical layout
+whose nodes are projections on 2D planes (based on two
+anatomical axes) also reduces this clutter to some extent [24].
+Spatial representations help neuroscientists orient them-
+selves with respect to the brain regions while 2D non-spatial
+graph layouts provide the necessary flexibility for visualiz-
+ing modifications to the connectivity data [31]. Combining
+both representations enables scientists to seamlessly investi-
+gate whether network topology interacts with the spatial
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+4
+domain of the data, providing the ability to draw more
+detailed conclusions. The Functional Brain Connectivity Ex-
+plorer [32] was among the first published tools combining
+the strengths of non-spatial and spatial visualization tech-
+niques. Other papers concerned with visual analysis of brain
+connectivity data include that by Akers et al. [33], Bruckner
+et al. [34], Beyer et al. [35], Jianu et al. [36], Whitfield et al. [37],
+Ribeiro et al. [38] and Brown et al. [39]. However, there
+is still a need for additional visualization techniques that
+can help neuroscientists answer more in-depth questions
+and perform more specific analysis of modular structures
+of functional brain connectivity data.
+3.2
+Visualization of Hierarchical Modular Structures
+Early work in visualizing communities [40] by Heer et
+al. [41] paved the path for automatically computing and vi-
+sualizing communities. Later, research by Corinna et al. [42]
+sought to solve the problem of visualizing overlapping
+communities. However, these published approaches do not
+focus on visualizing modular structures at multiple levels.
+To address this problem, Herman et al. [43] described vari-
+ous techniques to visualize hierarchical modular structures.
+These techniques include tree-map [44], cone-tree [45] and
+information cube [46]. Another technique, presented in the
+ASK-Graph-View [47] solves the problem of visualizing
+hierarchical structures by juxtaposing an interactive visual-
+ization of a hierarchical tree with a graph and a matrix view.
+However, this tool only visualizes user-selected clusters
+from the hierarchical tree, hiding the overall connectivity
+information between sub-clusters. Such visualizations make
+the analysis of interrelationships between sub-clusters dif-
+ficult. Analyzing these interrelationships is of importance
+to interpreting overall topology of the modular structure of
+hierarchical networks [14]. Summary graph [48], community
+matrix visualizations [49], and dendrograms [50] provide
+the foundation for visualizing hierarchical modular organi-
+zations of the functional brain networks. In our work, we
+expand on the aforementioned visual analysis techniques
+for visualizing hierarchical modular data specifically in the
+domain of functional brain connectivity data.
+Our research builds on these methods and expands their
+capabilities by emphasizing the visualization of hierarchi-
+cally organized modular data.
+3.3
+Visualization of Modular Structures Based on
+Functional Brain Connectivity
+Little progress has been made concerning the interactive
+visualization of the modular and hierarchical organization
+of brain networks. The Connectome Visualization Utility
+(CVU) [51] is a tool used for exploring the modular structure
+of brain networks. However, CVU is limited to identifying
+and visualizing modular structures at a single scale/level.
+Furthermore, the visualization features of this tool do not
+provide an overview of the communities or relationships
+between them.
+Current systems typically suffer from information over-
+load, occlusion, or lack of overview visualization. Infor-
+mation overload occurs when views provide few insights
+because of the overwhelming number of visual elements.
+Occlusion results when visualizations contain a large num-
+ber of elements that overlap with each other, inhibiting
+the comprehension of the data. Not providing an overview
+of the data inhibits overall data comprehension as it only
+captures the relationship of an individual brain region/node
+while not providing the global context.
+We address these problems and improve the current
+technology by supporting these capabilities: (i) juxtaposed
+visualization views in a detail+overview style; (ii) easy-to-
+use navigational and explorational techniques that support
+analysis of intra-modular, inter-modular or both types of
+connectivity information; (iii) concurrent access to all the
+representations of the same data by linked views; (iv)
+easy manageability of modular and hierarchical information
+through the inclusion of a network measure table.
+4
+OVERALL APPROACH
+To support the two complimentary tasks of exploring con-
+nectivity between brain regions and answering questions
+based on their modular structure (Section 2), Brain Modu-
+lyzer supports two analysis modes: correlation mode and com-
+munity mode (Fig. 3). The correlation mode focuses on direct
+visualization of the correlation matrix, showing correlation
+strength between individual brain region and putting this
+information in an anatomical context. The community mode
+displays the results of analyzing the modular and hierarchi-
+cal properties of brain networks. Switching between the two
+modes provides in-depth insight into brain connectivity and
+the modular structure arising from it in its anatomical con-
+text, making it possible to formulate new hypotheses that
+can subsequently be verified by offline statistical analysis.
+4.1
+Anatomical Views
+To understand functional connectivity between brain re-
+gions, neuroscientists need to determine how it relates
+to the anatomy. For example, it is often important to
+know whether two functionally correlated regions are also
+anatomically close or how detected communities are dis-
+tributed over the brain. Anatomical views in Brain Mod-
+ulyzer provide this information by coloring brain regions
+either based on their correlation strength to a selected
+region—in correlation mode—or based on their community
+membership—in community mode—to effectively combine
+connectivity information with the anatomy.
+• The Brain parcellation view provides a comprehensible
+overall picture of the brain by visualizing parcellated
+regions of interest in their anatomical context. Each
+brain region is displayed as a set of contiguous voxels
+comprising it (Fig. 3A).
+• Parcel centroid view: Visualizing brain regions as vox-
+els often suffers from from occlusion and visual clutter.
+The parcel centroid view addresses this issue by dis-
+playing just a sphere at the centroid of each brain region
+using the same color scheme as the brain parcellation
+view (Fig. 3C).
+• Slice views: Parcellated brain region are often sparse
+and fill only a small portion of the volume. As a
+consequence, it is difficult to identify their exact lo-
+cation in the brain. The slice views (Fig. 3B) display
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+5
+Fig. 2. Our system uses the connectivity matrix and its associated parcellation as input. The system operates in two modes—correlation mode and
+community mode. Correlation mode focuses on analysis of correlation network data, and the Community mode supports modular analysis.
+Fig. 3. Results of community detection with respect to anatomy. Each
+community is represented by a distinct color, and each region is colored
+according to its community membership. Parcellated brain regions can
+be shown as outlines in Fig. 4A or centroid depiction via a sphere Fig.
+4C.
+structural data from an MRI scan, providing the spatial
+cues necessary to locate the parcellated regions. Users
+can qualitatively assess the anatomical locations of the
+brain regions within the three complimentary planes:
+sagittal, coronal and axial. The view displays grayscale
+images of the MRI scan (registered with the parcellation
+volume) to provide the 2D spatial context of the 3D
+volume view.
+To provide additional anatomical context for the 3D views
+(brain parcellation view and parcel centroid view), our tool
+displays a semi-transparent contextual isosurface represent-
+ing the brain surface in the 3D views.
+4.2
+Abstract Views
+The abstract views support identifying, exploring, and an-
+alyzing patterns of interest underlying the correlation data.
+By removing the anatomical constraints on the visualiza-
+tions, the 2D non-spatial abstract views with flexible layouts
+convey changes in connectivity in an explicit way.
+• The matrix view supports quickly assessing connectiv-
+ity trends across the entire data set [52], [53], [54]. The
+view provides users with information about general
+correlation or relationships between brain regions. Each
+matrix entry ci,j is color-coded according to the corre-
+lation strength between the i-th brain region and j-th
+brain region. As the data is symmetric, the ci,j value is
+equal to the cj,i value.
+• The graph view allows users to easily identify topolog-
+ical patterns of interest and perform qualitative graph
+theoretical analysis. The view shows the brain network
+encoded in the functional connectivity data matrix as
+a node-link diagram. Nodes depict brain regions, and
+edges indicate the (pairwise) correlation strength be-
+tween the nodes.
+The following capabilities support performing high-level
+brain analysis tasks with our tool:
+• Node coloring: Often neuroscientists are interested in
+a node and its correlation with the other nodes to
+investigate its topological role in the network. Our tool
+allows users to dynamically select brain regions and
+explicitly highlight their edge strengths with respect to
+other nodes in the graph. The changes are highlighted
+by coloring the nodes and the edges in the graph view
+according to their correlation data values.
+• Thresholding: Visualizing all the information provided
+in the matrix produces a complete graph, e.g., the 27
+region graph in Fig. 1C, would have 576 edges. Such
+a graph suffers from clutter and overdraw, inhibiting
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+6
+users to perform any meaningful qualitative analysis.
+Brain Modulyzer supports filtering connectivity data
+based on a specific threshold value to remove clutter-
+causing edges in the graph. This feature allows users to
+selectively focus on the strongest connections between
+brain regions.
+• Dynamic layout change: Different graph layouts pos-
+sess varying degrees of user preference and aesthet-
+ics, highlighting different properties of network data.
+Circular-layouts, for e.g., focus on neutrality [55], i.e.,
+displaying all the nodes equidistant from each other,
+allowing users to better focus on connections rather
+than its underlying topology. Brain Modulyzer sup-
+ports the most widely used graph layout algorithms
+used by neuroscientists, including the neato graph lay-
+out [56], force-directed-layout [57], and circular or shell
+layouts [58].
+• Annotations: To provide in-depth details of regions
+of interest, all of the linked views provide interactive
+tooltips that convey useful quantitative information
+about network measures, correlation strength and the
+abbreviation of the region selected.
+4.3
+Community Detection and Visualization
+The community detection mode in our tool facilitates the
+exploration of the modular property of brain networks.
+Community detection is performed on the data to iden-
+tify and explore modules and its hierarchies. We apply
+community detection, e.g., Louvain’s method [3], to detect
+communities from the input correlation data and assign
+colors with a maximum perceptive distance [59] to each of
+these communities.
+To enable real-time interaction with the user, the tool
+detects and renders communities dynamically when the
+threshold for the connections changes. The following ab-
+stract views support community mode:
+• The community matrix supports detailed analysis of
+outlier connections or connectivity trends within each
+module. This view (Fig. 4) shows intra-modular con-
+nections by coloring a cell cij based on its community
+membership. The data is only visualized if it corre-
+sponds to a connection within a community and has
+a connection strength above a given threshold. To al-
+low easy extraction of connectivity trends within mod-
+ules, rows and columns of the matrix are contiguously
+sorted [60] such that colored cells are squeezed along
+the diagonal of the matrix view.
+A larger number of colored cells in the community
+matrix view indicate strong intra-modular connections.
+For example, out of the twelve identified communities
+shown in Fig. 4, only six are connected internally, i.e.,
+have edges within the module. As the other seven
+communities are single region communities, they do
+not possess any colored cells in the community matrix
+view.
+• The community graph provides an overview of the
+entire community structure of the brain network, en-
+abling users for easy identification of inter-modular
+connectivity patterns. This view supports a high-level
+investigation of modules that are highly correlated or
+anti-correlated with each other.
+Fig. 4. The matrix view shows twelve communities identified by the
+modularity optimization algorithm (Fig. 6). Six of the twelve communities
+are connected internally. Color coded cells of the matrix view represent
+intra-modular connections.
+Nodes in the community graph (Fig. 6A) represent
+individual communities and the edges thickness depict
+inter-modular correlation. The inter-modular correla-
+tion strength between two communities A and B is
+computed as the mean strength of all edges that start
+from nodes in community A and end at nodes in
+community B.
+To support visual correlation between community
+graph view and graph view, we ensure that the mod-
+ules are placed consistently in both views. Community
+nodes are placed at the average node coordinates of all
+the nodes in the original graph layout (Fig. 6A and 6C)
+comprising their community.
+The anatomical views color parcellates brain regions
+according to the communities identified in the correspond-
+ing abstract views. This coloring provides an anatomical
+context for the detected communities, allowing users to
+quickly investigate whether anatomically close regions are
+also members of the same community.
+4.4
+Dendrogram View
+Common hierarchical brain analysis tasks often require
+qualitative analysis of correlation information of sub-
+communities. The dendogram view not only supports in-
+teractive exploration and analysis of modular information
+at varying levels of hierarchy but also supports the investi-
+gation of the structure of the modular hierarchy itself.
+The Louvain method [3] outputs a hierarchy of modules
+that we visualize in the form of a dendrogram. Nodes in the
+lowest level of the hierarchy denote individual brain regions
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+7
+Fig. 5. The dendrogram view shows the hierarchical modular information
+of a community corresponding to threshold value 3.309. Level 1 of
+the dendrogram represents sub-communities formed when optimizing
+modularity locally with the nodes in level 0; level 2 nodes represent the
+final community emerging from the sub-communities identified in level
+1.
+while the nodes in the highest level denote the resulting
+communities. The nodes that are neither of these denote
+sub-communities.
+We construct the dendrograms (Fig. 5) in our system
+as follows: given the hierarchical modular information, we
+maintain a tree-like data structure that maps nodes in the
+dendrogram view to the nodes in the graph view. We
+visualize the cluster data using a layout that places the
+nodes in hierarchical order, i.e., it places nodes in the same
+hierarchy level at the same height starting with leaf nodes
+at the bottom and community nodes at the top. Changing
+the threshold for community analysis interactively results
+in an updated dendrogram view. The highly interactive
+features of the dendrogram view are what makes the view
+a significant feature for the modular analysis. For simplic-
+ity, we assume that the modularity-optimization algorithm
+provides us with three levels of hierarchy, i.e., higher-level
+communities, mid-level sub-communities and lower-level
+brain regions.
+The
+leaf
+nodes
+and
+subcommunity
+nodes
+of
+the
+dendrogram
+view
+are
+color-coded
+according
+to
+their
+community/sub-community membership. All of the nodes
+in the dendrogram view are ordered based on the hierarchi-
+cal structure of the data.
+In order to provide an overview of interactions between
+sub-communities, the tool allows the user to pick a level
+in the dendrogram hierarchy and investigate how commu-
+nities merge or split across the hierarchy. For example, in
+Fig. 6A, the community graph visualizes sub-communities
+formed by the modularity optimization algorithm at level
+1. Highlighted sub-communities colored in yellow and pink
+later merge into one community in the next stage of the
+hierarchy.
+4.5
+Network Measure Table
+Measures used in graph theory often convey useful in-
+formation about connectivity profiles of individual brain
+regions [16], [61], [62]. The graph theoretic measures that
+we utilize in our tool include:
+• Degree centrality: This measure captures the fraction
+of nodes a node is connected to [63]. A high value
+indicates that a node is a local hub that integrates
+information from its neighbors.
+• Participation coefficient: This measure reflects the dis-
+tribution of links of a node with all the modules in the
+network [64]. A high value indicates that a node acts as
+a bridge between modules.
+• Betweenness Centrality: This measure is the sum of
+the fraction of the shortest paths from all vertices to
+all others that pass through a node [65], [66]. A high
+value characterizes nodes that enable rapid distribution
+of information from one part of a network to another
+part.
+• Within-module degree z-score: This measure repre-
+sents the connectedness of a node to other nodes in the
+same module [16]. A high value indicates that the node
+is a provincial hub within its module.
+We present these measures in a table showing one row
+per brain region, supporting the identification of anomalies
+or patterns in brain networks. Tooltips provide additional
+information regarding Z-score values and the relative rank
+of the measure that is selected. A user can sort the table
+using any network measure by selecting the table headers.
+The table shown in Fig. 6E provides statistics for com-
+munities identified for the threshold value 3.056, sorted
+by descending centrality. Additionally, one can examine
+the measures of brain regions that belong to a selected
+community in the dendrogram view. For example, the brain
+region RPreSMA has a centrality value of 0.19 and is ranked
+fourth based on the sorting criteria. One can deduce that the
+node has a relatively average participation index of value
+0.49 and a low betweenness value.
+Visualizing Graph Measures as Graph Properties: To
+convey qualitative patterns that are not so obvious when
+presenting network statistics alone, our tool maps visually
+the network statistics to graph properties. Fig. 6C, uses node
+size (a graph property) to represent centrality (a network
+measure), where larger node sizes indicate higher centrality.
+4.6
+Linking and Interactivity
+All views are coordinated and linked together with a rich
+set of interactions enabling the users to gain multi-level in-
+sights for community analysis. Interactivity combined with
+various linking features in our tool allow the user to perform
+in-depth exploration of modules/brain regions of interest
+across the modular hierarchy.
+Users can select a brain region of interest in a particular
+view of interest and explore its representations in all the
+other views. For example in Fig. 6D, the user selects a com-
+munity in the dendrogram view and can simultaneously
+examine its representation network measure table, overview
+graph, and community graph view.
+Brain Modulyzer supports three types of linking features
+to analyze hierarchical relationships, these include:
+• Leaf-node to brain region linking: Selecting leaf-nodes
+in the dendrogram view highlight all the corresponding
+brain regions and the connections belonging to the
+selected community in all visualization views.
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+8
+Fig. 6. A) The community graph highlights the subcommunities associated with the community selected in the dendrogram view. B) Configuration
+options provide various choices for interactivity, such as toggling hovering/clicking, choosing graph layout and varying the opacity of highlighted
+nodes. C) The brain region graph displays highlighted nodes associated with selected sub communities. D) (While the dataset is same as Fig. 1F
+,
+the threshold value for this visualization view is different) The dendrogram view displays the hierarchy of communities. The communities that do that
+not have any edges emanating from them are grayed out. E) A table view lists important graph properties of the graph shown in Fig. 7C.
+• Sub-community nodes to brain regions linking: Se-
+lecting a sub-community node (e.g., in level 1), high-
+lights not only the corresponding brain regions that
+belong to the selected sub-community but also the
+edges within the sub-community.
+• Community nodes to brain regions linking: Picking a
+community node (e.g., in level 2) in the dendrogram
+view highlights all the associated sub-communities.
+Highlighting a sub-community is similar to the sub-
+community nodes to brain regions linking mechanism.
+For the exploration of modular properties of the brain
+networks, the interactive features include: (i) inter-modular
+highlighting for between-module connections (Figure 6A),
+(ii) intra-modular highlighting for within-module connec-
+tions (yellow or blue community in Figure 6C, Figure 4).
+Other interactive features include specifying the connection
+strength threshold to filter edges in the connection graph,
+see Fig. 6C, de-cluttering the connection graph, dynamically
+recalculating the graph structure, graph-theoretical metrics,
+and hierarchy of communities. Changing the connection
+strength threshold re-orders the headers of the community
+matrix and the leaves of the dendrogram such that commu-
+nity relationships of entities are reflected by the placement
+of their corresponding graphical primitives.
+Our experience with tool showed that when analyzing
+larger data sets, the matrix cells and the headers are no
+longer appropriate for visually capturing all the salient
+information of interest. In particular, to present a matrix
+view with a large number of rows/columns., it becomes
+necessary to omit row and column headers. While tool
+tips can provide information as to which pair of regions
+corresponds to a correlation value, this process becomes
+tedious for larger subregions. To support these use cases,
+our tool displays a subset of the data, i.e., a block of selected
+matrix elements, in another view. Restricting the matrix to a
+subset makes it possible to display row and column headers
+for orientation. The matrix elements to be displayed in the
+magnifier window can be based on any number of elements
+in the matrix views.
+5
+RESULTS
+Our team constitutes experts from visualization as well as
+neuroscience groups, all of which contributed to the design
+of the tool. The main research questions of our case studies
+were: What insights did the neuroscientists gain from using
+such a tool? How does the interplay of standard visualiza-
+tion techniques help them arrive at the hypotheses?
+The tool has helped the domain experts generate new hy-
+potheses and research ideas to analyze neuro-degenerative
+diseases such as Progressive Supranuclear Palsy and tasks
+based on memory encoding and retrieval. We describe the
+data acquisition process as well as the scientific insights
+gained through the use of our tool by the domain experts.
+5.1
+Case Study 1: Progressive Supranuclear Palsy
+Progressive supranuclear palsy (PSP) is a neurodegenerative
+disease that typically begins around the age of 60 and causes
+restricted vertical eye movement, balance impairment, axial
+muscle rigidity, and cognitive-behavioral deficits. Patients
+demonstrate atrophy of particular brain structures including
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+9
+the midbrain, cerebellum, thalamus, basal ganglia, and por-
+tions of the prefrontal cortex. The disease course is rapid and
+there is no available cure [67]. Previous work has identified
+functional connectivity reductions in a network anchored
+by the rostral mesothalamic junction (MTJ), connecting to
+an array of regions which contribute to diverse functions
+including oculomotor control, skeletomotor control, and
+social/emotional processing [68]. In this study, 18 patients
+with PSP and 36 age-matched healthy control (HC) subjects
+received task-free (resting state) fMRI scans. A total of 27
+specific regions of interest comprising this network were
+used to calculate the pairwise functional connectivity of all
+regions and define a 27 × 27 covariance matrix for each
+subject. To summarize the network connectivity patterns in
+patients with PSP and healthy controls, we calculated the
+average connectivity matrices for the 36 controls and 18
+patients.
+As reported by Gardner et al. [68], the mesothalamic
+junction (MTJ) is an epicenter of PSP disease-related pathol-
+ogy, structural atrophy, and functional connectivity disrup-
+tion. In that study, the MTJ node exhibited significantly
+reduced total flow, a graph theory measure similar to the
+nodal degree. In this study, we visualized the connectivity
+of this node with other nodes in the MTJ network using
+the Brain Modulyzer. As can be seen in Fig. 7, the right MTJ
+node in control subjects (Fig. 7C; blue lines emanating from
+selected node) shows higher connectivity to neighboring
+nodes than it does in PSP patients (Fig. 7D). Furthermore,
+the graph view (color-coded with communities) shows the
+left and right MTJ fragmented as an isolated community
+in PSP patients (Fig. 7D, right column, purple nodes). This
+isolation can be simultaneously recognized in the matrix
+view (Fig. 7A, right column) and the anatomical location
+of these nodes can be seen in the anatomical view (Fig. 7B,
+right). Finally, the graph view (color-coded with communi-
+ties) illustrates the significant isolation that exists between
+each community of nodes in PSP patients. Our previous
+work had shown that connectivity was globally reduced in
+this network.
+The visualization tool clarified that the major conse-
+quence of reduced connectivity was progressive isolation of
+the three modules in this network: the subcortical (Fig. 7B,
+left, blue), frontal (Fig.
+7B, left, red), and parietal (Fig.
+7B, left, green) modules. The cognitive symptoms of PSP
+include bradyphrenia, an impairment of concentration, and
+loss of mental flexibility, both of which are components of
+what has been called a subcortical dementia [69]. These
+symptoms are thought to reflect impaired interaction be-
+tween cortical regions and subcortical regions including the
+basal ganglia and thalamus [70].
+The visualization tool makes simultaneously apparent:
+(i) the reduced degree centrality of the basal ganglia (RBG
+and LBG nodes) in PSP as compared to HC (purple lines in
+Fig. 7D, right in PSP compared to right in HC, Fig. 7C) and
+(ii) the substantial isolation of the subcortical module from
+the frontal module (blue nodes to red nodes in Fig. 7C, right,
+vs cyan nodes to red nodes in Fig. 7C, right).
+This combination of community detection, nodewise
+graph theory metrics, anatomical rendering of community
+membership, and the ability to assess nodewise connectivity
+edges enables complex, multipart observations that are not
+otherwise easy to synthesize. Here, this disconnection of the
+basal ganglia in the face of cortical-subcortical isolation is a
+candidate mechanism for bradyphrenia in PSP that has not
+previously been explored in a network context.
+5.2
+Case Study 2: Memory Encoding and Retrieval
+Fifteen healthy young subjects participated in an episodic
+memory encoding and retrieval task (unpublished data).
+Subjects were asked to learn the associations between im-
+ages of different famous faces and famous places that in-
+volved first studying the pairs of faces and places to be
+remembered, then immediately afterwards receiving a task-
+free (resting state) fMRI scan. The following day, subjects
+returned and performed a memory test to assess how many
+of the studied pairs they could accurately recall from the
+previous day. Memory performance was measured in order
+to relate it to functional connectivity as observed by the
+pre-encoding and post-encoding fMRI scans. We hypoth-
+esized that subjects with superior memory would show
+elevated connectivity between memory and visual regions
+in the post-encoding scan, indicative of more active memory
+consolidation. Subject fMRI scans were parcellated into 199
+brain regions spanning the cortical gray matter, subcortical,
+and brainstem regions. The pairwise functional connectivity
+between these regions was calculated to derive the 199×199
+connectivity matrix for each subject. A behavioral correlation
+matrix matrix was obtained by calculating the correlation
+of each subject’s performance on the memory task with
+their functional connectivity between region A and region
+B, then repeating this procedure for all pairs of regions.
+This 199 × 199 groupwise behavioral correlation matrix
+can be thought of as a network representing successful
+memory consolidation. The memory consolidation network
+(MCN) was analyzed for community structure to determine
+if particular regions became more central hubs in the post-
+learning network, when memory consolidation was occur-
+ring for the subjects with superior memory performance.
+Community assignments were visualized in the Brain
+Modulyzer both in abstract and anatomical space. The mod-
+ules in this network can be recognized as known intrinsic
+functional connectivity networks—the default mode (Fig.;
+green), visual/sensory (red), executive control (cyan), and
+motor networks (purple). The anatomical view is essential
+for identifying the spatial topography of these networks.
+For example, in Fig. 8A and B, the default mode network
+(green) can be recognized based on its layout in medial
+frontal, medial parietal, lateral inferior parietal, and tem-
+poral lobes. The executive control network (blue) can be
+recognized in dorsal lateral prefrontal and superior parietal
+areas. The axial, sagittal, and slice views, along with the
+3D surface view, all provide complementary information.
+While the spatial pattern of nodes in the same module can
+be useful for recognizing the system, the anatomical view
+provides little information about the network interactions
+within and between these different modules. A graph view
+is a valuable tool for discerning how the different modules
+interact. The ability to simultaneously observe this network
+in linked anatomical, graph, and matrix views enables a rich
+navigational experience, unlike any currently available tool.
+In the network under examination here, the executive
+control network lies between the default mode and vi-
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+10
+A
+B
+C
+D
+Fig. 7. Functional connectivity of the mesothalamic junction (MTJ) network in 36 healthy controls subjects and 18 PSP patients. A. Matrix views of
+the MTJ network in controls (left column) and PSP patients (right column); the top row shows the connectivity weights as a heat map with the right
+MTJ nodes row highlighted in blue, while the bottom row shows connections above the selected weight threshold as solid colors corresponding to
+the community they belong to. B. Anatomical views of the nodes comprising the MTJ network, colored according to their community membership
+in controls (left) and PSP patients (right). Spring-embedded network views of the control C and PSP patient D group mean networks, illustrating
+connectivity strength from the right MTJ (left column) and the community structure of the networks (right column). Right MTJ connections are shown
+as blue edges in all networks. Right basal ganglia connections are shown as purple edges in the right column.
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+11
+A
+B
+C
+D
+Fig. 8. Anatomical and graph views of the memory consolidation network (MCN). A. Planar (top row) and 3D surface (bottom row) views of the
+199 regions of interest in the network, overlaid on the anatomical template brain. Node colors correspond to modules as determined by the Brain
+Modulyzer. B. Network aggregate community graphs (top) and Louvain modular hierarchy dendrogram (bottom). The left network shows the four
+communties at the top level of the hierarchy while the right network shows the eight subcommunities at the second level of the hierarchy. C.
+Whole graph view of the network, showing all nodes with the color corresponding to module membership as in A and B at the top level of the
+hierarchy. Highlighted are all connections within the default mode network module nodes (green). D. Whole graph view of the network, showing the
+connections of the posterior hippocampus/fusiform cortex (green node) to its most strongly connected neighbors (r > .25; bottom). Node colors
+respresent the correlation strength to the selected node.
+sual/sensory networks (Fig. 8B, top left). The default mode
+and visual/sensory networks have extremely sparse direct
+connectivity to one another, as can be seen by the weak
+inter-modular connectivity in Fig. 8B, top left, and the nearly
+perfect separation of the green and red nodes in the spring
+embedded network in Fig. 8C. From this observation we
+can generate the hypothesis that during successful memory
+consolidation, the executive network plays a pivotal role
+coordinating between these networks, potentially by allocat-
+ing resources for attention and multimodal sensory binding.
+One node played a particularly critical role in connect-
+ing multiple modules, the posterior hippocampus/fusiform
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+12
+cortex (Fig. 8D, green). This node exhibited the highest
+combination of degree centrality, participation coefficient,
+and betweenness centrality of any node in the MCN. This
+suggests that this node plays an important role binding
+information from communities supporting memory encod-
+ing (default mode; green), visual/sensory processing (red),
+executive function (blue), and motor function (purple).
+6
+CONCLUSIONS AND FUTURE WORK
+We have presented a visualization tool for exploration and
+analysis of modular functional brain connectivity data. The
+innovative capabilities of our system make it possible to
+apply visualization techniques to all relevant data represen-
+tations and use automated analysis methods for detailed
+exploration of brain network data. Our tool provides fo-
+cus+context and detail+overview visualizations supporting
+an interactive, in-depth analysis of hierarchical commu-
+nities. We have used our system to visualize community
+hierarchies in real-time for datasets up to 200 brain regions.
+The tool has already proven to be a valuable resource for the
+neuroscientists in our collaborative team. Since other groups
+have voiced a strong interest in our tool, we plan to make it
+publicly available for download.
+While already useful in its current state, numerous ex-
+tensions of our system are possible. For example, currently
+the tool supports analyzing one graph at a time. We plan to
+add the ability to read several connectivity matrices, e.g., a
+resting state network and a network after performing a men-
+tal task and display graphs that highlight the differences in
+an intuitive way. We also plan to expand our framework to
+more effectively combine statistical and visual data analysis.
+Since these two modes of data analysis complement each
+other, it will be worthwhile to explore whether statistical
+insights can inform the visualization process and whether
+visual presentations can also lead to refined statistical anal-
+ysis.
+7
+ACKNOWLEDGEMENTS
+This work was supported by the Laboratory Directed Re-
+search and Development Program of Lawrence Berkeley
+National Laboratory under U.S. Department of Energy Con-
+tract No. DE-AC02-05CH11231. This work is also supported
+by the Tau Consortium (grants to William W. Seeley), and
+the NIH (NIA grants AG023501 to William W. Seeley).
+Finally, we thank our patients and their families for their
+invaluable contributions to neurodegenerative disease re-
+search.
+REFERENCES
+[1]
+S. M. Smith, P. T. Fox, K. L. Miller, D. C. Glahn, P. M. Fox, C. E.
+Mackay, N. Filippini, K. E. Watkins, R. Toro, A. R. Laird, and C. F.
+Beckmann, “Correspondence of the brain’s functional architecture
+during activation and rest,” PNAS, vol. 106, no. 31, 2009.
+[2]
+J. D. Power, A. L. Cohen, S. M. Nelson, G. S. Wig, K. A. Barnes,
+J. A. Church, A. C. Vogel, T. O. Laumann, F. M. Miezin, B. L.
+Schlaggar, and S. E. Petersen, “Functional network organization
+of the human brain,” Neuron, vol. 72, no. 4, pp. 665–678, 2011.
+[3]
+V. D. Blondel, J.-L. Guillaume, R. Lambiotte, and R. Lefebvre, “Fast
+unfolding of communities in large networks,” Journal of Statistical
+Mechanics: Theory and Experiment, vol. 2008, p. P10008, 2008.
+[4]
+D. Meunier, S. Achard, A. Morcom, and E. Bullmore, “Age-related
+changes in modular organization of human brain functional net-
+works,” Neuroimage, vol. 44, no. 3, 2009.
+[5]
+M. Y. Chan, D. C. Park, N. K. Savalia, S. E. Petersen, and G. S. Wig,
+“Decreased segregation of brain systems across the healthy adult
+lifespan,” Proc. of the National Academy of Sciences, vol. 111, no. 46,
+pp. E4997–E5006, 2014.
+[6]
+A. Meyer-Lindenberg, J.-B. Poline, P. D. Kohn, J. L. Holt, M. F.
+Egan, D. R. Weinberger, and K. F. Berman, “Evidence for abnor-
+mal cortical functional connectivity during working memory in
+schizophrenia,” American Journal of Psychiatry, 2001.
+[7]
+C. Stam, B. Jones, G. Nolte, M. Breakspear, and P. Scheltens,
+“Small-world networks and functional connectivity in alzheimer’s
+disease,” Cerebral cortex, vol. 17, no. 1, pp. 92–99, 2007.
+[8]
+L. Wang, C. Zhu, Y. He, Y. Zang, Q. Cao, H. Zhang, Q. Zhong,
+and Y. Wang, “Altered small-world brain functional networks
+in children with attention-deficit/hyperactivity disorder,” Human
+brain mapping, vol. 30, no. 2, pp. 638–649, 2009.
+[9]
+Y. Liu, M. Liang, Y. Zhou, Y. He, Y. Hao, M. Song, C. Yu,
+H. Liu, Z. Liu, and T. Jiang, “Disrupted small-world networks in
+schizophrenia,” Brain, vol. 131, no. 4, pp. 945–961, 2008.
+[10] M. Rubinov, S. A. Knock, C. J. Stam, S. Micheloyannis, A. W. Har-
+ris, L. M. Williams, and M. Breakspear, “Small-world properties of
+nonlinear brain activity in schizophrenia,” Human brain mapping,
+vol. 30, no. 2, pp. 403–416, 2009.
+[11] M. H. Lee, C. D. Smyser, and J. S. Shimony, “Resting-state fmri: a
+review of methods and clinical applications,” American Journal of
+Neuroradiology, vol. 34, no. 10, pp. 1866–1872, 2013.
+[12] J. Power, B. Schlaggar, and S. Petersen, “Studying brain organiza-
+tion via spontaneous fMRI signal,” Neuron, vol. 84, no. 4, 2014.
+[13] M. E. Newman and M. Girvan, “Finding and evaluating commu-
+nity structure in networks,” Physical review E, vol. 69, 2004.
+[14] D. Meunier, R. Lambiotte, A. Fornito, K. D. Ersche, and E. T.
+Bullmore, “Hierarchical modularity in human brain functional
+networks,” Frontiers in neuroinformatics, vol. 3, 2009.
+[15] Y. He, J. Wang, L. Wang, Z. J. Chen, C. Yan, H. Yang, H. Tang,
+C. Zhu, Q. Gong, Y. Zang et al., “Uncovering intrinsic modular
+organization of spontaneous brain activity in humans,” PloS one,
+vol. 4, no. 4, p. e5226, 2009.
+[16] M. Rubinov and O. Sporns, “Complex network measures of brain
+connectivity: uses and interpretations,” Neuroimage, vol. 52, no. 3,
+pp. 1059–1069, 2010.
+[17] D. S. Bassett, E. Bullmore, B. A. Verchinski, V. S. Mattay, D. R.
+Weinberger, and A. Meyer-Lindenberg, “Hierarchical organization
+of human cortical networks in health and schizophrenia,” The
+Journal of Neuroscience, vol. 28, no. 37, pp. 9239–9248, 2008.
+[18] R. Salvador, J. Suckling, M. R. Coleman, J. D. Pickard, D. Menon,
+and E. Bullmore, “Neurophysiological architecture of functional
+magnetic resonance images of human brain,” Cerebral cortex,
+vol. 15, no. 9, pp. 1332–1342, 2005.
+[19] D. A. Fair, A. L. Cohen, J. D. Power, N. U. Dosenbach, J. A. Church,
+F. M. Miezin, B. L. Schlaggar, and S. E. Petersen, “Functional brain
+networks develop from a local to distributed organization,” PLoS
+computational biology, vol. 5, no. 5, p. e1000381, 2009.
+[20] G. Deshpande, P. Santhanam, and X. Hu, “Instantaneous and
+causal connectivity in resting state brain networks derived from
+functional mri data,” Neuroimage, vol. 54, no. 2, 2011.
+[21] D. A. Fair, A. L. Cohen, N. U. Dosenbach, J. A. Church, F. M.
+Miezin, D. M. Barch, M. E. Raichle, S. E. Petersen, and B. L. Schlag-
+gar, “The maturing architecture of the brain’s default network,”
+Proc. of the National Academy of Sciences, vol. 105, 2008.
+[22] R. A. Becker, S. G. Eick, and A. R. Wilks, “Visualizing network
+data,” Visualization and Computer Graphics, IEEE Transactions on,
+vol. 1, no. 1, pp. 16–28, 1995.
+[23] E. J. Sanz-Arigita, M. M. Schoonheim, J. S. Damoiseaux, S. A.
+Rombouts, E. Maris, F. Barkhof, P. Scheltens, and C. J. Stam, “Loss
+of small-worldnetworks in alzheimer’s disease: graph analysis of
+fmri resting-state functional connectivity,” PloS one, vol. 5, 2010.
+[24] S. Achard, R. Salvador, B. Whitcher, J. Suckling, and E. Bullmore,
+“A resilient, low-frequency, small-world human brain functional
+network with highly connected association cortical hubs,” The
+Journal of Neuroscience, vol. 26, no. 1, pp. 63–72, 2006.
+[25] K. J. Worsley, J.-I. Chen, J. Lerch, and A. C. Evans, “Comparing
+functional connectivity via thresholding correlations and singular
+value decomposition,” Philosophical Transactions of the Royal Society
+B: Biological Sciences, vol. 360, no. 1457, pp. 913–920, 2005.
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+13
+[26] G. Bezgin, A. T. Reid, D. Schubert, and R. K¨
+otter, “Matching spatial
+with ontological brain regions using java tools for visualization,
+database access, and integrated data analysis,” Neuroinformatics,
+vol. 7, no. 1, pp. 7–22, 2009.
+[27] J. Cao, K. Worsley et al., “The geometry of correlation fields with
+an application to functional connectivity of the brain,” The Annals
+of Applied Probability, vol. 9, no. 4, pp. 1021–1057, 1999.
+[28] M. Xia, J. Wang, and Y. He, “Brainnet viewer: A network visual-
+ization tool for human brain connectomics,” PLoS One, 2013.
+[29] R. Goebel, F. Esposito, and E. Formisano, “Analysis of functional
+image analysis contest (fiac) data with brainvoyager qx: From
+single-subject to cortically aligned group general linear model
+analysis and self-organizing group independent component anal-
+ysis,” Human Brain Mapping, vol. 27, no. 5, pp. 392–401, 2006.
+[30] K. Li, L. Guo, C. Faraco, D. Zhu, H. Chen, Y. Yuan, J. Lv, F. Deng,
+X. Jiang, T. Zhang et al., “Visual analytics of brain networks,”
+NeuroImage, vol. 61, no. 1, pp. 82–97, 2012.
+[31] B. Alper, B. Bach, N. Henry Riche, T. Isenberg, and J.-D. Fekete,
+“Weighted graph comparison techniques for brain connectivity
+analysis,” in Proc. of the SIGCHI Conference on Human Factors in
+Computing Systems.
+ACM, 2013, pp. 483–492.
+[32] A. F. van Dixhoorn, B. H. Vissers, L. Ferrarini, J. Milles, and
+C. P. Botha, “Visual analysis of integrated resting state functional
+brain connectivity and anatomy,” in Proc. of the 2nd Eurographics
+Conference on Visual Computing for Biology and Medicine, ser. EG
+VCBM’10.
+Eurographics Association, 2010, pp. 57–64.
+[33] D. Akers, A. Sherbondy, R. Mackenzie, R. Dougherty, and B. Wan-
+dell, “Exploration of the brain’s white matter pathways with
+dynamic queries,” in Visualization, 2004. IEEE.
+IEEE, 2004.
+[34] S. Bruckner, V. Solteszova, E. Groller, J. Hladuvka, K. Buhler, J. Y.
+Yu, and B. J. Dickson, “Braingazer-visual queries for neurobiology
+research,” Visualization and Computer Graphics, IEEE Transactions
+on, vol. 15, no. 6, 2009.
+[35] J. Beyer, A. Al-Awami, N. Kasthuri, J. W. Lichtman, H. Pfister,
+and M. Hadwiger, “Connectomeexplorer: Query-guided visual
+analysis of large volumetric neuroscience data,” Visualization and
+Computer Graphics, IEEE Transactions on, vol. 19, no. 12, 2013.
+[36] R. Jianu, C. Demiralp, and D. H. Laidlaw, “Exploring brain con-
+nectivity with two-dimensional neural maps,” Visualization and
+Computer Graphics, IEEE Transactions on, vol. 18, no. 6, 2012.
+[37] S. Whitfield-Gabrieli and A. Nieto-Castanon, “Conn: a functional
+connectivity toolbox for correlated and anticorrelated brain net-
+works,” Brain connectivity, vol. 2, no. 3, pp. 125–141, 2012.
+[38] A. S. Ribeiro, L. M. Lacerda, and H. A. Ferreira, “Multi-
+modal imaging brain connectivity analysis toolbox (mibca),” PeerJ
+PrePrints, Tech. Rep., 2014.
+[39] J. A. Brown, J. D. Rudie, A. Bandrowski, J. D. Van Horn, and
+S. Y. Bookheimer, “The ucla multimodal connectivity database:
+a web-based platform for brain connectivity matrix sharing and
+analysis,” Frontiers in neuroinformatics, vol. 6, 2012.
+[40] C. Vehlow, F. Beck, and D. Weiskopf, “The state of the art in
+visualizing group structures in graphs.”
+[41] J. Heer and D. Boyd, “Vizster: Visualizing online social networks,”
+in Information Visualization, 2005. INFOVIS 2005. IEEE Symposium
+on.
+IEEE, 2005, pp. 32–39.
+[42] C. Vehlow, T. Reinhardt, and D. Weiskopf, “Visualizing fuzzy
+overlapping communities in networks,” IEEE Transactions on Vi-
+sualization and Computer Graphics, vol. 19, no. 12, 2013.
+[43] I. Herman, G. Melanc
+¸on, and M. S. Marshall, “Graph visualization
+and navigation in information visualization: A survey,” Visualiza-
+tion and Computer Graphics, IEEE Transactions on, vol. 6, no. 1, 2000.
+[44] B. Johnson and B. Shneiderman, “Tree-maps: A space-filling ap-
+proach to the visualization of hierarchical information structures,”
+in Visualization, 1991. Visualization’91, Proc.., IEEE Conference on.
+IEEE, 1991, pp. 284–291.
+[45] G. G. Robertson, J. D. Mackinlay, and S. K. Card, “Cone trees:
+animated 3d visualizations of hierarchical information.”
+ACM.
+[46] J. Rekimoto and M. Green, “The information cube: Using trans-
+parency in 3d information visualization,” 1993.
+[47] J. Abello, F. Van Ham, and N. Krishnsan, “Ask-graphview: A
+large scale graph visualization system,” Visualization and Computer
+Graphics, IEEE Transactions on, vol. 12, no. 5, pp. 669–676, 2006.
+[48] M. Raitner, “Visual navigation of compound graphs,” in Graph
+drawing.
+Springer, 2005, pp. 403–413.
+[49] H.-M. Wu, Y.-J. Tien, and C.-h. Chen, “Gap: A graphical environ-
+ment for matrix visualization and cluster analysis,” Computational
+Statistics & Data Analysis, vol. 54, no. 3, pp. 767–778, 2010.
+[50] R. R. Sokal and F. J. Rohlf, “The comparison of dendrograms by
+objective methods,” Taxon, pp. 33–40, 1962.
+[51] R. A. LaPlante, L. Douw, W. Tang, and S. M. Stufflebeam, “The
+connectome visualization utility: Software for visualization of
+human brain networks,” PloS one, vol. 9, no. 12, p. e113838, 2014.
+[52] D. S. Bassett, J. A. Brown, V. Deshpande, J. M. Carlson, and S. T.
+Grafton, “Conserved and variable architecture of human white
+matter connectivity,” Neuroimage, vol. 54, no. 2, 2011.
+[53] C. E. Ginestet and A. Simmons, “Statistical parametric network
+analysis of functional connectivity dynamics during a working
+memory task,” Neuroimage, vol. 55, no. 2, pp. 688–704, 2011.
+[54] M. A. Kramer, U. T. Eden, K. Q. Lepage, E. D. Kolaczyk, M. T.
+Bianchi, and S. S. Cash, “Emergence of persistent networks in
+long-term intracranial eeg recordings,” The Journal of Neuroscience,
+vol. 31, no. 44, pp. 15 757–15 767, 2011.
+[55] F. Iragne, M. Nikolski, B. Mathieu, D. Auber, and D. Sherman,
+“Proviz: protein interaction visualization and exploration,” Bioin-
+formatics, vol. 21, no. 2, pp. 272–274, 2005.
+[56] S. C. North, “Drawing graphs with neato,” NEATO User Manual,
+vol. 11, 2004.
+[57] T. M. Fruchterman and E. M. Reingold, “Graph drawing by
+force-directed placement,” Software: Practice and experience, vol. 21,
+no. 11, pp. 1129–1164, 1991.
+[58] M. Y. Becker and I. Rojas, “A graph layout algorithm for drawing
+metabolic pathways,” Bioinformatics, vol. 17, no. 5, 2001.
+[59] A. Del Bimbo, M. Mugnaini, P. Pala, and F. Turco, “Visual querying
+by color perceptive regions,” Pattern recognition, vol. 31, 1998.
+[60] C. A. Hoare, “Quicksort,” The Computer Journal, 1962.
+[61] E. Bullmore and O. Sporns, “Complex brain networks: graph
+theoretical analysis of structural and functional systems,” Nature
+Reviews Neuroscience, vol. 10, no. 3, pp. 186–198, 2009.
+[62] O. Sporns, “From simple graphs to the connectome: networks in
+neuroimaging,” Neuroimage, vol. 62, no. 2, 2012.
+[63] P. Bonacich, “Some unique properties of eigenvector centrality,”
+Social Networks, vol. 29, no. 4, pp. 555–564, 2007.
+[64] R. Guimera and L. A. N. Amaral, “Functional cartography of
+complex metabolic networks,” Nature, vol. 433, no. 7028, 2005.
+[65] U. Brandes, “A faster algorithm for betweenness centrality*,”
+Journal of Mathematical Sociology, vol. 25, no. 2, pp. 163–177, 2001.
+[66] M. E. Newman, “A measure of betweenness centrality based on
+random walks,” Social networks, vol. 27, no. 1, pp. 39–54, 2005.
+[67] L. I. Golbe, “Progressive supranuclear palsy,” Seminars in Neurol-
+ogy, vol. 34, no. 02, pp. 151–159, 2014.
+[68] R. C. Gardner, A. L. Boxer, A. Trujillo, J. B. Mirsky, C. C. Guo, E. D.
+Gennatas, H. W. Heuer, E. Fine, J. Zhou, J. H. Kramer, B. L. Miller,
+and W. W. Seeley, “Intrinsic connectivity network disruption in
+progressive supranuclear palsy,” Annals of Neurology, vol. 73, 2013.
+[69] M. L. Albert, R. G. Feldman, and A. L. Willis, “Thesubcortical
+dementia’of progressive supranuclear palsy,” Journal of Neurology,
+Neurosurgery & Psychiatry, vol. 37, no. 2, pp. 121–130, 1974.
+[70] J. D. Schmahmann and D. N. Pandya, “Disconnection syndromes
+of basal ganglia, thalamus, and cerebrocerebellar systems,” Cortex,
+vol. 44, no. 8, pp. 1037–1066, 2008.
+Sugeerth Murugesan is currently a Ph.D. can-
+didate in the Department of Computer Science
+at the University of California, Davis, and is
+working as a graduate student researcher in
+the Lawrence Berkeley National Laboratory’s
+Computational Research Division. His current
+research involves developing visualization and
+analysis methods for complex spatio-temporal
+data. His other research interests include com-
+puter vision and machine learning.
+ TO APPEAR IN IEEE/ACM TRANSACTIONS ON COMPUTATIONAL BIOLOGY AND BIOINFORMATICS
+14
+Kristopher Bouchard’s research addresses the
+question of how distributed neural circuits gives
+rise to coordinated behaviors. His undergrad-
+uate studies in mathematics guided his senior
+thesis in neural network learning with Dr. Larry
+Abbott at Brandeis. During his neuroscience
+Ph.D at UCSF with Dr. Michael Brainard, he
+designed and conducted experiments recording
+from single-neurons to examine the represen-
+tation of produced probabilistic sequences in
+songbird sensorimotor circuits. As a postdoctoral
+fellow in neural engineering with Dr. Edward Chang, he investigated
+functional organization and dynamic coordination in human sensori-
+motor cortex (SMC) during speech production with high-density elec-
+trocorticography (ECoG) grids. Currently, he is part of a diverse team
+across UCB-UCSF-LBNL for development of instrumentation and com-
+putational methods for massive channel count, high spatial-temporal
+resolution functional brain mapping
+Jesse A. Brown is a postdoctoral scholar at
+UCSF. He works in the Memory and Aging Cen-
+ter with Dr. William Seeley. He has a Ph.D.
+in neuroscience from UCLA, where he worked
+with Dr. Susan Bookheimer on multimodal neu-
+roimaging methods for characterizing brain con-
+nectivity alterations in individuals with genetic
+risk for Alzheimers Disease. His current re-
+search is developing neuroimaging connectivity
+methods to aid in the early diagnosis of neurode-
+generative diseases and monitor their progres-
+sion over time.
+Bernd Hamann teaches computer science at
+the University of California, Davis. He studied
+computer science and mathematics at the Tech-
+nical University of Braunschweig, Germany, and
+Arizona State University, U.S.A. His main inter-
+ests are visualization, geometric modeling, im-
+age processing and computer graphics.
+William W. Seeley received his MD from the
+UCSF School of Medicine. He then completed
+an Internal Medicine internship at UCSF and
+Neurology residency at the Massachusetts Gen-
+eral and Brigham and Womens Hospitals. He is
+currently an Associate Professor of Neurology at
+the UCSF Memory and Aging Center, where he
+participates in patient evaluation and manage-
+ment, and Director of the UCSF Neurodegener-
+ative Disease Brain Bank. His research interest
+regards selective vulnerability in neurodegener-
+ative disease.
+Andrew Trujillo Andrew Trujillo joined the See-
+ley Selective Vulnerability Research Laboratory
+in June 2011 as an Imaging Research Associate.
+He graduated from Pomona College in 2009 with
+a bachelor of arts degree in cognitive science.
+Andrew comes to the UCSF Memory and Aging
+Center (MAC) after having completed a two year
+apprenticeship at Stanford University.
+Gunther H. Weber is a Staff Scientist in LBNLs
+Computational Research Division and an Ad-
+junct Associate Professor of Computer Science
+at UC Davis. He earned his Ph.D. in computer
+science from the University of Kaiserslautern,
+Germany in 2003 and completed his post-doc in
+2006 at UC Davis. His research interests include
+scientific visualization, data analysis, computer
+graphics and parallel algorithms.

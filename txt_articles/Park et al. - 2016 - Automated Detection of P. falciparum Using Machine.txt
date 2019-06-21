@@ -1,0 +1,931 @@
+ RESEARCH ARTICLE
+Automated Detection of P. falciparum Using
+Machine Learning Algorithms with
+Quantitative Phase Images of Unstained
+Cells
+Han Sang Park1*, Matthew T. Rinehart1, Katelyn A. Walzer2,3, Jen-Tsan Ashley Chi2,3,
+Adam Wax1
+1 Department of Biomedical Engineering, Duke University, Durham, NorthCarolina, United States of
+America, 2 Department of Molecular Genetics and Microbiology, Duke University, Durham, NorthCarolina,
+United States of America, 3 Duke Center for Genomic and Computational Biology, Duke University, Durham,
+NorthCarolina, United States of America
+* hp36@duke.edu
+Abstract
+Malaria detection through microscopic examination of stained blood smears is a diagnostic
+challenge that heavily relies on the expertise of trained microscopists. This paper presents
+an automated analysis method for detection and staging of red blood cells infected by the
+malaria parasite Plasmodium falciparumat trophozoite or schizont stage. Unlike previous
+efforts in this area, this study uses quantitative phase images of unstained cells. Erythro-
+cytes are automatically segmented using thresholds of optical phase and refocused to
+enable quantitative comparison of phase images. Refocused images are analyzed to
+extract 23 morphologicaldescriptors based on the phase information. While all individual
+descriptors are highly statistically different between infected and uninfected cells, each
+descriptor does not enable separation of populations at a level satisfactory for clinical utility.
+To improve the diagnostic capacity, we applied various machine learning techniques,
+including linear discriminant classification (LDC), logistic regression (LR), and k-nearest
+neighbor classification (NNC), to formulate algorithms that combine all of the calculated
+physical parameters to distinguish cells more effectively. Results show that LDC provides
+the highest accuracy of up to 99.7% in detecting schizont stage infected cells compared to
+uninfected RBCs. NNC showed slightly better accuracy (99.5%) than either LDC (99.0%) or
+LR (99.1%) for discriminating late trophozoites from uninfected RBCs. However, for early
+trophozoites, LDC produced the best accuracy of 98%. Discrimination of infection stage
+was less accurate, producing high specificity (99.8%) but only 45.0%-66.8% sensitivity with
+early trophozoites most often mistaken for late trophozoite or schizont stage and late tro-
+phozoite and schizont stage most often confused for each other. Overall, this methodology
+points to a significant clinical potential of using quantitative phase imaging to detect and
+stage malaria infection without staining or expert analysis.
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+1 / 19
+a11111
+OPEN ACCESS
+Citation: Park HS, Rinehart MT, Walzer KA, Chi J-
+TA, Wax A (2016) AutomatedDetectionof P.
+falciparumUsing Machine Learning Algorithmswith
+QuantitativePhase Images of UnstainedCells. PLoS
+ONE 11(9): e0163045.doi:10.1371/journal.
+pone.0163045
+Editor: David J. Sullivan, Jr., Johns Hopkins
+University Bloomberg School of Public Health,
+UNITED STATES
+Received:March 12, 2016
+Accepted: September 1, 2016
+Published: September 16, 2016
+Copyright: © 2016 Park et al. This is an open
+access article distributedunder the terms of the
+Creative Commons AttributionLicense, which permits
+unrestricteduse, distribution,and reproduction in any
+medium, provided the original author and source are
+credited.
+Data Availability Statement: All relevant data are
+within the paper and its SupportingInformationfiles.
+Funding: This work has been supportedby National
+Science Foundation, Division of IndustrialInnovation
+and Partnership(NSF IIP-1346349, http://www.nsf.
+gov/, AW) and NationalInstitutesof Health (NIH R01-
+CA167421, www.nih.gov/,AW) grants. JAC
+acknowledges financial support from the World Anti-
+Doping Agent (https://www.wada-ama.org/) and
+BurroughsWellcome Fund (www.bwfund.org/). KAW
+is supportedby the NSF GRFP (http://www.nsf.gov/).
+ Introduction
+Malaria is a parasitic infectious disease caused by Plasmodium species, with P. falciparum
+being the most deadly and clinically relevant. This parasite has a complex intra-erythrocytic
+life cycle, moving through several stages of development while consuming the hemoglobin of
+the red blood cell (RBC). The gold standard for malaria diagnosis is manual microscopic evalu-
+ation of Giemsa stained blood smears. However, the utility of this approach is limited by the
+skill of an expert microscopist. Further, both the staining process and microscopic examination
+can be time consuming [1]. Therefore, there is an unmet need to bypass these requirements to
+allow easy detection and staging of malaria infection.
+The aim of this manuscript is to report on the development of a method to automatically
+detect P. falciparum infection in unstained blood samples without human interpretation.
+Hänscheid et al. reported automated malaria diagnosis, using the Cell-Dyn full blood count
+analyzer that can distinguish abnormal monocytes and neutrophils containing birefringent
+hemozoin, showing 48.6% sensitivity and 96.2% specificity [2,3]. Several previous efforts have
+sought to use machine learning algorithms to detect malaria infection by automated analysis of
+microscopic images of stained red blood cells [4–6], achieving 84–95% accuracy in detecting
+parasites. These approaches can improve detection by removing the need for manual evalua-
+tion. However, they still rely on brightfield imaging of fixed and stained red blood cells. New
+imaging approaches can provide additional information that can potentially be used to
+improve automated detection. For example, recent studies using quantitative phase measure-
+ments have shown the ability to discern structural features indicative of P. falciparum infection
+in live, unstained blood cells [7]. Quantitative phase imaging (QPI) has been previously used to
+study morphological and temporal characteristics of individual cells in vitro by defining many
+metrics related to structural mechanics [8], molecular content [9], and dynamic responses to a
+wide range of stimuli with nanoscale sensitivity [10,11]. However, even with the wealth of
+information available through QPI, we still lack an automated algorithm that can discriminate
+malaria infection with sufficient accuracy to realize the clinical potential. Recent efforts from
+the group of B. Javidi have examined shape correlation of RBC images across several focal
+planes and achieved 86% discrimination accuracy [12]. Here, we seek to further improve the
+discrimination capacity of automated analysis by using multiparametric characterization of
+individual blood cells based on morphological descriptors extracted from quantitative phase
+images of live, unstained red blood cells. We have constructed machine learning algorithms
+using morphological descriptors of each cell extracted from quantitative phase images rather
+than the image data itself. Use of these parameters reduces the size of both training and test
+sets to allow the analysis of larger numbers of cells than previous studies using QPI. The result-
+ing algorithms allow identification of malaria infection with high accuracy (>99%) and good
+discrimination of infection stage.
+Materials and Methods
+Ethics statement
+This study was conducted with the approval of the Duke University Institutional Review Board
+(IRB), and the participant provided a written informed consent to participate in this study.
+Blood sample preparation
+A whole blood sample was collected from a healthy, non-pregnant donor with informed writ-
+ten consent. In order to isolate red blood cells, purification protocols outlined by Sangokoya
+et al. were followed [13]. The fresh human blood sample was diluted in half by adding a volume
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+2 / 19
+The funders had no role in study design, data
+collectionand analysis, decision to publish, or
+preparationof the manuscript.
+Competing Interests: The authors have declared
+that no competinginterests exist.
+ of PBS equal to the blood volume. Then, the blood suspension was carefully layered on top of
+Ficoll, in an amount equal to the blood volume, in 50 cc conical tube. The cells were spun at
+1500 rpm for 35 minutes at 25°C with no break. After the spin, RBC pellets at the bottom were
+isolated by removing the supernatant top layer, including white blood cells (WBC), and washed
+once in PBS.
+RBCs were infected with P. falciparum strain, 3D7A, and synchronized using methods
+describedby Saliba and Jacobs-Lorena [14]. During the 48-hour life cycle, infected RBCs were
+isolated from the general RBC population by magnetic sorting via a MACS magnet (Miltenyi
+Biotec) to separate uninfected RBCs from those containing parasites. Briefly, when most para-
+sites are observedto be trophozoites or schizonts in a 30 mL culture, 5 mL of cultured cells are
+centrifugedat room temperature for 5 minutes at 1000 rpm (201 x g). Meanwhile, a prewarmed
+LS column (Miltenyi Biotec) is placed on a MACS magnet and is equilibrated with 5 mL of
+incomplete medium at 37°C. Supernatant from pelleted culture is removed, resuspended in 5
+mL of incomplete medium and run through the LS column. The column is washed three times
+with 5 mL of incomplete medium at 37°C. The column is then carefully removed from the
+magnet, placed in a 15 mL conical tube, and eluted with 3 mL of incomplete medium at 37°C.
+The resuspended parasites are centrifuged at room temperature for 5 minutes at 1000 rpm
+(201 x g). The supernatant is removed, and the parasites are resuspended in 1 mL of PBS con-
+taining calcium chloride and magnesium chloride.
+Parasite-infected red blood cells that were isolated using the magnetic sorting technique
+were imaged label-free in an aqueous environment (99:1 Dulbecco’s phosphate buffered saline,
+D8662 Sigma-Aldrich, to bovine albumin fraction V (7.5%), 15260–037 Gibco) using the QPS
+system at multiple time-points throughout the 48-hour life cycle: early trophozoite (24 hrs),
+late trophozoite (36 hrs), and schizont (48 hrs) stages (Distribution of RBC types, Table 1).
+Since RBCs with malaria parasites in ring stage, 12 hours post synchronized infection, could
+not be isolated with the magnetic sorting technique, they are not included in this study. Bright-
+field images of the histologic slides were made by fixing and staining RBCs with parasites at dif-
+ferent stages of infection along with uninfected RBCs as shown in Fig 1.
+White blood cells were also separated from the whole blood sample following the RBC isola-
+tion protocol, outlined above, until the centrifugation step. After spinning the cells, the upper
+Table 1. Distribution of RBC types used for imaging experiments.
+Sample type
+# of cells (N)
+Time after infection [hours]
+Uninfected (S1 Fig)
+413
+—
+Early trophozoite (S2 Fig)
+173
+24
+Late trophozoite (S3 Fig)
+314
+36
+Schizont (S4 Fig)
+337
+48
+doi:10.1371/journal.pone.0163045.t001
+Fig 1. Bright-field microscopy images. Bright-field microscopy images: (A) uninfected RBC (B-D) RBCs with malaria parasite in
+early trophozoite, late trophozoite, and schizont stages respectively (scale bars = 5μm).
+doi:10.1371/journal.pone.0163045.g001
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+3 / 19
+ layer containing plasma and platelets was removed without disturbing the WBC layer. WBC
+are carefully collected and washed in PBS + 10% FBS. The solution was then pelleted at 1500
+rpm for 10 minutes and the supernatant was aspirated to isolate the WBCs. The isolated WBCs
+were washed and resuspended in PBS.
+Quantitative phase spectroscopy
+We have used our quantitative phase spectroscopy system (QPS, Fig 2) [15] to image red blood
+cells. The digital holography system uses a supercontinuum laser source (Fianium SC-400-4)
+that is spectrally filtered to select a 1.12nm spectral full-width at half-maximum bandwidth
+from the broadband light with a variable center wavelength that is tuned across 475nm–700nm
+in 5 nm increments. This bandwidth is broad enough to reduce speckle from coherent artifacts
+but produces a reasonably long coherence length (ranges from 83–193 μm, depending on the
+center wavelength) such that the interferometric efficiencyis not significantly degraded across
+the field of view.
+The system employs a custom scheme to implement a rapidly-tunable spectral filter [15].
+The filter uses a 300 lp/mm transmission diffractiongrating (DG) with a galvanometric scan-
+ning mirror (GSM) to couple the selected wavelengths into a single-mode fiber so that it may
+be introduced to the interferometer. The fiber output passes through a linear polarizer (LP)
+before entering the off-axis Mach-Zehnder interferometer as a collimated beam. In the interfer-
+ometer, a beam splitter (BS) separates the illumination light into sample (S) and reference (R)
+arms that are path-matched within the coherence length of the filtered light using mirror-
+based retroreflectors (RR) on translation stages. The propagation angle of the reference arm is
+offset with respect to the sample arm to cause an angle difference between the two beams, cre-
+ating off-axis interferograms (Fig 2C) that are detected by the CMOS camera (Photron Fas-
+tCam SA-4, 1024×1024 px, 10-bit data capture). Matched microscope objectives, MO1 and
+MO2 (Zeiss Plan-NeoFLUAR 40× 0.75NA) are used in each arm, creating an image of the sam-
+ple with an effective magnification of ~107x.
+The interferograms are digitally processed, as describedpreviously [15,16], to produce
+quantitative phase images, Δϕ(x,y). Processing steps include: (1) Fourier transforming the
+Fig 2. QPS system diagram. (A) Quantitative phase spectroscopy system: (DG) diffraction grating, (GSM) galvanometric scanning
+mirror, (LP) linear polarizer, (BS) beam splitter, (RR) retroreflectors, (MO) microscope objective. Path-matched sample (S) and
+reference (R) beams create off-axis interferograms imaged by a CMOS camera. (B) Interferogram spectral sweep from 475–700nm at
+5nm increments in ~6s (C) Interferogram with corresponding fringes created by off-axis angle difference between the sample and
+reference arms.
+doi:10.1371/journal.pone.0163045.g002
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+4 / 19
+ interferogram, (2) spatially filtering around the carrier frequency in the Fourier domain to iso-
+late one of the complex conjugates, (3) re-centering the filtered two dimensional spatial fre-
+quency information and demodulating the complex wave, (3) inverse Fourier transforming the
+frequency information to produce a complex image of the wavefront differences containing
+both amplitude and phase information. A hyperspectral set of reference holograms of media-
+only fields of view (FOV) is captured separately and subtracted from the corresponding sample
+images of RBCs to remove phase artifacts due to non-uniformities in illumination. Any low-
+order background phase, variations caused by temporal drift between the two interferometer
+arms, are then removed by fitting the images to 5th-order polynomials. Changes in optical path
+length are calculated as:
+DOPLðx; y; lÞ ¼ Dnðx; y; lÞ � hðx; yÞ ¼ D�ðx; y; lÞ � l=2p
+ð1Þ
+where h(x,y) is the height map of the object and Δn(x,y,λ) is the refractive index map. Each data
+set comprises a distribution of optical path lengths across a range of several wavelengths. The set
+of optical path length maps are then averaged across the wavelengths to obtain an image with
+further reduced coherent noise artifacts [15]. Spatial noise of media-only background images is
+measured to be 7.5 mrad, corresponding to a ΔOPL sensitivity of 0.69 nm. Spectrally-averaged
+images are digitally refocusedusing a previously describedalgorithm [17] and red blood cells are
+automatically segmented from each FOV by applying joint optical path length and area thresh-
+olds. Within each FOV
+, all objects with ΔOPL > 10nm are identified as potential RBCs. Upper
+and lower area thresholds are used to exclude objects that are significantly bigger or smaller than
+known RBC size [18] such as cell clumps or fragments, free parasites, and non-RBC objects.
+Morphologicalparameters
+In order to characterize the different types of RBC populations, 23 morphological metrics,
+listed in Table 2, are extracted from the isolated cells using both standard packages in
+MATLAB and customized algorithms.
+Quantitative measurements describing the geometric shape of the cells are calculated by
+analyzing the OPL maps (Fig 3A–3H) of the uninfected and malaria infected RBCs at various
+stages. Examples of geometric parameters used here are: 1) Elongation—the ratio of major axis
+length to minor axis length where major and minor axis are the longest and shortest lines
+across the centroid of an RBC’s binary mask, 2) Equivalent diameter—the diameter of a circle
+with the same area as that of the RBC, 3) Eccentricity—the ratio of the distance between the
+foci and the major axis length of a RBC describing the roundness of its shape.0020
+In addition, statistical features based on the histograms of the OPL distribution for each cell
+(Fig 4A–4D) are also used to characterize the RBCs. Both skewness and kurtosis, also known as
+3rd and 4th central moments respectively, describe the shape of the histogram: skewness repre-
+sents asymmetry of data points around the mean value while kurtosis characterizes the heavy
+tails of a histogram that can be related to the shape of the peaks in the distribution. These
+parameters can be calculated as:
+Skewness ¼ E DOPLðx; yÞ � DOPLðx; yÞ
+�
+�3=sOPL
+3
+ð2Þ
+Kurtosis ¼ E DOPLðx; yÞ � DOPLðx; yÞ
+�
+�4=sOPL
+4
+ð3Þ
+where E(t) is the expected value.
+Further parameters can be obtained by calculating the gradient of each cell’s phase changes.
+The rate of change in the height of different types of RBCs, as represented by gradient maps
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+5 / 19
+ Table 2. Morphological parameters used to describe RBCs.
+Parameters
+Definition
+Max OPL
+ΔOPLMAX(x,y)
+Mean OPL
+DOPLðx; yÞ
+Median OPL
+D g
+OPLðx; yÞ
+Optical volume [17]
+Z Z
+DOPLðx; yÞdxdy
+Minor axis length
+Shortestline across a cell’s binary mask through its centroid
+Major axis length
+Longest line across a cell’s binary mask through its centroid
+Perimeter
+Outline of a cell’s binary mask
+Area
+Extent of a cell’s binary mask
+Elongation
+Major axis length
+Minor axis length
+Equivalent diameter
+2
+ffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffi
+Cell area
+p
+q
+Eccentricity
+Foci length
+Major axis length
+Foci length ¼ 2
+ffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffi
+Major axis length
+2
+�
+�2
+�
+Minor axis length
+2
+�
+�2
+r
+ 
+!
+Standard deviation OPL
+sDOPL ¼
+ffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffi
+P
+ðDOPLðx;yÞ� DOPLðx;yÞÞ2
+n
+q
+Variance OPL
+s2
+DOPL
+Interquartile range OPL
+Difference between the upper and lower quartilesthat measures midspread of ΔOPL
+Skewness
+Asymmetry of ΔOPL
+’s histogram with respect to its mean
+Kurtosis
+Shape of peaks in ΔOPL
+’s histogram
+Mean symmetry
+Average rotational symmetry value
+Min symmetry
+Minimum rotational symmetry value
+Maximum gradient
+Maximum of krOPL(x,y)k
+Mean gradient
+Average of krOPL(x,y)k
+Centroid vs. Center of mass
+Physical skewness of a cell
+Upper quartilemean OPL
+Average of largest 25% ΔOPL values
+Upper quartilemean gradient
+Average of largest 25% rOPL values
+doi:10.1371/journal.pone.0163045.t002
+Fig 3. OPL maps. Uninfected RBC and RBCs infected by P. falciparumin early trophozoite, late trophozoite, and schizont stages
+represented respectively as: (A-D) OPL maps, (E-F) OPL maps from different viewpoint (scale bars = 5μm).
+doi:10.1371/journal.pone.0163045.g003
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+6 / 19
+ (Fig 5A–5D), identifies sharp changes in the thickness of infected RBCs, which could arise due
+to parasite infection. The magnitude of the gradient can be calculated as:
+krOPLðx; yÞk ¼
+ffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffiffi
+@OPLðx; yÞ
+@x
+�
+�2
+þ
+@OPLðx; yÞ
+@y
+�
+�2
+s
+ð4Þ
+The symmetry of each cell can also provide valuable discrimination. Symmetry is calculated
+as the dot product of a rotated image of the RBC and the original image across a range of angles
+up to a full rotation referenced to the scalar product of the original cell image.
+Symmetry y
+ð Þ ¼ ðDOPLðx; yÞ � DOPLðx0; y0ÞÞ
+kDOPLðx; yÞk
+2
+where
+x0
+y0
+"
+#
+¼
+cosy
+siny
+� siny
+cosy
+"
+#
+x
+y
+"
+#
+ð5Þ
+Symmetry values for the uninfected RBC and the three different stages of parasite-infected
+RBCs shown in Fig 3 are plotted in Fig 6 across the range of rotation angles. Both mean and
+minimum symmetry values are used as descriptors of the red blood cells.
+Another way of representing asymmetry is by analysis of the differences between the cen-
+troid and center of mass. These both represent geometric centers of an RBC; however, centroid
+assumes uniform density across its area. For example, in Fig 7, the centroid of an RBC contain-
+ing a parasite at schizont stage is calculated with a binary mask of the cell while the center of
+mass is calculated using the OPL map as a surrogate measure of mass distribution. Therefore,
+the difference between the two positions can be related to the magnitude of an RBC’s physical
+asymmetry.
+Fig 4. OPL histograms. (A-D) OPL histograms of uninfected RBC and RBCs infected by P. falciparumin early trophozoite, late
+trophozoite, and schizont stages respectively as shown in Fig 3.
+doi:10.1371/journal.pone.0163045.g004
+Fig 5. Gradient maps. (A-D) Gradient maps of uninfected RBC and RBCs infected by P. falciparumin early trophozoite, late
+trophozoite, and schizont stages respectively as shown in Fig 3 (scale bars = 5μm).
+doi:10.1371/journal.pone.0163045.g005
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+7 / 19
+ Finally, the upper quartile of the OPL and OPL gradient histograms for each RBC are aver-
+aged to produce descriptors that reflect the differences in the thickest regions and greatest tran-
+sitional regions, of cells, respectively. These metrics are expected to be directly related to the
+presence of parasites.
+When the uninfected RBC population is compared against the malaria parasite-infected
+RBC population, all of the 23 morphological parameters listed in Table 2 show differences that
+are highly statistically significant when considered individually (P-value << 0.001). However,
+uninfected and infected RBC populations cannot be separated from each other when only one
+of these morphological parameters is used. For example, maximum optical path length, which
+produces the smallest p-value, can be used to determine a threshold of classification as shown
+in Fig 8. This parameter separates the two populations with 94.0% specificity, 88.8% sensitivity,
+Fig 6. Symmetry values. Symmetryvalues of uninfected RBC and RBCs infected by P. falciparumin early
+trophozoite, late trophozoite, and schizont stages respectively as shown in Fig 3 versus angles of rotation.
+doi:10.1371/journal.pone.0163045.g006
+Fig 7. Centroid vs. Center of mass. Binary mask used to calculate centroid and ΔOPL map used to calculate
+center of mass for an RBC with P. falciparumat schizont stage (scale bars = 5μm).
+doi:10.1371/journal.pone.0163045.g007
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+8 / 19
+ and 90.5% accuracy. Since all of the 23 metrics measured by QPS result in highly statistically
+significant differences in describing the two different populations, machine learning systems
+are used to combine the parameters in a logical way to formulate algorithms that can better
+separate the populations.
+Machine learning algorithms
+Machine learning systems build a predictive model based on identified inputs as a teaching or
+learning set and classify new datasets using a customized algorithm instead of following explic-
+itly programmed instructions. In order to classify RBCs, 3 different types of machine learning
+techniques were examined based on their prediction accuracy and speed: linear discriminant
+classification (LDC), logistic regression (LR), and k-nearest neighbor classification (NNC).
+LDC, also known as Fisher discriminant classification, relies on linear combinations of training
+data that best separate different populations by finding a multidimensional axis that maximizes
+the between-populationvariability while minimizing the within-population variability. LR is
+an algorithm that determines a linear combination of parameters from training data based on
+the maximum likelihood method with logit link function. Unlike LDC and LR which create
+algorithms from the training data, NNC is an instance-based learner, which directly uses the
+training dataset for classification. When a new dataset is in need of classification, NNC finds k-
+number of closest points (k = 3) and classifies the new data according to the majority identifica-
+tion of those nearest neighbors. For our experiment, the k parameter has been determined by
+Fig 8. Population identification using maximum OPL. Comparison of maximum OPL for uninfected RBCs and
+RBCs with parasites at all of the stages combined. Optimal threshold for population identification based on
+maximum OPL results in 90.5% accuracy.
+doi:10.1371/journal.pone.0163045.g008
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+9 / 19
+ testing NNC’s performance using different k ranging from 2–5. These algorithms are used to
+make binary classification between uninfected cells and cells with malaria parasites in different
+erythrocyticstages. Also, their performances for determining the different stages of infection
+are evaluated through multinomial classification.
+The predictive power of the supervisedlearning methods is assessed using k-fold cross-vali-
+dation (k = 10). In order to validate a machine learning model, the dataset (N = 1237) which
+includes both infected and uninfected cells is randomly partitioned into 10 subsets that are
+roughly equal in size. Then, 9 of the subsets are used as the training dataset to create a model
+and the remaining subset is used as the testing set to measure its performance. Analysis with a
+different testing set is repeated until all 10 subsets have been used once as a testing set. To mini-
+mize variability, average performance of a model using 100 rounds of cross-validation with
+new subsets which are randomly partitioned each time is reported.
+Results
+Uninfected vs infected RBC
+Machine learning algorithms are used to distinguish uninfected RBCs from 3 different hemo-
+zoin containing stages of P.falciparum infected RBCs (early trophozoite–ET, late trophozoite–
+LT, schizont–S). The performance of the three supervisedlearning methods, as evaluated using
+the 10-fold cross-validation technique, is summarized in Table 3.
+All of the classification methods have higher specificitiescompared to their sensitivities
+when distinguishing uninfected from infected RBCs for all 3 stages of infection. The specifici-
+ties ranged from 98.4% for LR with the early stage of infection (ET) to 100% for the best per-
+forming method (LDC) for both LT and S stages. Among all three methods, the worst
+performance was in distinguishing ET, with NNC offering the lowest sensitivity for this stage
+(87.8%) while that of LDC and LR methods were 93.5% and 90.8%, respectively. The overall
+accuracy of the classification methods are compared graphically in Fig 9A. Note that the accu-
+racy remains over 95% for all of the stages and machine learning methods examined here.
+ROC curves with corresponding AUC values are shown in Fig 9B–9D.
+All of the methods show very high accuracies, especially when they are applied to classify
+uninfected RBCs from RBCs with P.falciparum parasites in later stages: they are able to classify
+RBCs with P.falciparum parasites in schizont stage at or above 99.6% accuracies. These results
+are supported by the perfect and near-perfect AUC values in Fig 9B–9D. As expected, all of the
+machine learning algorithms show lower accuracies when differentiating RBCs with ET para-
+sites because this early stage of infection exhibits less morphological changes.
+The clinical utility of these approaches can be illustrated by calculating the positive and neg-
+ative predictive values (PPV & NPV, Table 4). For cells with parasites in LT and S stages, the
+PPVs are both 100% using LDC. The perfect positive predictive values and specificitiesindicate
+that the classifier did not have any false positive outcomes where uninfected RBCs would be
+incorrectly classified as RBCs with parasites in either LT or S stages. The NPV values for all of
+the stages are above 95% indicating that there are only a few false negatives where infected
+Table 3. Performance of machine learning algorithms: Uninfected vs Infection stage.
+NNC
+LR
+LDC
+Stage (# of cells)
+ET (173)
+LT (314)
+S (337)
+ET (173)
+LT (314)
+S (337)
+ET (173)
+LT (314)
+S (337)
+Sensitivity [%]
+87.8 ± 0.7
+99.2 ± 0.3
+99.0 ± 0.2
+90.8 ± 0.4
+98.9 ± 0.2
+99.4 ± 0.2
+93.5 ± 0.3
+97.7 ± 0.3
+99.4 ± 0.04
+Specificity [%]
+99.2 ± 0.2
+99.8 ± 0.01
+100
+98.4 ± 0.2
+99.3 ± 0.1
+99.7 ± 0.1
+99.9 ± 0.1
+100
+100
+Accuracy [%]
+95.8 ± 0.3
+99.5 ± 0.1
+99.6 ± 0.09
+96.1 ± 0.2
+99.1 ± 0.1
+99.6 ± 0.1
+98.0 ± 0.1
+99.0 ± 0.1
+99.7 ± 0.02
+doi:10.1371/journal.pone.0163045.t003
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+10 / 19
+ RBCs are classified to be uninfected, mostly for early trophozoite stage. The NPV show errors
+ranging from 0.5% to 4.8% depending on infection stage (NNC: 8, 1, 2 / LR: 7, 3, 2 / LDC: 5, 6,
+2 misclassified cells respectively for ET, LT, and S).
+Discriminationof infection stages
+The results of multinomial classifications using the supervisedlearning algorithms, NNC, LR,
+and LDC, are shown in Fig 10. The classification of the cells, as determined by time after syn-
+chronized infection and confirmed with histological analysis, are listed in the left column and
+Fig 9. Uninfected vs. Infected RBC. A) Accuracy of nearest neighbor classification (NNC), logistic regression (LR), and linear discriminant classification
+(LDC) used to distinguish uninfected RBCs from RBCs infected with P.falciparum parasites in early trophozoite (ET), late trophozoite (LT), and schizont (S)
+stages. B- D) ROC curves and their corresponding AUC for NNC, LR, and LDC respectively.
+doi:10.1371/journal.pone.0163045.g009
+Table 4. Positive and negative predictive values.
+NNC
+LR
+LDC
+Stage (# of cells)
+ET (173)
+LT (314)
+S (337)
+ET (173)
+LT (314)
+S (337)
+ET (173)
+LT (314)
+S (337)
+PPV [%]
+97.8 ± 0.6
+99.7 ± 0.03
+100
+95.9 ± 0.6
+99.1 ± 0.2
+99.7 ± 0.2
+99.8 ± 0.3
+100
+100
+NPV [%]
+95.2 ± 0.3
+99.4 ± 0.2
+99.2 ± 0.2
+96.3 ± 0.2
+99.2 ± 0.2
+99.5 ± 0.1
+97.3 ± 0.1
+98.3 ± 0.2
+99.5 ± 0.06
+doi:10.1371/journal.pone.0163045.t004
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+11 / 19
+ the percentages of predicted identities using the supervisedlearning systems are listed along
+the rows of the table. The highlighted diagonal table elements indicate the correct classifica-
+tions. Fig 11 presents these classification results graphically in stacked bar plots.
+As can be seen in Fig 10, NNC, LR, and LDC all have high specificities,the rate of true unin-
+fected cells classified as uninfected, of 99.1%, 98.7%, and 99.8% respectively. Furthermore,
+none of the uninfected RBCs are classified as RBCs with schizont stage parasites and very few
+(1–7 cells) are classified as ET or LT. The majority of the cells across the different stages of
+infection are identified correctly using all three algorithms (NNC: 45.0%, 50.1%, 59.7% / LR:
+46.6%, 59.1%, 66.8% / LDC: 50.6%, 57.4%, 63.6% respectively for ET, LT, and S). The perfor-
+mances of the classification algorithms for discriminating the various infection stages from
+Fig 10. Infection staging. Table showing performanceof multinomial machine learningalgorithms:Infection
+stages.
+doi:10.1371/journal.pone.0163045.g010
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+12 / 19
+ Fig 11. Stacked bar plot–infection staging. Performance of multinomial machine learningalgorithms:
+Infection stages.
+doi:10.1371/journal.pone.0163045.g01
+1
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+13 / 19
+ each other are lower than the specificitiesof the multinomial classifications. However, the clas-
+sification errors rarely confuse an infected cell for an uninfected one. 9.9% (~17 cells), 3.8% (~7
+cells), 6.5% (~12 cells) of the total ET population are classified to be uninfected RBCs by NNC,
+LR, and LDC respectively. This type of misclassification is even lower for RBCs with parasites
+in LT and S stages for the algorithms, with the error rate dropping to 0.6% (2 cells) for LT and
+zero for S stage cells using both the NNC and LDC algorithm.
+Discriminationof white blood cells
+In a further demonstration of the capabilities of this approach, white blood cells are separated
+from the red blood cells by fractionating whole blood and are imaged by QPS. Fig 12 below
+shows the OPL maps of fractionated WBCs.
+The machine learning algorithms from the previous experiments, including multinomial NNC,
+LR, and LDC, that are trained with the uninfectedand parasite-infectedRBCs are used to classify
+WBCs in Fig 12. NNC and LDC predicted 24/27 WBCs (89%) and 19/27 WBCs (70%), respec-
+tively, to be uninfectedRBCs and the rest to be RBCs with parasites in the early trophozoite stage
+while LR classified 9/27 cells (33%) to be uninfectedRBCs and the other cells as RBCs with para-
+sites in ET stage. Since our algorithms classify some of the WBCs as cells infectedwith malaria par-
+asites, our system is limited to RBC samples that are isolated by whole blood fractionation.
+Discussion
+Malaria infection is a leading cause of death worldwide that can be managed with early detec-
+tion and proper treatment using artemisinin-basedcombination therapies [19]. The
+Fig 12. WBCs. WBCs, N = 27 (square tile = 20μm x 20μm).
+doi:10.1371/journal.pone.0163045.g012
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+14 / 19
+ parasitemia percentage at which patients display symptoms of infection can range anywhere
+from 0.0002% to 0.7% depending on the severity of the infection and the level of immunity
+towards malaria parasites [20]. Peripheral blood smear screening using the light microscope
+can be very sensitive with the ability to detect malaria parasite densities as low as ~0.0001%.
+However, the accuracy of the technique is reduced for low-density parasitemia. Errors of iden-
+tification have been previously reported for samples with parasitemia densities below 0.4%
+[21]. Also, microscopic examination of stained blood smears depends upon the expertiseof
+trained microscopists and, therefore, is subject to humanistic error and variability. In regions
+where malaria is not endemic and malaria microscopy examination is not routinely performed,
+the sensitivity of malaria detection decreases significantly. A recent study in U.S. acute care set-
+tings showed 88% sensitivity in distinguishing patients infected with P. falciparum [22] and an
+earlier study in Canada reported that 59% of malaria cases were misdiagnosed[23]. In addition,
+manual diagnosis procedures are time consuming and labor intensive. This aspect is especially
+problematic since the majority of malaria-related deaths occur in low resource settings where
+the needed expertise is not easily found [24]. Therefore, quantitative assessment of malaria
+infection using automated methods can reduce the need for trained microscopists and assist
+clinicians to make better, faster decisions regarding malaria diagnosis.
+Previously, Hänscheid et al. showed that a full blood count analyzer can be implemented as
+an automated malaria diagnosis tool using the depolarizing characteristic of hemozoin [2,3].
+Although erythrocytescan produce depolarization when illuminated by laser light, monocytes
+and neutrophils do not unless they contain hemozoin, a birefringent byproduct of malaria par-
+asites. The full blood count analyzer can detect malaria by measuring changes in the intensity
+of depolarized scattered light from WBCs, effectively detecting those with hemozoin. Although
+this approach showed specificity as high as 96.2%, the sensitivity was much lower at 48.6%.
+Also, hemozoin-containing monocytes have been found 2–3 weeks after the patients were
+parasitologically cured which may result in false positives after the treatment.
+QPI has also been used to analyze RBCs infected by P. falciparum by characterizing their
+physical properties such as RBC volumes and shape correlation [7,12]. Kim et al. reconstructed
+3-D optical refractive index (RI) tomograms of RBCs with malaria parasites at different stages
+of infection that were used to quantify various features such as cytoplasmic and parasite vol-
+umes. While this approach produces highly detailed maps of RI, the computation time is exten-
+sive. Further, although the examined parameters offer a useful characterization of cell changes
+due to infection, they do not appear to provide a suitable method for discrimination. Anand et
+al. used correlation coefficientsbased on the thickness distribution of RBCs at multiple recon-
+structed axial planes to separate RBC populations. This approach produced reasonable accu-
+racy but did not provide sufficient discrimination to point to clinical utility. Computation
+times were not given but may be a barrier to examination of large numbers of cells with this
+approach.
+In this work, we have used morphological parameters extracted from phase images of RBCs
+to build machine learning algorithms that show great performance in distinguishing uninfected
+vs. infected RBCs. One improvement is reducing the total processing time needed to evaluate a
+sample. After obtaining raw images from unstained blood samples, we can extract all of the rel-
+evant morphological features of the RBCs in a FOV (~10 cells) in less than 150 seconds which
+is much faster than previous efforts (15 sec/cell vs. 3000 sec/cell for Kim et al [7]). All data anal-
+ysis was executed with custom scripts in MATLAB on a desktop computer (Intel Core i5 2400
+CPU, 3.10GHz, 32 GB RAM). For clinical use, general machine learning algorithms, such as
+LDC and LR, can be created ahead of time with training data of known samples. Since it is not
+necessary to reconstruct new algorithms for each test sample, the analysis procedures can be
+accomplished within a short time. Also, population identification using extracted features and
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+15 / 19
+ pre-built machine learning algorithms takes ~5ms for all of the cells in a FOV, which allowed
+us to characterize relatively large populations of different types of RBCs. Although the overall
+computation time is not yet clinically feasible, the approach can be further developed to enable
+higher throughput evaluation. Use of the parallel computing capabilities of a graphics process-
+ing unit (GPU) in addition to optimization of morphology extraction scripts could significantly
+reduce this computation time and will be an area of future work in this development.
+As shown in Table 3, all of the machine learning algorithms identify uninfected and infected
+RBCs with high accuracies. They have higher specificitiesfor all of the stages of infection indi-
+cating that they discriminate uninfected RBCs more effectively. Also, high PPV values in
+Table 4, which indicate low false positive outcomes, show the system’s potential application as
+a screening tool to exclude blood samples that do not require further examination by expert
+microscopists therefore expediting the total diagnostic process. Although the classifiers per-
+formed with lower NPV values indicating that some infected cells were incorrectly identified in
+this study, these rates are comparable to those obtained by trained microscopists [25].
+Typically, malaria diagnostic modalities are compared to one another by the lowest detect-
+able parasitemia percentages. Currently, the ability to evaluate our technique is limited by the
+total number of uninfected cells (413) that were imaged with the system. Due to the sample
+size, our technique cannot show diagnostic performance with samples that have parasitemia
+percentages below 0.2%. Further work with QPI and machine learning algorithms will seek to
+define their accuracy in determining parasitemia percentages in samples with controlled levels
+of infection that match the levels of the typical patients by increasing the sample size and creat-
+ing a synthetic population of uninfected cell data based on random samples of the distribution
+of the 23 morphological parameters. Also, the ring stage, the earliest stage of the parasites that
+would complete the erythrocyticcycle, will be explored in the future which could require the
+use of additional parameters as input to the machine learning algorithms.
+Currently, our system is limited to classifying red blood cells that have been separated using
+a whole blood fractionation method such as the one describedin the blood preparation section.
+Confounding cells in whole blood samples, such as white blood cells and reticulocytes,each
+representing ~1% of the total number of blood cells, are likely to be misclassified by our algo-
+rithms which have been trained only with uninfected and parasite-infected RBCs. The classifi-
+cation results of the additional experiment with WBCs in Fig 12 show that current algorithms
+would only be useful if samples were prepared for analysis so that only RBCs were imaged by
+the QPS system. Also, patients with hemoglobinopathies and auto-hemolytic anemia, such as
+spherocytosis, will have RBCs that have different morphology compared to RBCs that were
+used to train our algorithms. These patients would require development of new algorithms
+which are trained with control groups that are more relevant to their conditions. In the future,
+we will conduct a more complete analysis of whole blood samples by training our algorithms
+on samples which include these confounding cells in order to make our system more clinically
+applicable.
+Classification of different erythrocyticstages of malaria parasites can help choose treatment
+based on stage-specificsensitivity of antimalarial drugs [26–28]. Although the algorithm based
+classification of infection stages does not perform as well as binary classification of uninfected
+vs. infected RBCs, the multinomial classification still has high specificity and sensitivity where
+the vast majority of the cells are accurately classified according to the infection timeline. Also,
+it should be noted that the multinomial classifications maintain high performances when the
+cells with parasites are grouped across the different stages of infection with sensitivities as high
+as 97.7%, 98.9% and 98.4% respectively for NNC, LR, and LDA. While higher performance
+would be needed to rely on the automated algorithm for selecting treatment courses, the ability
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+16 / 19
+ of the approach to detect infection suggests it can be used as a screening tool with further stage
+discrimination conducted via manual interpretation, if warranted.
+Conclusion
+In our study, QPS is used to image RBCs infected by different stages of P.falciparum to distin-
+guish them from uninfected RBCs. The physical descriptors of each population, extracted from
+the phase images, are used to train machine learning algorithms that classify RBCs with great
+accuracies. One of the main strengths of using machine learning algorithms to analyze the
+extracted parameters is that the identification of RBC infection will be based on quantified met-
+rics and pre-built classifiers that requires minimal operator training. In order to enable auto-
+mated imaging in the future, a microfluidic device with controlled flow rates can be combined
+with the analysis approach that would allow high throughput. This would permit rapid analysis
+of a blood sample at the point of care to assist the clinical decision of physicians. The World
+Health Organization has recommended a minimal standard of 95% sensitivity and specificity
+for diagnostic tools to be clinically useful when evaluating patients infected with P. falciparum
+densities of 0.0002% [29]. In the future, experiments involving samples that match parasitemia
+levels of typical malaria patients will be evaluated using our combined imaging and analysis
+modality. Currently, the supervisedlearning models are created exclusively with morphological
+parameters but further studies can be conducted to extract more information from additional
+cell properties, such as spectral features, to strengthen performance in distinguishing parasite-
+infected cells as well as their infection stages.
+SupportingInformation
+S1 Fig. Uninfected RBCs. Uninfected RBCs, N = 413 (square tile = 20μm x 20μm).
+(TIF)
+S2 Fig. RBCs infected with P.falciparum in early trophozoite stage. RBCs infected with P.fal-
+ciparum in early trophozoite stage, N = 173 (square tile = 20μm x 20μm).
+(TIF)
+S3 Fig. RBCs infected with P.falciparum in late trophozoite stage. RBCs infected with P.fal-
+ciparum in late trophozoite stage, N = 314 (square tile = 20μm x 20μm).
+(TIF)
+S4 Fig. RBCs infected with P.falciparum in schizont stage. RBCs infected with P.falciparum
+in schizont stage, N = 337 (square tile = 20μm x 20μm).
+(TIF)
+S5 Fig. Overallpipeline. Pipeline showing the overall procedure.
+(TIF)
+S1 Table. Cell properties. 23 morphological parameters for all of the RBCs.
+(XLSX)
+Author Contributions
+Conceptualization: HSP MTR KAW JAC AW.
+Data curation: HSP MTR.
+Formal analysis: HSP MTR.
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+17 / 19
+ Funding acquisition: JAC AW.
+Investigation: HSP MTR KAW.
+Methodology:HSP MTR KAW JAC AW.
+Project administration: JAC AW.
+Resources: JAC AW.
+Software: HSP MTR.
+Supervision:JAC AW.
+Validation: HSP MTR KAW.
+Visualization: HSP.
+Writing – original draft: HSP MTR KAW JAC AW.
+Writing – review& editing: HSP MTR KAW JAC AW.
+References
+1.
+Jamshaid Iqbal PRH. Modified Giemsa Staining for Rapid Diagnosis of Malaria Infection. Med Princ
+Pract Int J Kuwait Univ Health Sci Cent. 2003; 12: 156–9. doi: 10.1159/000070751
+2.
+Hänscheid T, Valadas E, Grobusch MP
+. Automated Malaria Diagnosis Using Pigment Detection. Para-
+sitol Today. 2000; 16: 549–551. doi: 10.1016/S0169-4758(00)01742-7 PMID: 11121855
+3.
+Grobusch MP
+, Hänscheid T, Krämer B, Neukammer J, May J, Seybold J, et al. Sensitivity of hemozoin
+detection by automated flow cytometryin non- and semi-immune malaria patients. CytometryB Clin
+Cytom. 2003; 55B: 46–51. doi: 10.1002/cyto.b.10039
+4.
+Das DK, Ghosh M, Pal M, Maiti AK, Chakraborty C. Machine learningapproach for automated screen-
+ing of malaria parasite using light microscopic images. Micron Oxf Engl 1993. 2013; 45: 97–106. doi:
+10.1016/j.micron.2012.11.002
+5.
+Tek FB, Dempster AG, Kale İ. Parasite detection and identification for automated thin blood film malaria
+diagnosis. Comput Vis Image Underst. 2010; 114: 21–32. doi: 10.1016/j.cviu.2009.08.003
+6.
+Di RubertoC, Dempster A, Khan S, Jarra B. Analysis of infected blood cell images using morphological
+operators. Image Vis Comput. 2002; 20: 133–146. doi: 10.1016/S0262-8856(01)00092-0
+7.
+Kim K, Yoon H, Diez-Silva M, Dao M, Dasari RR, Park Y. High-resolution three-dimensional imaging of
+red blood cells parasitized by Plasmodium falciparum and in situ hemozoin crystals using optical dif-
+fraction tomography. J Biomed Opt. 2013; 19: 011005–011005. doi: 10.1117/1.JBO.19.1.011005
+8.
+Shaked NT, Satterwhite LL, Telen MJ, Truskey GA, Wax A. Quantitative microscopy and nanoscopy of
+sickle red blood cells performed by wide field digital interferometry. J Biomed Opt. 2011; 16: 030506.
+doi: 10.1117/1.3556717 PMID: 21456860
+9.
+Mir M, Wang Z, Shen Z, Bednarz M, Bashir R, Golding I, et al. Optical measurement of cycle-dependent
+cell growth. Proc Natl Acad Sci. 2011; 108: 13124–13129. doi: 10.1073/pnas.1100506108 PMID:
+21788503
+10.
+Shaked NT, Finan JD, Guilak F, Wax A. Quantitative phase microscopy of articularchondrocyte
+dynamics by wide-field digital interferometry. J Biomed Opt. 2010; 15: 010505–010505–3. doi: 10.
+1117/1.3290242
+11.
+Eldridge WJ, Sheinfeld A, Rinehart MT, Wax A. Imaging deformation of adherent cells due to shear
+stress using quantitative phase imaging. Opt Lett. 2016; 41: 352. doi: 10.1364/OL.41.000352 PMID:
+26766712
+12.
+Anand A, Chhaniwal VK, Patel NR, Javidi B. Automatic Identificationof Malaria-Infected RBC With Digi-
+tal Holographic Microscopy Using Correlation Algorithms. IEEE Photonics J. 2012; 4: 1456–1464. doi:
+10.1109/JPHOT.2012.2210199
+13.
+Sangokoya C, LaMonte G, Chi J-T. Isolation and Characterization of MicroRNAs of Human Mature
+Erythrocytes. Methods Mol Biol Clifton NJ. 2010; 667: 193–203. doi: 10.1007/978-1-60761-811-9_13
+14.
+Saliba K, Jacobs-Lorena M. Production of Plasmodium falciparum Gametocytes In Vitro. In: Ménard R,
+editor. Malaria. Humana Press; 2013. pp. 17–25. Available: http://dx.doi.org/10.1007/978-1-62703-
+026-7_2
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+18 / 19
+ 15.
+RinehartM, Zhu Y, Wax A. Quantitative phase spectroscopy. Biomed Opt Express. 2012; 3: 958. doi:
+10.1364/BOE.3.000958 PMID: 22567588
+16.
+Liebling M, Blu T, Unser M. Complex-wave retrieval from a single off-axis hologram. J Opt Soc Am A.
+2004; 21: 367. doi: 10.1364/JOSAA.21.000367
+17.
+RinehartMT, Park HS, Wax A. Influence of defocus on quantitative analysis of microscopic objects and
+individual cells with digital holography. Biomed Opt Express. 2015; 6: 2067. doi: 10.1364/BOE.6.
+002067 PMID: 26114029
+18.
+Diez-Silva M, Dao M, Han J, Lim C-T, Suresh S. Shape and Biomechanical Characteristics of Human
+Red Blood Cells in Health and Disease. MRS Bull Mater Res Soc. 2010; 35: 382–388.
+19.
+Organization WH. Guidelines for the Treatment of Malaria. World Health Organization; 2006.
+20.
+Murray CK, Gasser RA, Magill AJ, Miller RS. Update on Rapid Diagnostic Testing for Malaria.Clin
+Microbiol Rev. 2008; 21: 97–110. doi: 10.1128/CMR.00035-07 PMID: 18202438
+21.
+Kilian AHD, Metzger WG, Mutschelknauss EJ, Kabagambe G, Langi P
+, Korte R, et al. Reliability of
+malaria microscopy in epidemiological studies: results of quality control. Trop Med Int Health. 2000; 5:
+3–8. doi: 10.1046/j.1365-3156.2000.00509.x PMID: 10672199
+22.
+Stauffer WM, CartwrightCP
+, Olson DA, Juni BA, Taylor CM, Bowers SH, et al. Diagnostic Performance
+of Rapid Diagnostic Tests versus Blood Smears for Malaria in US Clinical Practice. Clin Infect Dis.
+2009; 49: 908–913. doi: 10.1086/605436 PMID: 19686072
+23.
+Kain KC, HarringtonMA, Tennyson S, Keystone JS. ImportedMalaria:Prospective Analysis of Prob-
+lems in Diagnosis and Management. Clin Infect Dis. 1998; 27: 142–149. doi: 10.1086/514616 PMID:
+9675468
+24.
+Moody A. Rapid Diagnostic Tests for Malaria Parasites. Clin Microbiol Rev. 2002; 15: 66–78. doi: 10.
+1128/CMR.15.1.66–78.2002 PMID: 11781267
+25.
+Manser M, Olufsen C, Andrews N, Chiodini PL. Estimating the parasitaemia of Plasmodium falciparum:
+experience from a national EQA scheme. Malar J. 2013; 12: 428. doi: 10.1186/1475-2875-12-428
+PMID: 24261625
+26.
+Dahl EL, Shock JL, Shenai BR, Gut J, DeRisi JL, Rosenthal PJ. Tetracyclines Specifically Target the
+Apicoplast of the Malaria Parasite Plasmodium falciparum. Antimicrob Agents Chemother. 2006; 50:
+3124–3131. doi: 10.1128/AAC.00394-06 PMID: 16940111
+27.
+Skinner TS, Manning LS, Johnston WA, Davis TME. In vitro stage-specific sensitivity of Plasmodium
+falciparum to quinine and artemisinin drugs. Int J Parasitol. 1996; 26: 519–525. doi: 10.1016/0020-
+7519(96)89380-5 PMID: 8818732
+28.
+Geary TG, Divo AA, Jensen JB. Stage Specific Actions of Antimalarial Drugs on Plasmodium falcipa-
+rum in Culture. Am J Trop Med Hyg. 1989; 40: 240–244. PMID: 2648881
+29.
+Bell D, Peeling RW. Evaluation of rapid diagnostic tests: malaria.Nat Rev Microbiol. 2006; 4: S34–S38.
+doi: 10.1038/nrmicro1524 PMID: 17034070
+Automated Detection of pf-RBC Using Quantitative Phase Images
+PLOS ONE | DOI:10.1371/journal.pone.0163045
+September 16, 2016
+19 / 19

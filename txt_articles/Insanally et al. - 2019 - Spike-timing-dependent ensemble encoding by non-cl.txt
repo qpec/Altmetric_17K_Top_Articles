@@ -1,0 +1,2255 @@
+ *For correspondence:
+robert.froemke@med.nyu.edu
+Competing interests: The
+authors declare that no
+competing interests exist.
+Funding: See page 28
+Received: 27 September 2018
+Accepted: 27 January 2019
+Published: 28 January 2019
+Reviewing editor: Stephanie
+Palmer, University of Chicago,
+United States
+Copyright Insanally et al. This
+article is distributed under the
+terms of the Creative Commons
+Attribution License, which
+permits unrestricted use and
+redistribution provided that the
+original author and source are
+credited.
+Spike-timing-dependent ensemble
+encoding by non-classically responsive
+cortical neurons
+Michele N Insanally1,2,3,4,5, Ioana Carcea1,2,3,4,5, Rachel E Field1,2,3,4,5,
+Chris C Rodgers6,7, Brian DePasquale8, Kanaka Rajan9,10, Michael R DeWeese11,12,
+Badr F Albanna13, Robert C Froemke1,2,4,5,14*
+1Skirball Institute for Biomolecular Medicine, New York University School of
+Medicine, New York, United States; 2Neuroscience Institute, New York University
+School of Medicine, New York, United States; 3Department of Otolaryngology, New
+York University School of Medicine, New York, United States; 4Department of
+Neuroscience and Physiology, New York University School of Medicine, New York,
+United States; 5Center for Neural Science, New York University, New York, United
+States; 6Department of Neuroscience, Columbia University, New York, United
+States; 7Kavli Institute of Brain Science, Columbia University, New York, United
+States; 8Princeton Neuroscience Institute, Princeton University, Princeton, United
+States; 9Department of Neuroscience, Icahn School of Medicine at Mount Sinai,
+New York, United States; 10Friedman Brain Institute, Icahn School of Medicine at
+Mount Sinai, New York, United States; 11Helen Wills Neuroscience Institute,
+University of California, Berkeley, Berkeley, United States; 12Department of Physics,
+University of California, Berkeley, Berkeley, United States; 13Department of Natural
+Sciences, Fordham University, New York, United States; 14Howard Hughes Medical
+Institute, New York University School of Medicine, New York, United States
+Abstract Neurons recorded in behaving animals often do not discernibly respond to sensory
+input and are not overtly task-modulated. These non-classically responsive neurons are difficult to
+interpret and are typically neglected from analysis, confounding attempts to connect neural activity
+to perception and behavior. Here, we describe a trial-by-trial, spike-timing-based algorithm to
+reveal the coding capacities of these neurons in auditory and frontal cortex of behaving rats.
+Classically responsive and non-classically responsive cells contained significant information about
+sensory stimuli and behavioral decisions. Stimulus category was more accurately represented in
+frontal cortex than auditory cortex, via ensembles of non-classically responsive cells coordinating
+the behavioral meaning of spike timings on correct but not error trials. This unbiased approach
+allows the contribution of all recorded neurons – particularly those without obvious task-related,
+trial-averaged firing rate modulation – to be assessed for behavioral relevance on single trials.
+DOI: https://doi.org/10.7554/eLife.42409.001
+Introduction
+Spike trains recorded from the cerebral cortex of behaving animals can be complex, highly variable
+from trial-to-trial, and therefore challenging to interpret. A fraction of recorded cells typically exhibit
+trial-averaged firing rates with obvious task-related features and can be considered ‘classically
+responsive’, such as neurons with tonal frequency tuning in the auditory cortex or orientation tuning
+in the visual cortex. Another population of responsive cells are modulated by multiple task
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+1 of 31
+RESEARCH ARTICLE
+ parameters (‘mixed selectivity cells’) and have recently been shown to have computational advan-
+tages necessary for flexible behavior (Rigotti et al., 2013). However, a substantial number of cells
+have variable responses that fail to demonstrate firing rates with any obvious trial-averaged relation-
+ship to task parameters (Jaramillo and Zador, 2011; Olshausen and Field, 2006; Raposo et al.,
+2014; Rodgers and DeWeese, 2014). These ‘non-classically responsive’ neurons are especially prev-
+alent in frontal cortical regions but can also be found throughout the brain, including primary sen-
+sory cortex (Hroma
+´dka et al., 2008; Jaramillo and Zador, 2011; Rodgers and DeWeese, 2014).
+These response categories are not fixed but can be dynamic, with some cells apparently becoming
+non-classically responsive during task engagement without impairing behavioral performance
+(Carcea et al., 2017; Kuchibhotla et al., 2017; Otazu et al., 2009). The potential contribution of
+these cells to behavior remains to a large extent unknown and represents a major conceptual chal-
+lenge to the field (Olshausen and Field, 2006).
+How do these non-classically responsive cells relate to behavioral task variables on single trials?
+While there are sophisticated approaches for dissecting the precise correlations between classically
+responsive cells and task structure (Erlich et al., 2011; Jaramillo and Zador, 2011; Kiani and Shad-
+len, 2009; Murakami et al., 2014; Raposo et al., 2014), there is still a need for complementary and
+straightforward analytical tools for understanding any and all activity patterns encountered
+(Jaramillo and Zador, 2011; Raposo et al., 2014; Rigotti et al., 2013). Moreover, most behavioral
+tasks produce dynamic activity patterns throughout multiple neural circuits, but we lack unified
+methods to compare activity across different regions, and to determine to what extent these neu-
+rons might individually or collectively perform task-relevant computations. To address these limita-
+tions, we devised a novel trial-to-trial analysis using Bayesian inference that evaluates the extent to
+which relative spike timing in single-unit and ensemble responses encode behavioral task variables.
+eLife digest Neurons encode information in the form of electrical signals called spikes. Certain
+neurons increase the rate at which they produce spikes under specific circumstances, e.g., whenever
+an animal hears a particular sound. These neurons are said to be ’classically responsive’. But not all
+neurons behave in this way. Others produce spikes at a variable rate that does not obviously relate
+to the animal’s behavior. These neurons are said to be ’non-classically responsive’. They are often
+omitted from analyses, despite typically outnumbering their classically responsive counterparts. So,
+what are these neurons doing?
+To find out, Insanally et al. trained rats to respond to sounds. The animals learned to poke their
+nose into a window whenever they heard a specific tone, and to avoid responding whenever they
+heard any other tone. As the rats performed the task, Insanally et al. recorded from neurons in two
+areas of the brain, the frontal cortex and the auditory cortex. A computer then analyzed the activity
+of individual neurons during each trial.
+As expected, the firing rate of non-classically responsive cells did not relate to the animals’
+behavior. But the timing of this firing did. The interval between spikes contained information about
+which tone the animals had heard and/or how they had responded. The cells worked together in
+groups to encode this information. Over the course of each trial, every neuron in the group varied
+the interval between its spikes. Eventually, the group reached a consensus, with all neurons using
+the same interval to represent information relevant to the task. Groups of neurons in the frontal
+cortex encoded more information about the category of the tone than those in the auditory cortex.
+By including all neurons – both classically and non-classically responsive – this model offers a
+more comprehensive view of how neural activity relates to behavior. This may in turn help us
+understand the variable and complex neural activity seen in people with sensory and cognitive
+disorders.
+DOI: https://doi.org/10.7554/eLife.42409.002
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+2 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ Results
+Non-classically responsive cells prevalent in auditory and frontal cortex
+during behavior
+We trained 15 rats on an audiomotor frequency recognition go/no-go task (Carcea et al., 2017;
+Froemke et al., 2013; King et al., 2016; Martins and Froemke, 2015) that required them to nose
+poke to a single target tone for food reward and withhold from responding to other non-target
+tones (Figure 1A). Tones were 100 ms in duration presented sequentially once every 5–8 s at 70 dB
+sound pressure level (SPL); the target tone was 4 kHz and non-target tones ranged from 0.5 to 32
+kHz separated by one octave intervals. After a few weeks of training, rats had high hit rates to target
+tones and low false alarm rates to non-targets, leading to high d’ values (mean performance shown
+in Figure 1B; each individual rat included in this study shown in Figure 1—figure supplement 1).
+To correctly perform this task, animals must first recognize the stimulus and then execute an
+appropriate motor response. We hypothesized that two brain regions important for this behavior
+are the auditory cortex (AC) and frontal cortical area 2 (FR2). Many but not all auditory cortical neu-
+rons respond to pure tones with reliable, short-latency phasic responses (Hroma
+´dka et al., 2008;
+Hubel et al., 1959; Kadia and Wang, 2003; Merzenich et al., 1975; Polley et al., 2007; Wehr and
+Zador, 2003; Yaron et al., 2012). These neurons can process sound in a dynamic and context-sensi-
+tive manner, and AC cells are also modulated by expectation, attention, and reward structure,
+strongly suggesting that AC responses are important for auditory perception and cognition
+(David et al., 2012; Fritz et al., 2003; Hubel et al., 1959; Jaramillo and Zador, 2011; Wein-
+berger, 2007). Previously, we found that the go/no-go tone recognition task used here is sensitive
+to AC neuromodulation and plasticity (Froemke et al., 2013). In contrast, FR2 is not thought to be
+part of the canonical central auditory pathway but is connected to many other cortical regions
+including AC (Nelson and Mooney, 2016; Schneider et al., 2018; Schneider et al., 2014). This
+region has recently been shown to be involved in orienting responses, categorization of perceptual
+stimuli, and in suppressing AC responses during movement (Erlich et al., 2011; Hanks et al., 2015;
+Schneider et al., 2014). These characteristics suggest that FR2 may be important for goal-oriented
+behavior.
+We first asked if activity in AC or FR2 is required for animals to successfully perform this audiomo-
+tor task. We implanted cannulas into AC or FR2 (Figure 1—figure supplement 2), and infused the
+GABA agonist muscimol bilaterally into AC or FR2, to inactivate either region prior to testing behav-
+ioral performance. We found that task performance was impaired if either of these regions was inac-
+tivated, although general motor functions, including motivation or ability to feed were not impaired
+(Figure 1—figure supplement 3; for AC p=0.03; for FR2 p=0.009 Student’s paired two-tailed
+t-test). Thus activity in both AC and FR2 may be important, perhaps in different ways, for successful
+performance on this task. We note that a previously published study (Gimenez et al., 2015)
+observed a more modest effect of muscimol-based inactivation of auditory cortex (although we used
+a separate task and higher dose of muscimol than that study which might contribute to this
+difference).
+Once animals reached behavioral criteria (hit rates � 70% and d’ values � 1.5), they were
+implanted with tetrode arrays in either AC or FR2 (Figure 1—figure supplement 4). After recovery,
+we made single-unit recordings from individual neurons or small ensembles of two to eight cells dur-
+ing task performance. The trial-averaged responses of some cells exhibited obvious task-related fea-
+tures: neuronal activity was tone-modulated compared to inter-trial baseline activity (Figure 1C) or
+gradually changed over the course of the trial as measured by a ramping index (Figure 1D; hereafter
+referred to as ‘ramping activity’). However, 60% of recorded cells were non-classically responsive in
+that they were neither tone modulated nor ramping according to statistical criteria (Figure 1E and
+F; Figure 1—figure supplement 5; 64/103 AC cells and 43/74 FR2 cells from 15 animals had neither
+significant tone-modulated activity or ramping activity; pre and post-stimulus mean activity com-
+pared via subsampled bootstrapping and considered significant when p<0.05; ramping activity mea-
+sured with linear regression and considered significant via subsampled bootstrapping when p<0.05
+and r > 0.5; for overall population statistics see Figure 1—figure supplement 6). While the fraction
+of non-classically responsive AC neurons observed is consistent with previous studies that use differ-
+ent auditory stimuli or behavioral paradigms (Jaramillo and Zador, 2011; Rodgers and DeWeese,
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+3 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ 0.5
+1
+2
+4
+8
+16
+32
+0
+50
+100
+A
+C
+AC (target) stimulus-aligned
+N = 15
+Stimulus
+Response
+Reward
+Target
+Non-target
+Task performance
+Responses (%)
+Frequency (kHz)
+Time (s)
+Time (s)
+Trial
+Trial
+ AC (non-target) stimulus-aligned
+B
+E
+Spikes/s
+Normalized firing rate 
+Spikes/s
+Classically responsive
+Normalized firing rate 
+ FR2 response-aligned 
+Non-classically responsive
+Time (s)
+Trial
+Spikes/s
+D
+Trial
+Spikes/s
+ FR2 (target) stimulus-aligned 
+Trial
+Spikes/s
+Normalized firing rate 
+Trial
+Spikes/s
+Normalized firing rate 
+Normalized firing rate 
+F
+Time (s)
+ FR2 (non-target) stimulus-aligned 
+ FR2 response-aligned 
+Time (s)
+Time (s)
+Normalized firing rate 
+Time (s)
+Time (s)
+Time (s)
+Time (s)
+Time (s)
+Time (s)
+Population average
+Population average
+Population average
+Population average
+Population average
+Population average
+Figure 1. Recording from AC or FR2 during go/no-go audiomotor task. (A) Behavioral schematic for the go/no-go frequency recognition task. Animals
+were rewarded with food for entering the nose port within 2.5 s after presentation of a target tone (4 kHz) or given a 7 s time-out if they incorrectly
+responded to non-target tones (0.5, 1, 2, 8,16, or 32 kHz). (B) Behavioral responses (nose pokes) to target and non-target tones (hit rates: 88 ± 7%, false
+alarms: 7 ± 5%, N = 15 rats). (C) Left, AC unit with significant tone modulated responses during target trials (red; top panel, average evoked
+spikes = 0.55) and non-target trials (blue; bottom panel, average evoked spikes = 0.92). Rasters of individual trials as well as the firing rate histogram
+and moving average are shown. Histograms of average firing rate during a trial were constructed using 25 ms time bins. A moving average of the firing
+rate was constructed using a Gaussian kernel with a 20 ms standard deviation. Black circles represent behavioral responses. Right, population averages
+for all target (n = 23) or nontarget (n = 34) classically responsive singe-units from AC. (D) Left, FR2 unit with ramping activity (green; ramp index = 2.82).
+Trials here are aligned to response time. Diamonds indicate stimulus onset. Right, population average for all ramping single-units from FR2 (n = 21). (E)
+Left, FR2 unit that was not significantly modulated during target trials (red; average evoked spikes = 0.041, p<0.001, 2000 bootstraps). Black circles here
+represent behavioral responses. Right, population averages for all target (n = 44) or non-target (n = 44) non-classically responsive single-units from FR2
+Figure 1 continued on next page
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+4 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ 2014), this definition does not preclude the possibility that non-classically responsive cells can be
+driven by other acoustic stimuli or behavioral paradigms.
+Novel single-trial, ISI-based algorithm for decoding non-classically
+responsive activity
+Given that the majority of our recordings were from non-classically responsive cells, we developed a
+general method for interpreting neural responses even when trial-averaged responses were not
+obviously task-modulated which allowed us to compare coding schemes across different brain
+regions (here, AC and FR2). The algorithm is agnostic to the putative function of neurons as well as
+the task variable of interest (here, stimulus category or behavioral choice).
+Our algorithm empirically estimates the interspike interval (ISI) distribution of individual neurons
+to decode the stimulus category (target or non-target) or behavioral choice (go or no-go) on each
+trial via Bayesian inference. The ISI was chosen because its distribution could vary between task con-
+ditions even without changes in the firing rate – building on previous work demonstrating that the
+ISI distribution contains complementary information to the firing rate (Lundstrom and Fairhall,
+2006; Reich et al., 2000; Zuo et al., 2015). The distinction between the ISI distribution and trial-
+averaged firing rate is subtle, yet important. While the ISI is obviously closely related to the instanta-
+neous firing rate, decoding with the ISI distribution is not simply a proxy for using the time-varying,
+trial-averaged rate. To demonstrate this, we constructed three model cells: a stimulus-evoked cell
+with distinct target and non-target ISI distributions (Figure 2A), a stimulus-evoked cell with identical
+ISI distributions (Figure 2B), and a non-classically responsive cell with distinct target and non-target
+ISI distributions (Figure 2C). These models clearly demonstrate that trial-averaged rate modulation
+can occur with or without corresponding differences in the ISI distributions and cells without appar-
+ent trial-averaged rate-modulation can nevertheless have distinct ISI distributions. Taken together,
+these examples demonstrate that the ISI distribution and trial-averaged firing rate capture different
+spike train statistics. This has important implications for decoding non-classically responsive cells
+that by definition do not exhibit large firing rate modulations but nevertheless may contain informa-
+tion latent in their ISI distributions.
+For each recorded neuron, we built a library of ISIs observed during target trials and a library for
+non-target trials from a set of ‘training trials’. Two different cells from AC are shown in Figure 3A
+and Figure 3—figure supplement 1A–D, and another cell from FR2 is shown in Figure 3—figure
+supplement 1E–H. These libraries were used to infer the probability of observing an ISI during a
+particular trial type (Figure 3B,C; Figure 3—figure supplement 1C,G; left panels show target in red
+and non-target in blue). These conditional probabilities were inferred using non-parametric statistical
+methods to minimize assumptions about the underlying process generating the ISI distribution and
+better capture the heterogeneity of the observed ISI distributions (Figure 3B; Figure 3—figure sup-
+plement 1C,G). We verified that our observed distributions were better modeled by non-parametric
+Figure 1 continued
+(F) Left, FR2 unit lacking ramping activity (green, ramp index = �1.0, p<0.001, 2000 bootstraps). Right, population average for all non-ramping single-
+units from FR2 (n = 44).
+DOI: https://doi.org/10.7554/eLife.42409.003
+The following figure supplements are available for figure 1:
+Figure supplement 1. Individual response curves from 15 animals included in this study.
+DOI: https://doi.org/10.7554/eLife.42409.004
+Figure supplement 2. Histological placement of cannulas in AC and FR2.
+DOI: https://doi.org/10.7554/eLife.42409.005
+Figure supplement 3. Bilateral infusion of muscimol into either AC or FR2 significantly impairs task performance.
+DOI: https://doi.org/10.7554/eLife.42409.006
+Figure supplement 4. Histological placement of electrodes in AC and FR2.
+DOI: https://doi.org/10.7554/eLife.42409.007
+Figure supplement 5. Examples of tone-evoked, ramping, and non-classically responsive cells from AC and FR2.
+DOI: https://doi.org/10.7554/eLife.42409.008
+Figure supplement 6. Summary statistics.
+DOI: https://doi.org/10.7554/eLife.42409.009
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+5 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ A
+Time (s)
+Time (s)
+Trial
+Firing rate
+(Spikes/s)
+ISI (ms)
+Probability density
+Time (s)
+Time (s)
+Trial
+Firing rate
+(Spikes/s)
+ISI (ms)
+Probability density
+Time (s)
+Time (s)
+Trial
+Firing rate
+(Spikes/s)
+ISI (ms)
+Probability density
+B
+C
+Target
+Non-target
+p(ISI | target)
+p(ISI | non-target)
+Example neuron 1: Distinct trial-averaged PSTHs and ISI distributions
+Example neuron 2: Distinct trial-averaged PSTHs and identical ISI distributions
+Example neuron 3: Identical trial-averaged PSTHs and distinct ISI distributions
+PSTHs
+ISI distributions
+Figure 2. ISIs capture information distinct from trial-averaged rate. Three simulated example neurons
+demonstrating that differences in the ISI are not necessary for differences in the trial-averaged firing rate to occur
+(and vice versa). Each trial was generated by randomly sampling from the appropriate conditional ISI distribution.
+Evoked responses were generated by shifting trials without altering the ISI distributions such that one spike during
+stimulus presentation is found at approximately 30 ms (with a variance of 10 ms). (A) Example neuron with both an
+evoked target response and a difference in the conditional ISI distributions on target and non-target trials. (B)
+Example neuron with an evoked target response but identical conditional ISI distributions. (C) Example non-
+classically responsive neuron with no distinct trial-averaged activity relative to the pre-stimulus period that
+nevertheless is generated by distinct ISI distributions.
+DOI: https://doi.org/10.7554/eLife.42409.010
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+6 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ methods rather than standard parametric methods (e.g. rate-modulated Poisson process; Figure 3—
+figure supplement 2). Specifically, we found the distributions using Kernel Density Estimation where
+the kernel bandwidth for each distribution was set using 10-fold cross-validation. To accommodate
+any non-stationarity, these ISI distributions were calculated in 1 s long sliding windows recalculated
+every 100 ms over the course of the trial. We then used these training set probability functions to
+decode a spike train from a previously unexamined individual trial from the set of remaining ‘test
+Figure 3. ISI-based algorithm for decoding behavioral variables from AC and FR2 single-units. (A) Single-unit activity was first sorted by task condition,
+here for target trials (red) and non-target trials (blue). All ISIs following stimulus onset and before behavioral choice were aggregated into libraries for
+each condition (average response time is used on no-go trials) as shown for a sample trial. (B) Probability density for observing a given ISI on each
+condition was generated via Kernel Density Estimation on libraries from (A) Left, target (red) and non-target (blue) probabilities. Right, go (green) and
+no-go (purple). (C) Relative differences between the two stimulus conditions (or choice conditions) was used to infer the actual stimulus category (or
+choice) from an observed spike train, in terms of weighted log likelihood ratio (W. LLR) for stimulus category (p(ISI)*(log2p(ISI|target) - log2(ISI|non-
+target)); on left) and behavioral choice (p(ISI)*(log p2(ISI|go) - log2(ISI|no-go)); on right). When curve is above zero the ISI suggests target (go) and when
+below zero the ISI suggests non-target (no-go). (D) Probability functions from B were used as the likelihood function to estimate the prediction of a
+spike train on an individual trial (bottom). Bayes’ rule was used to update the probability of a stimulus (top) or choice (bottom) as the trial progressed
+and more ISIs were observed. The prediction for the trial was assessed at the end of the trial as the probability of stimulus category (or choice). In this
+example trial, p(target|ISI)=61%.
+DOI: https://doi.org/10.7554/eLife.42409.011
+The following figure supplements are available for figure 3:
+Figure supplement 1. Decoding algorithm to determine stimulus category and choice in single-unit ISIs from AC and FR2 for two additional neurons.
+DOI: https://doi.org/10.7554/eLife.42409.012
+Figure supplement 2. Empirical ISI distributions are better modeled using non-parametric methods.
+DOI: https://doi.org/10.7554/eLife.42409.013
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+7 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ trials’. This process was repeated 124 times using 10-fold cross-validation with randomly generated
+folds.
+Importantly, while the probabilities of observing particular ISIs on target and non-target trials
+were similar (Figure 3B; Figure 3—figure supplement 1C,G), small differences between the curves
+carried sufficient information to allow for decoding. To characterize these differences, we used the
+weighted log likelihood ratio (W. LLR; Figure 3C; Figure 3—figure supplement 1C,G) to clearly rep-
+resent which ISIs suggested target (W. LLR > 0) or non-target (W. LLR < 0) stimulus categories. Our
+algorithm relies only on statistical differences between task conditions; therefore, the W. LLR sum-
+marizes all spike timing information necessary for decoding. Similar ISI libraries were also computed
+for behavioral choice categories (Figure 3B,C; Figure 3—figure supplement 1C; right panels show
+go decision in green and no-go in purple). These examples clearly illustrate that the relationship
+between the ISIs and task variables cannot simply be approximated by an ISI or firing rate threshold
+where short ISIs imply one task variable and longer ISIs imply another: in the cell shown in Figure 3,
+short ISIs (ISI < 50 ms) indicated non-target, medium ISIs (50 ms <ISI < 100 ms) indicated target, and
+longer ISIs indicated non-target (100 ms <ISI).
+The algorithm uses the statistical prevalence of certain ISI values under particular task conditions
+(in this case the ISIs accompanying stimulus category or behavioral choice), to infer the task condi-
+tion for each trial. Each trial begins with equally uncertain probabilities about the stimulus categories
+(i.e. p(target)=p(non-target)=50%). As each ISI is observed sequentially within the trial, the algorithm
+applies Bayes’ rule to update p(target|ISI) and p(non-target|ISI) using the likelihood of the ISI under
+each stimulus category (p(ISI|target) and p(ISI|non-target) (Figure 3B–D). As these functions were
+estimated in 1 s long sliding windows, each ISI was assessed using the distribution that placed the
+final spike closest to the center of the sliding window. As shown for one trial of the example cell in
+Figure 3D, ISIs observed between 0 and 1.0 s consistently suggested the presence of the target
+tone, whereas ISIs observed between 1.0 and 1.4 s suggested the non-target category thereby also
+necessarily reducing the belief that a target tone was played (Figure 3D, top trace). These ISI likeli-
+hood functions consider each ISI to be independent of previous ISIs and therefore ignore correla-
+tions between ISIs. After this process was completed for all ISIs in the particular trial, we obtained
+the probability of a non-target tone and a target tone as a function of time during the trial
+(Figure 3D). Because it is particularly challenging to dissociate choice from motor execution or pre-
+paratory motor activity in this task paradigm, the prediction for the entire trial p(target|ISI) is evalu-
+ated at the end of the trial (in the example trial, p(target|ISI)=61%; Figure 3D). This process is
+repeated for the behavioral choice (Figure 3B–D; right panels; trials separated according to go, no-
+go; probabilities of ISIs in each condition generated; conditional probabilities used as likelihood
+function to predict behavioral choice on a given trial). The single-trial decoding performance of each
+neuron is then averaged over all trials as a measure of the overall ability of each neuron to distin-
+guish behavioral conditions (Figure 4A). Note that this measure not only takes into account whether
+the algorithm was correct on individual trials (i.e. target vs. non-target), but also its prediction
+certainty.
+Non-classically responsive cells contain spike-timing-based task
+information
+Can we uncover task information from non-classically responsive cells? We found that non-classically
+responsive cells in both AC and FR2 provided significant spike-timing-based information about each
+task variable (Figure 4A,B, red; Figure 4—figure supplement 1). The ability to decode was poorly
+explained by the average firing rate (Figure 4—figure supplements 2A–F and 0.30 < r < 0.46),
+z-score (Figure 4—figure supplements 2G–I, –0.05 < r < 0.05), and ramping activity (Figure 4—fig-
+ure supplements 2J, –0.02 < r < 0.28). Stimulus decoding performance was also independent of
+receptive field properties including best frequency and tuning curve bandwidth for AC neurons (Fig-
+ure 4—figure supplement 3).
+We also observed that task information was distributed across both AC and FR2, and neural spike
+trains from individual units were multiplexed in that they often encoded information about both
+stimulus category and choice simultaneously (Figure 4B, Table 1). Given the strong correlation
+between stimulus and choice variables in the task design, it is difficult to fully separate information
+about one variable from information about the other. To establish that multiplexing was not simply a
+byproduct of this correlation, an independent measure of multiplexing relying on multiple regression
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+8 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ Decoding
+performance (%)
+A
+Choice decoding performance (%)
+Stimulus decoding performance (%)
+Choice decoding
+performance (%)
+C
+D
+Decoding performance (%)
+AC
+FR2
+Stimulus    Choice
+Stimulus
+Choice
+B
+n = 56 
+Synthetic spike trains
+E
+AC choice 
+FR2 stimulus
+Choice NCR
+Choice CR
+Sensory NCR
+Sensory CR
+n = 43 
+ AC
+FR2
+CR
+NCR
+NCR & 
+NCR &
+n = 42 
+n = 34 
+AC FR2
+CR
+NCR
+Condition permutation
+F
+Stimulus decoding performance (%)
+Figure 4. Decoding performance of single-units recorded from AC or FR2. (A) Decoding performance of single-units for stimulus category and
+behavioral choice in AC (open circles) and FR2 (filled circles) restricted to those statistically significant relative to synthetically-generated spike trains
+(p<0.05, permutation test, two-sided). Note that decoding performance values reflect the algorithm’s prediction certainty on individual trials. Central
+symbol with error bars represents group medians and top and bottom quartiles (*p=0.02, **p=0.001, Mann-Whitney U test, two-sided). Black symbols,
+classically responsive cells; red symbols, non-classically responsive cells. (B) Weighted decoding performance for choice versus stimulus, restricted to
+those statistically significant relative to synthetically generated spike trains for either stimulus, choice, or both (p<0.05, permutation test, two-sided).
+Black symbols, classically responsive cells; red symbols, non-classically responsive cells. This performance metric is weighted by the prediction certainty
+on individual trials and can be thought of as a confidence measure. (C) Choice decoding performance in AC of non-classically responsive cells (red) and
+choice non-classically responsive (dark-red) versus choice classically responsive cells (black; i.e. ramping cells). Decoding performance was not
+statistically different (p=0.32 Mann-Whitney U test, two-sided). Central symbol with error bars represents group medians and top and bottom quartiles.
+(D) Stimulus decoding performance in FR2 for non-classically responsive cells (red) and sensory non-classically responsive (dark-red) versus choice
+responsive cells (black; i.e. ramping cells). Decoding performance was not statistically different (p=0.29, Mann-Whitney U test, two-sided). Central
+symbol with error bars represents group medians and top and bottom quartiles. (E) Decoding performance for choice versus stimulus, applied to spike
+trains synthetically generated from sampling (with replacement) over all ISIs observed without regard to stimulus category or behavioral choice. Black,
+classically responsive cells; red, non-classically responsive cells. Error bars represent standard deviation. (F) Decoding performance for choice versus
+stimulus, applied to spike trains left intact but trial conditions (stimulus category and behavioral choice) were randomly permuted (1000 permutations
+per unit). Error bars represent standard deviation.
+DOI: https://doi.org/10.7554/eLife.42409.014
+The following figure supplements are available for figure 4:
+Figure supplement 1. Decoding performance of single cells on individual trials.
+DOI: https://doi.org/10.7554/eLife.42409.015
+Figure 4 continued on next page
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+9 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ was applied (Figure 4—figure supplement 4). This analysis confirmed that the information revealed
+by our algorithm about a behavioral variable was primarily a reflection of that variable and not simply
+an indirect measure of the other, correlated variable. This analysis establishes that a certain degree
+of separability is possible and demonstrates that the multiplexing observed in our decoding results
+is unlikely to be a trivial byproduct of correlations in the task variables.
+Despite the broad sharing of information about behavioral conditions, there were notable system-
+atic differences between AC and FR2. Surprisingly, neurons in FR2 were more informative about
+stimulus category than AC, and AC neurons were more informative about choice than stimulus cate-
+gory (Figure 4A, pAC = 0.016, pstim = 0.0013, Mann-Whitney U test, two-sided). Both of these obser-
+vations would not have been detected at the level of the PSTH, as most cells in AC were non-
+classically responsive for behavioral choice (no ramping activity, 91/103), yet our decoder revealed
+that these same cells were as informative as choice classically responsive cells (Figure 4C, p=0.32
+Mann-Whitney U test, two-sided; red circles indicate cells non-classically responsive for both varia-
+bles, dark-red cells are choice non-classically responsive, and black cells are classically responsive).
+Similarly, most cells in FR2 were sensory non-classically responsive (not tone modulated, 60/74), yet
+contained comparable stimulus information to sensory classically responsive cells (Figure 4D,
+p=0.29 Mann-Whitney U test, two-sided; red cells are non-classically responsive for both variables,
+dark-red cells are sensory non-classically responsive, black cells are classically responsive).
+To assess the statistical significance of these results, we tested our algorithm on two shuffled
+data sets. First, we ran our analysis using synthetically-generated trials that preserved trial length but
+randomly sampled ISIs with replacement from those observed during a session without regard to
+condition (Figure 4E). Second, we left trial activity intact but permuted the stimulus category and
+choice for each trial (Figure 4F). We restricted analysis to cells with decoding performance signifi-
+cantly different from synthetic spike trains (all cells in Figure 4A–D significantly different from syn-
+thetic condition shown in Figure 4E, p<0.05, bootstrapped 1240 times).
+To directly assess the extent to which information captured by the ISI distributions in our data set
+was distinct from the time-varying rate, we compared the performance from our ISI-based decoder
+to a conventional rate-modulated (inhomogeneous) Poisson decoder (Rieke et al., 1999), which
+assumes that spikes are produced randomly with an instantaneous probability equal to the time-
+varying firing rate. As our model cells illustrate (Figure 2), it is possible to decode using the ISI distri-
+butions even when firing rates are uninformative (Figure 5A). When applied to our dataset, the ISI-
+based decoder generally outperformed this conventional rate-based decoder confirming that ISIs
+capture information distinct from that of the firing rate (Figure 5B; Overall stimulus decoding perfor-
+mance: pAC = 0.0001, pFR2 = 8 � 10�6; Overall choice decoding performance pAC = 0.0057,
+pFR2 = 0.02, Mann-Whitney U test, two-sided). Moreover, comparing single trial decoding outcomes
+demonstrated weak to no correlations between the ISI-based decoder and the conventional rate
+Figure 4 continued
+Figure supplement 2. Lack of correlations between classical firing rate metrics and stimulus or choice decoding performance.
+DOI: https://doi.org/10.7554/eLife.42409.016
+Figure supplement 3. Stimulus decoding in AC independent of receptive field properties.
+DOI: https://doi.org/10.7554/eLife.42409.017
+Figure supplement 4. Decoding performance is a sufficient measure of uni/multiplexing.
+DOI: https://doi.org/10.7554/eLife.42409.018
+Table 1. Number of classically responsive (CR) or non-classically responsive (NCR) neurons in AC and
+FR2 with significant stimulus or choice information.
+# stimulus sig.
+# choice sig.
+Total #
+AC
+CR
+19
+21
+39
+NCR
+18
+21
+64
+FR2
+CR
+20
+22
+31
+NCR
+10
+11
+43
+DOI: https://doi.org/10.7554/eLife.42409.019
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+10 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ B
+Decoding performance (%)
+Decoding performance (%)
+AC
+FR2
+AC
+FR2
+Classically responsive 
+Non-classically responsive 
+Rate 
+Rate 
+ISI 
+ISI 
+Rate 
+Rate 
+ISI 
+ISI 
+Rate 
+Rate 
+ISI 
+ISI 
+Rate 
+Rate 
+ISI 
+ISI 
+AC
+FR2
+Overall
+Rate 
+Rate 
+ISI 
+ISI 
+Rate 
+Rate 
+ISI 
+ISI 
+Stimulus
+Choice
+C
+AC
+FR2
+Stimulus Choice Stimulus Choice
+Correlation coefficient
+AC
+FR2
+Stimulus Choice Stimulus Choice
+Normalized correlation coefficient
+Example Neuron 1
+Distinct PSTH, distinct ISI
+Example Neuron 2
+Distinct PSTH, identical ISI
+Example Neuron 3
+Identical PSTH, distinct ISI
+A 
+ISI decoding performance (%)
+Firing rate-based 
+decoding performance (%)
+Classically responsive 
+Non-classically responsive 
+Overall
+Figure 5. Information captured by ISI-based decoder distinct from conventional rate-modulated (inhomogeneous) Poisson decoder. (A) Decoding
+performance comparison for example neurons shown in Figure 2. Left, Both the trial-averaged firing rate and the ISI distributions can be used to
+decode stimulus category for this example neuron. Middle, Only the firing rate can be used to decode this example. Right, In this case, the ISI
+distributions can be used to decode even when the trial-averaged firing rate cannot. (B) Comparison of decoding performance for conventional rate-
+Figure 5 continued on next page
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+11 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ decoder, further underscoring that these two methods rely on different features of the spike train to
+decode (Figure 5C; stimulus medians: AC = 0.10 FR2 = 0.11; choice medians: AC = 0.07,
+FR2 = 0.08).
+We hypothesize that ISI-based decoding is biologically plausible. Short-term synaptic plasticity
+and synaptic integration provide powerful mechanisms for differential and specific spike-timing-
+based coding. We illustrated this capacity by making whole-cell recordings from AC neurons in vivo
+and in brain slices (Figure 5—figure supplement 1A,B), as well as in FR2 brain slices (Figure 5—fig-
+ure supplement 1C). In each case, different cells could have distinct response profiles to the same
+input pattern, with similar overall rates but different spike timings.
+Moreover, we note that this type of coding scheme requires few assumptions about implementa-
+tion, and does not require additional separate integrative processes to compute rates or form gener-
+ative models. Thus, ISI-based decoding coding could be generally applicable across brain areas, as
+demonstrated here for AC and FR2.
+Non-classically responsive cells encode selection rule information in a
+novel task-switching paradigm
+To further demonstrate the generalizability and utility of our approach, we applied our decoding
+algorithm to neurons that were found to be non-classically responsive in a previously published study
+(Rodgers and DeWeese, 2014). In this study, rats were trained on a novel auditory stimulus selec-
+tion task where depending on the context animals had to respond to one of two cues while ignoring
+the other. Rats were presented with two simultaneous sounds (a white noise burst and a warble). In
+the ‘localization’ context, the animal was trained to ignore the warble and respond to the location of
+the white noise burst and in the ‘pitch’ context it was trained to ignore the location of the white
+noise burst and respond to the pitch of the warble (Figure 6A). Using our algorithm, we found sig-
+nificant stimulus and choice-related information in the activity of non-classically responsive cells that
+displayed no stimulus modulation nor ramping activity in the firing rate (Figure 6B–D). The main
+finding of the study is that the pre-stimulus activity in both primary auditory cortex and prefrontal
+cortex encodes the selection rule (i.e. activity reflects whether the animal is in the localization or
+pitch context). This conclusion was entirely based on a difference in pre-stimulus firing rate between
+the two contexts. The authors reported, but did not further analyze, cells that did not modulate their
+pre-stimulus firing rate. In our nomenclature these cells are ‘non-classically responsive for the selec-
+tion rule’. Using our algorithm, we found that the ISI distributions of these cells encoded the selec-
+tion rule and were significantly more informative than the classically responsive cells (Figure 6E,
+pAC = 5 � 10�6, pPFC <0.0002, Mann-Whitney U test, two-sided). This surprising result demonstrates
+that our algorithm generalizes to novel datasets, and may be used to uncover coding for cognitive
+Figure 5 continued
+modulated decoder to our ISI-based decoder. Top row, stimulus decoding, bottom row, choice decoding. Left, Overall comparison for all cells. Right,
+Comparison for classically responsive and non-classically responsive cells (Stimulus Overall: ***pAC = 0.0001, ***pFR2 = 8 � 10�6, Stimulus Repsonsive:
+*pAC = 0.031, ***pFR2 = 4 � 10�5, Stimulus non-classically responsive: **pAC = 0.0019, n.s. pFR2 = 0.096, Choice Overall: **pAC = 0.0057, *pFR2 = 0.02,
+Choice Repsonsive: n.s. pAC = 0.031, n.s. pFR2 = 0.08, Choice non-classically responsive: *pAC = 0.004, n.s. pFR2 = 0.19, Wilcoxon signed-rank test).
+Individual cells shown and median with error bars designating bottom and top quartiles superimposed. (C) Left, Matthews correlation coefficient (MCC)
+between correct predictions of our ISI-based decoder and a conventional rate-modulated firing rate decoder. A MCC value of 1 indicates each decoder
+correctly decodes exactly the same set of trials, whereas �1 indicates each decoder is correct on complementary trials. Values close to 0 indicate that
+that the relationship between the decoders is close to chance. Typically, values from �0.5 to 0.5 are considered evidence for weak to no correlation
+(stimulus median and interquartile range: AC = 0.10, 0.09, FR2 = 0.11, 0.12; choice median and interquartile range: AC = 0.06, 0.15, FR2 = 0.08, 0.17).
+Right, Matthews correlation coefficient (MCC) rescaled by the maximum possible correlation given the decoding performance of each method remains
+fixed. This control demonstrates that the correlation values are not a result of weak decoding performance for one of the decoding methods (stimulus
+median and interquartile range: AC = 0.11, 0.11, FR2 = 0.12, 0.15; choice median and interquartile range: AC = 0.08, 0.17, FR2 = 0.11, 0.19). Source
+data has been provided in the spreadsheet titled ‘figure_5.csv’.
+DOI: https://doi.org/10.7554/eLife.42409.020
+The following figure supplement is available for figure 5:
+Figure supplement 1. Whole-cell recordings from AC and FR2 neurons showing that different cells can have distinct responses to the same input
+pattern- necessary for ISI-based decoding by biological networks.
+DOI: https://doi.org/10.7554/eLife.42409.021
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+12 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ variables beyond those apparent from conventional trial-averaged, rate-based analyses. Further-
+more, these results indicate that as task complexity increases non-classically responsive cells are dif-
+ferentially recruited for successful task execution.
+Non-classically responsive ensembles are better predictors of
+behavioral errors
+Downstream brain regions must integrate the activity of many neurons and this ISI-based approach
+naturally extends to simultaneously recorded ensembles. We therefore asked whether using small
+A
+B
+Stimulus
+Response
+Reward
+Nose in center
+Localization rule
+(only attend to the location of the noise burst)
+left noise burst
+&
+high warble
+right noise burst
+&
+high warble
+left noise burst
+&
+low warble
+right noise burst
+&
+low warble
+left noise burst
+&
+low warble
+left noise burst
+&
+high warble
+right noise burst
+&
+high warble
+right noise burst
+&
+low warble
+go left
+no go
+Pitch rule
+(only attend to the pitch of the warble)
+left noise burst
+&
+high warble
+right noise burst
+&
+high warble
+left noise burst
+&
+low warble
+right noise burst
+&
+low warble
+left noise burst
+&
+low warble
+right noise burst
+&
+low warble
+left noise burst
+&
+high warble
+right noise burst
+&
+high warble
+go right
+no go
+go left
+go right
+Stimulus location 
+(localization rule trials)
+Selection rule
+CR
+NCR
+NCR
+CR
+AC
+PFC
+Stimulus pitch
+(pitch rule trials)
+CR
+NCR
+NCR
+CR
+AC
+PFC
+CR
+NCR
+NCR
+CR
+AC
+PFC
+Choice
+CR
+NCR
+NCR
+CR
+AC
+PFC
+C
+D
+E
+Decoding performance (%)
+Decoding performance (%)
+Figure 6. Non-classically responsive cells in both auditory cortex and prefrontal cortex (PFC) encode behavioral variables including the selection rule in
+a task switching paradigm. (A) Schematic of novel auditory stimulus selection task. Animals were presented with two simultaneous tones (a white noise
+burst and warble) and trained to respond to the location of the sound in the ‘localization’ context while ignoring pitch and respond to the pitch while
+ignoring the location in the ‘pitch’ context (figure adapted from Rodgers and DeWeese, 2014), Neuron). Decoding performance for (B) stimulus
+localization on localization trials (pAC = 0.24, pPFC = 0.21, Mann-Whitney U test, two-sided), (C) stimulus pitch on pitch trials (pAC = 0.48, pPFC = 0.47,
+Mann-Whitney U test, two-sided), and (D) choice (**pAC = 0.0064, pPFC = 0.22, Mann-Whitney U test, two-sided) for classically responsive cells (black)
+and non-classically responsive cells (red; no stimulus modulation or ramping activity) in auditory (open symbols) and prefrontal cortex (closed symbols)
+previously reported but not further analyzed in this study. (E) Decoding performance for the selection rule for classically responsive (black) and non-
+classically responsive cells (red; similar pre-stimulus firing rates for both pitch and localization blocks; ***pAC = 5 � 10�6, ***pPFC <0.0002, Mann-
+Whitney U test, two-sided).
+DOI: https://doi.org/10.7554/eLife.42409.022
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+13 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ ensembles would change or improve decoding. To decode from ensembles, likelihood functions
+from each cell were calculated independently as before but were used to simultaneously update the
+task condition probabilities (p(target | ISI) and p(go | ISI)) on each trial (Figure 7A). Analyzing ensem-
+bles of two to eight neurons in AC and FR2 significantly improved decoding for both variables in
+FR2 and stimulus decoding in AC (Figure 7B, pAC stim=0.04, pFR2 stim=1�10�5, pAC = 0.29, pFR2 choic-
+e=7�10�5, Mann-Whitney U test, two-sided). This was not a trivial consequence of using more neu-
+rons, as the information provided by individual ISIs on single trials can be contradictory (e.g.
+compare LLR functions in Figure 3C and Figure 3—figure supplement 1C for 50 ms <ISIs < 120
+ms). For ensemble decoding to improve upon single neuron decoding, the ISIs of each member of
+the ensemble must indicate the same task variable.
+Can our decoding method predict errors on a trial-by-trial basis? In general, trial-averaged PSTHs
+did not reveal systematic differences between correct and error trials (Figure 7—figure supplement
+1). However, when we examined single-trial performance with our algorithm, ensembles of neurons
+in AC and FR2 predicted behavioral errors (Figure 7C). In general, ensembles in AC predicted
+behavioral errors significantly better than those in FR2 (Figure 7C, for three-member ensembles:
+p=1.2 � 10�5, for four-member ensembles: p=0.03, Mann-Whitney U test, two-sided). Interestingly,
+decoding with an increasing number of non-classically responsive cells improved error prediction in
+both AC and FR2 (Figure 7D, (pAC = 0.013, pFR2 = 0.046, Welch’s t-test).
+Timing-dependent ensemble consensus-building dynamics underlie task
+information
+While improvements were seen in decoding performance with increasing ensemble size, the ISI dis-
+tributions/ISI-based likelihood functions were highly variable across individual ensemble members.
+Thus, we wondered if there was task-related structure in the timing of population activity that
+evolved over the course of the trial to instantiate behavior. To answer this question, we examined
+whether local ensembles share the same representation of task variables over the course of the trial.
+Do they ‘reach consensus’ on how to represent task variables using the ISI (Figure 8A)? Without con-
+sensus, a downstream area would need to interpret ensemble activity using multiple disparate repre-
+sentations rather than one unified code (Figure 8B). The firing rates and ISI distributions of
+simultaneously-recorded units were generally variable across cells requiring an exploratory approach
+to answer this question (Figure 8C, example three-member ensemble with heterogeneous condi-
+tional ISI distributions). Therefore, we examined changes in the distributions of ISIs across task condi-
+tions, asking how the moment-to-moment changes in the log-likelihood ratio (LLR) of each cell were
+coordinated to encode task variables (Figure 8C). We focused on the LLR because it quantifies how
+the ISI represents task variables for a given cell and summarizes all spike timing information needed
+by our algorithm (or a hypothetical downstream cell) to decode.
+We examined how ensembles coordinate their activity moment-to-moment over the course of the
+trial by quantifying the similarity of the LLRs across cells in a sliding window. Similarity was assessed
+by summing the LLRs of ensemble members, calculating the total area underneath the resulting
+curve, and normalizing this value by the sum of the areas of each individual LLR. We refer to this
+quantified similarity as ‘consensus’; a high consensus value indicates that ensemble members have
+similar LLRs and therefore have a similar representation of task variables (Figure 8D). We should
+emphasize that successful ensemble decoding (Figure 7) does not require the LLRs of ensemble
+members to be related in any way; therefore, structured LLR dynamics (Figure 8) are not simply a
+consequence of how our algorithm is constructed.
+While the conventional trial-averaged PSTH of non-classically responsive ensembles recorded in
+AC and FR2 showed no task-related modulation, our analysis revealed structured temporal dynamics
+of the LLRs (captured by the consensus value). On correct trials, we observe a trajectory of increasing
+consensus at specific moments during the trial signifying a dynamically created, shared ISI represen-
+tation of task variables. In FR2, sensory non-classically responsive ensembles (ensembles in which at
+least two out of three cells were not tone-modulated) encode stimulus information using temporally-
+precise stimulus-related dynamics on correct trials. The stimulus representation of sensory non-classi-
+cally responsive ensembles reached consensus rapidly after stimulus onset followed by divergence
+(Figure 8E, stimulus-aligned, solid line, Dconsensus, t = 0 to 0.42 s, pSNR = 3.9 � 10�4 Wilcoxon test
+with Bonferroni correction, two-sided). Sensory classically responsive ensembles in AC increased
+consensus beyond stimulus presentation, reaching a maximum ~750 ms after tone onset on correct
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+14 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ A
+B
+Stimulus
+Choice
+Decoding performance (%)
+Ensemble size (number of cells)
+Ensemble size (number of cells)
+���
+���
+���
+���
+���
+��
+���
+����
+Neuron 1
+Neuron 2
+Probability density
+W. LLR (bits) 
+Target
+Non-target
+Target
+Non-target
+Neuron 1
+Neuron 2
+Example Trial
+Response
+p(stimulus)
+ISI (ms)
+Time (s)
+ISI (ms)
+FR2
+AC
+FR2
+AC
+C
+Number of non-classically responsive cells
+Error prediction performance (%)
+3 member ensembles
+FR2
+5 member ensembles
+AC
+D
+Error prediction performance (%)
+Ensemble size (number of cells)
+FR2
+AC
+p(target)
+p(non-target)
+Figure 7. Decoding performance of neuronal ensembles recorded in AC or FR2. (A) Schematic of ensemble decoding. Left, conditional ISI distributions
+and corresponding weighted LLR shown for two simultaneously recorded neurons. Right, an example trial where each neuron’s ISIs and LLRs are used
+to independently update stimulus category according to Bayes’ rule. Arrows indicate the first updates from each neuron. (B) Stimulus and choice
+decoding performance for ensembles in AC and FR2 for ensembles of increasing size (Comparing smallest with largest ensembles. Stimulus:
+*pAC = 0.04, ***pFR2 = 1 � 10�5, Choice: pAC = 0.29, ***pFR2 = 7 � 10�5, Mann-Whitney U test, two-sided). (C) Error prediction performance in AC and
+FR2 as a function of ensemble size (*pAC = 0.03, **pFR2 = 0.002; comparison between AC and FR2, for 3-member ensembles: p=1.2 � 10�5, for 4-
+member ensembles: p=0.03, Mann-Whitney U test, two-sided). Chance performance is 50%. (D) Error prediction performance in AC and FR2 as a
+function of the number of non-classically responsive cells in the ensemble (*pAC = 0.037, Welch’s t-test with Bonferroni correction for multiple
+comparisons; *pFR2 = 0.015, Student’s t-test with Bonferroni correction), 3 and 5 member ensembles in c. shown for AC and FR2 respectively. Chance
+performance is 50%.
+DOI: https://doi.org/10.7554/eLife.42409.023
+Figure 7 continued on next page
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+15 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ trials (Figure 8E stimulus-aligned, dotted line, Dconsensus, t = 0 to 0.81 s, pSR = 0.14 Wilcoxon test
+with Bonferroni correction, two-sided). For choice-related activity, choice non-classically responsive
+ensembles in both regions as well as choice classically responsive ensembles in FR2 each reached
+consensus within 500 ms of the behavioral response (Figure 8E, response-aligned, Dconsensus,
+t = �1.0 to 0.0 s, pCNR = 2.0 � 10�5, pCR = 0.12 Wilcoxon test with Bonferroni correction, two-
+sided). Importantly, this temporally precise pattern of consensus building is not present on error tri-
+als. On error trials, stimulus consensus dynamics decreased over the course of the trial whereas
+choice dynamics did not display a systematic increase with the exception of choice non-classically
+responsive ensembles in AC which remained systematically lower than correct trials (Figure 8F,
+Dconsensus, correct trials vs. error trials, stimulus: pSNR = 0.007, pSR = 0.065, choice: pCNR = 0.0048,
+pCR = 0.065 Mann-Whitney U test, two-sided, Dconsensus on error trials, t = 0 to 0.42 s,
+pSNR = 1.3 � 10�33, t = �1.0 to 0 s, pCNR = 0.032, pCR = 0.14 Wilcoxon test with Bonferroni correc-
+tion, two-sided). The observed increases in ensemble consensus on correct trials (while failing do so
+on error trials) suggests that achieving a shared ISI representation of task variables may be relevant
+for successful task execution.
+These results reveal that consensus-building and divergence occur at key moments during the
+trial for successful execution of behavior in a manner that is invisible at the level of the PSTH. As sen-
+sory and choice non-classically responsive ensembles participated in these dynamics, changes in the
+consensus value cannot simply be a byproduct of correlated firing rate modulation due to tone-
+evoked responses or ramping. While consensus-building can only indicate a shared representation,
+divergence can indicate one of two things: (1) the LLRs of each cell within an ensemble are
+completely dissimilar or (2) they are ‘out of phase’ with one another – the LLRs partition the ISIs the
+same way (Figure 8D, dotted lines), but the same ISIs code for opposite behavioral variables. This
+distinction is important because (2) implies coordinated structure of ensemble activity (the partitions
+of the ISI align) whereas (1) does not. To distinguish between these two possibilities, we used the
+‘unsigned consensus’, a second measure sensitive to the ISI partitions but insensitive to the sign of
+the LLR. Both ‘in phase’ and perfectly ‘out of phase’ LLRs would produce an unsigned consensus of
+1, whereas unrelated LLRs would be closer to 0 (Figure 8D). For example, in the second row of
+Figure 8D, both cells agree that ISIs < 100 ms indicate one stimulus category and ISIs > 100 ms indi-
+cate another, but they disagree about which set of ISIs mean target and which mean non-target.
+This results in a consensus value of 0 (out of phase) but an unsigned consensus value of 1.
+Using this metric, we found that the unsigned consensus pattern for non-classically responsive
+ensembles (ensembles with two or more non-classically responsive members) were shared between
+AC and FR2 – increasing until ~750 ms after tone onset on correct trials (Figure 8G, stimulus-
+aligned, D consensus, t = 0 to 0.89 s, p=1.7 � 10�5 Wilcoxon test, two-sided). Non-classically
+responsive ensembles in AC and FR2 also increased their unsigned consensus immediately before
+behavioral response (although values in AC were lower overall; Figure 8G, response-aligned,
+Dconsensus, t = �1.0 to 0.0 s, p=0.0011 Wilcoxon test, two-sided). This pattern of consensus-build-
+ing was only present on correct trials. On error trials unsigned consensus values did not systemati-
+cally increase (Figure 8H, Dconsensus compared to error trials, p=1.9 � 10�9 Mann-Whitney U test,
+two-sided) suggesting that behavioral errors might result from a general lack of consensus between
+ensemble members. In summary, we have shown that cells which appear unmodulated during behav-
+ior do not encode task information independently, but do so by synchronizing their representation
+of behavioral variables dynamically during the trial.
+Discussion
+Using a straightforward, single-trial, ISI decoding algorithm that makes few assumptions about the
+proper model for neural activity, we found task-specific information extensively represented by non-
+classically responsive neurons in both AC and FR2 that lacked conventional task-related, trial-
+Figure 7 continued
+The following figure supplement is available for figure 7:
+Figure supplement 1. PSTHs from two example cells recorded in either AC or FR2 separated by correct (top) and error (bottom) trials.
+DOI: https://doi.org/10.7554/eLife.42409.024
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+16 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ A
+B
+C
+Consensus
+Consensus
+Time (s)
+Time (s)
+Time (s)
+Stimulus-aligned
+Response-aligned
+D
+E
+G
+Unsigned Consensus
+Time (s)
+NCR
+Sensory NCR
+Sensory CR
+Choice NCR
+Choice CR
+Stimulus-aligned
+Response-aligned
+Unsigned Consensus
+Correct Trials
+Correct Trials
+Error Trials
+Error Trials
+Consensus
+Time (s)
+Time (s)
+Consensus
+Time (s)
+Unsigned Consensus
+Time (s)
+Unsigned Consensus
+NCR
+NCR
+NCR
+Choice NCR
+Choice CR
+Sensory NCR
+Sensory CR
+AC
+ FR2
+AC
+ FR2
+F
+H
+Neuron #1
+Relative probability
+ISI (ms)
+Consensus examples 
+Consensus
+1
+0
+.5
+1
+1
+.5
+LLR 2
+Target
+Non-target
+Weighted log-likelihood ratio
+Target
+Non-target
+ISI (ms)
+Neuron #3
+Neuron #2
+Bits
+ISI (ms)
+ISI (ms)
+Unsigned 
+consensus
+Example three-member ensemble
+ISI (ms)
+ISI distributions
+Target
+Non-target
+Target
+Non-target
+Target
+Non-target
+Target
+Non-target
+?
+?
+?
+Con
+s
+e
+nsus
+Upstream LLRs
+Upstream LLRs
+Target
+Non-target
+LLR 1
+Ensemble #1
+Ensemble #2
+Ensemble #3
+Downstream LLR
+Downstream LLRs
+Figure 8. . Ensemble consensus-building during behavior. (A) Schematic of consensus building in a three-member ensemble. When the LLRs of
+ensemble members are similar the meaning of any ISI is unambiguous to a downstream neuron. (B) Schematic of a three-member ensemble without
+consensus. The meaning of an ISI depends on the upstream neuron it originates from. (C) ISI distributions, and LLRs for three members of a sample
+ensemble. Note that despite differences in ISI distributions, neuron #1 and neuron #2 have similar weighted log-likelihood ratios (ISIs > 200 ms indicate
+Figure 8 continued on next page
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+17 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ averaged firing rate modulation. The complexity of single-trial spiking patterns and the apparent var-
+iability between trials led to the development of this novel decoding method. Furthermore, the het-
+erogeneity in the observed ISI distributions
+within and across brain
+regions precluded a
+straightforward interpretation of these distributions and instead suggested an approach which
+focused on whether and when these distributions are shared in local ensembles via consensus-
+building.
+The degree to which single neurons were task-modulated was uncorrelated with conventional
+response properties including frequency tuning. AC and FR2 each represent both task-variables; fur-
+thermore, in both regions, we identified many multiplexed neurons that simultaneously represented
+the sensory input and the upcoming behavioral choice including non-classically responsive cells. This
+highlights that the cortical circuits that generate behavior exist in a distributed network – blurring
+the traditional modular view of sensory and frontal cortical regions.
+Most notably, FR2 has a better representation of task-relevant auditory stimuli than AC. The prev-
+alence of stimulus information in FR2 might be surprising given that AC reliably responds to pure
+tones in untrained animals; however, when tones take on behavioral significance, this information is
+encoded more robustly in frontal cortex, suggesting that this region is critical for identifying the
+appropriate sensory-motor association. Furthermore, the stark improvement in stimulus encoding
+for small ensembles in FR2 suggests that task-relevant stimulus information is reflected more homo-
+geneously in local firing activity across FR2 (perhaps through large-scale ensemble consensus-build-
+ing) while this information is reflected in a more complex and distributed manner throughout AC.
+We have identified task-informative non-classically responsive neurons recorded while animals
+performed a frequency recognition task or a task-switching paradigm. This does not preclude the
+possibility that these cells are driven by other acoustic stimuli or in other behavioral contexts; how-
+ever, determining the significance of non-classically responsive activity must ultimately be considered
+in the specific behavioral context in question, as their role may be dynamic and context dependent.
+The finding that the ISI-based approach of our algorithm is not reducible to rate despite their
+close mathematical relationship raises the question of how downstream regions could respond pref-
+erentially to specific ISIs. Our whole-cell recordings from both AC and FR2 demonstrate that differ-
+ent postsynaptic cells can respond differently to the same input pattern with a fixed overall rate,
+emphasizing the importance of considering a code sensitive to precise spike-timing perhaps via
+Figure 8 continued
+target, ISIs < 200 ms indicate non-target). (D) Consensus values for three illustrative two-member ensembles. Ensemble 1 members have identical LLRs,
+agreeing on the meaning of all ISIs (consensus = 1) and on how the ISIs should be partitioned (unsigned consensus = 1). Ensemble 2 contains cells with
+LLRs where the ISI meanings are reversed, disagreeing on meaning of the ISIs (consensus = 0) but still agree on how the ISIs should be partitioned
+(unsigned consensus = 1). Ensemble 3 contains two cells with moderate agreement about the ISI meanings and partitioning, leading to intermediate
+consensus and unsigned consensus values (0.5 for each). (E) Left, mean consensus as a function of time from tone onset (stimulus-aligned) on correct
+trials for three-member sensory classically responsive ensembles in AC (two or more members sensory classically responsive; black dotted line; n=11
+ensembles) and sensory non-classically responsive ensembles in FR2 (two or more members sensory non-classically responsive; dark red solid line;
+n=101 ensembles). Standard deviation shown around each mean trendline. Thin solid and dotted line represent an individual consensus trajectory from
+FR2 and AC, respectively. FR2 sensory non-classically responsive cells consistently reached consensus and then diverged immediately after stimulus
+presentation (Dconsensus, t = 0 to 0.42 s, pSNR = 3.9�10�4 Wilcoxon test with Bonferroni correction, two-sided). AC classically responsive ensembles
+(black) increase consensus until 750 ms (Dconsensus, t = 0 to 0.81 s, pSR = 0.14 Wilcoxon test with Bonferroni correction, two-sided). Right, mean
+consensus as a function of time to behavioral response (response-aligned) on correct trials for three-member choice classically responsive ensembles
+(two or more members choice classically responsive; black) in FR2 (solid line; n=47 ensembles) and choice non-classically responsive (two or more
+members choice non-classically responsive; dark red) in AC (dotted line; n=11 ensembles) and FR2 (solid line; n=57 ensembles). Standard deviation
+shown around each mean trendline. On correct trials, choice classically responsive (black) and choice non-classically responsive ensembles (dark red) in
+both regions reached high consensus values ~500 ms before response (Dconsensus, t = -1.0 to 0.0 s, pCNR = 2.0�10�5, pCR = 0.12 Wilcoxon test with
+Bonferroni correction, two-sided). (F) As in e, but for error trials (Dconsensus, correct vs. error trials, stimulus: pSNR= 0.007, pSR = 0.065, choice: pCNR =
+0.0048, pCR = 0.065 Mann-Whitney U test, two-sided). (G) Unsigned consensus index for non-classically responsive ensembles (two or more members
+non-classically responsive) in AC (dotted line; n=13 ensembles) and FR2 (solid line; n=36 ensembles), stimulus-aligned (left, Dconsensus, t = 0 to 0.89 s,
+p = 5.1�10�5 Wilcoxon test with Bonferroni correction, two-sided) and response-aligned (right, Dconsensus, t = -1.0 to 0.0 s, p = 0.0033 Wilcoxon test
+with Bonferroni correction, two-sided). On correct trials, ensembles reach high values of unsigned consensus ~750 ms after tone onset and within 500
+ms of behavioral response. (H) As in (G), but for error trials (Dconsensus, correct vs. error trials, p = 1.9�10�9 Mann-Whitney U test, two-sided). (E) – (G)
+Combinations analyzed and shown are those for which there are significant numbers in our dataset.
+DOI: https://doi.org/10.7554/eLife.42409.025
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+18 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ mechanisms of differential short-term plasticity such as depression and facilitation (Figure 5—figure
+supplement 1). Furthermore, this is supported by experimental and theoretical work showing that
+single neurons can act as resonators tuned to a certain periodicity of firing input (Izhikevich, 2000).
+This view could also be expanded to larger neuronal populations comprised of feedback loops that
+would resonate in response to particular ISIs. In this case, cholinergic neuromodulation could offer a
+mechanism for adjusting the sensitivities of such a network during behavior on short time-scales by
+providing rapid phasic signals (Hangya et al., 2015).
+Our consensus results reveal dynamic changes in the relationship between the LLRs of ensemble
+members. How might such a downstream resonator interpret a given ISI in the context of these
+dynamics? Our consensus analysis provides one possible answer: downstream neurons may be
+attuned to the ISIs specified by the consensus LLR of an ensemble. In such a model, an ensemble
+would have the strongest influence on downstream activity when they reach high consensus. We
+additionally hypothesize that mechanisms of long-term synaptic plasticity such as spike-timing-
+dependent plasticity can redistribute synaptic efficacy, essentially changing the dynamics of short-
+term plasticity independent from overall changes in amplitudes (Markram and Tsodyks, 1996).
+Thus, after training, downstream neurons do not need to continually change the readout mechanism-
+rather, the upstream and downstream components might be modified together by cortical plasticity
+during initial phases of behavioral training. This would set the ISI distributions appropriate for firing
+of task-relevant downstream neurons, which would ensure that ensemble consensus is reached for
+correct sensory processing in highly trained animals.
+It is still unclear what the relevant timescales of decoding might be in relation to phenomena such
+as membrane time constants, periods of oscillatory activity, and behavioral timescales. Given that
+our ISI-based decoder and conventional rate-modulated decoders reveal distinct information, future
+approaches might hybridize these rate-based and temporal-based decoding methods to span multi-
+ple timescales. Other recent studies have also contributed to our understanding of non-classically
+responsive activity, by evaluating firing rates or responses from calcium imaging to demonstrate
+how correlations with classically responsive activity may contribute to the linear separability of
+ensemble responses (Leavitt et al., 2017; Zylberberg, 2018).
+We have shown that underlying the task-relevant information encoded by each ensemble is a rich
+set of consensus-building dynamics that is invisible at the level of the PSTH. Ensembles in both FR2
+and AC underwent stimulus and choice-related consensus building that was only observed when the
+animal correctly executed the task. Moreover, non-classically responsive cells demonstrated tempo-
+ral dynamics synchronized across regions which were distinct from classically responsive ensembles.
+These results underscore the importance of measuring neural activity in behaving animals and using
+unbiased and generally applicable analytical methods, as the response properties of cortical neurons
+in a behavioral context become complex in ways that challenge our conventional assumptions
+(Carcea et al., 2017; Fritz et al., 2010; Kuchibhotla et al., 2017; Otazu et al., 2009).
+Materials and methods
+Key resources table
+Reagent type
+(species) or resource Designation
+Source or reference
+Identifiers
+Additional
+information
+Strain, strain
+background
+(Rattus norvegicus
+domesticus,
+males and females)
+Sprague-Dawley, rats
+Charles River, Taconic NTac:SD
+Chemical compound,
+drug
+Muscimol
+Sigma-Aldrich
+InChi:ZJQHPWUVQPJPQT
+-UHFFFAOYSA-N;
+SID:24896662
+Software, algorithm
+Single-trial Bayesian decoding algorithm newly created
+N/A
+https://github.com/
+badralbanna
+/Insanally2017
+Other
+Rodgers and DeWeese, 2014 dataset
+CRCNS
+pfc-1
+http://crcns.org/data-sets/pfc/pfc-1
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+19 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ Behavior
+All animal procedures were performed in accordance with National Institutes of Health standards
+and were conducted under a protocol approved by the New York University School of Medicine
+Institutional Animal Care and Use Committee. We used 23 adult Sprague-Dawley male and female
+rats (Charles River) in the behavioral studies. Animals were food restricted and kept at 85% of their
+initial body weight, and maintained at a 12 hr light/12 hr dark cycle.
+Animals were trained on a go/no-go audiomotor task (Carcea et al., 2017; Froemke et al.,
+2013). Operant conditioning was performed within 12’ L x 10’ W x 10.5’ H test chambers with stain-
+less steel floors and clear polycarbonate walls (Med Associates), enclosed in a sound attenuation
+cubicle and lined with soundproofing acoustic foam (Med Associates). The nose and reward ports
+were both arranged on one of the walls with the speaker on the opposite wall. The nose port,
+reward port, and the speaker were controlled and monitored with a custom-programmed microcon-
+troller. Nose port entries were detected with an infrared beam break detector. Auditory stimuli were
+delivered through an electromagnetic dynamic speaker (Med Associates) calibrated using a pressure
+field microphone (ACO Pacific).
+Animals were rewarded with food for nose poking within 2.5 s of presentation of the target tone
+(4 kHz) and given a short 7 s time-out for incorrectly responding to non-target tones (0.5, 1, 2, 8, 16,
+32 kHz). Incorrect responses include either failure to enter the nose port after target tone presenta-
+tion (miss trials) or entering the nose port after non-target tone presentation (false alarms). Tones
+were 100 ms in duration and sound intensity was set to 70 dB SPL. Tones were presented randomly
+with equal probability such that each stimulus category was presented. The inter-trial interval delays
+used were 5, 6, 7, or 8 s.
+For experiments involving muscimol, we implanted bilateral cannulas in either FR2 (+2.0 to +4.0
+mm AP, ±1.3 mm ML from Bregma) of seven animals or AC (-5.0 to -5.8 mm AP, 6.5-7.0 mm ML
+from Bregma) of three animals. We infused 1 mL of muscimol per side into FR2 or infused 2 mL of
+muscimol per side into AC, at a concentration of 1 mg/mL. For saline controls, equivalent volumes
+of saline were infused in each region. Behavioral testing was performed 30-60 min after infusions.
+Power analysis was performed to determine sample size for statistical significance with a power of b:
+0.8; these studies required at least three animals, satisfied in the experiments of Figure 1-figure sup-
+plement 3B,E. For motor control study, animals could freely nose poke for food reward without pre-
+sentation of auditory stimuli after muscimol and saline infusion.
+Implant preparation and surgery
+Animals were implanted with microdrive arrays (Versadrive-8 Neuralynx) in either AC (eight animals)
+or FR2 (seven animals) after reaching behavioral criteria of d’�1.0. For surgery, animals were anes-
+thetized with ketamine (40 mg/kg) and dexmedetomidine (0.125 mg/kg). Stainless steel screws and
+dental cement were used to secure the microdrive to the skull, and one screw was used as ground.
+Each drive consisted of eight independently adjustable tetrodes. The tetrodes were made by twist-
+ing and fusing four polyimide-coated nichrome wires (Sandvik Kanthal HP Reid Precision Fine Tet-
+rode Wire; wire diameter 12.5 mm). The tip of each tetrode was gold-plated to an impedance of
+300–400 kOhms at 1 kHz (NanoZ, Neuralynx).
+Electrophysiological recordings and unit isolation
+Recordings in behaving rats were performed as previously described (Carcea et al., 2017). After the
+animal recovered from surgery (~7 days) recordings began once performance returned to pre-sur-
+gery levels. Tetrodes were advanced ~60 mm 12 hr prior to each recording session, to a maximum of
+2.5 mm (for FR2) or 2.0 mm (for AC) from the pial surface. For recording, signals were first amplified
+onboard using a small 16-bit unity-gain preamplifier array (CerePlex M, Blackrock Microsystems)
+before reaching the acquisition system. Spikes were sampled at 30 kS/sec and bandpass filtered
+between 250 Hz and 5 kHz. Data were digitized and all above-threshold events with signal-to-noise
+ratios > 3:1 were stored for offline spike sorting. Single-units were identified on each tetrode using
+OfflineSorter (Plexon Inc) by manually classifying spikes projected as points in 2D or 3D feature
+space. The parameters used for sorting included the waveforms projection onto the first two princi-
+pal components, energy, and nonlinear energy. Artifacts were rejected based on refractory period
+violations (<1 msec). Clustering quality was assessed based on the Isolation Distance and Lratio
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+20 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ sorting quality metrics. To be initially included for analysis, cells had to have >3 spikes per trial for
+80% of trials to ensure that there were enough ISIs to reliably estimate the ISI probability density
+functions.
+Statistical tests for non-classical responsiveness
+We used two positive statistical tests for non-classical responsiveness: one to establish a lack of
+tone-modulation, the other to establish a lack of ramping activity. To accommodate the possibility
+of tone onset and offset responses, we performed our tone-modulation test on a 100 ms long tone
+presentation window as well as the 100 ms window immediately after tone presentation. The test
+compared the number of spikes during each of these windows to inter-trial baseline activity as mea-
+sured by three sequential 100 ms windows preceding tone onset. Three windows were chosen to
+account for variability in spontaneous spike counts. Given that spike counts are discrete, bounded,
+and non-normal, we used subsampled bootstrapping to evaluate whether the mean change in spikes
+during tone presentation was sufficiently close to zero (in our case 0.1 spikes). We subsampled 90%
+of the spike count changes from baseline, calculated the mean of these values, and repeated this
+process 5000 times to construct a distribution of means. If 95% of the subsampled means values
+were between �0.1 and 0.1, we considered the cell sensory non-classically responsive (p<0.05). The
+range of mean values from �0.1 to 0.1 were included to account for both tone-evoked (increases in
+spike count) and tone-suppressed (decreases in spike count) activity. The value of 0.1 spikes was
+chosen to be conservative as it is equivalent to an expected change of 1 spike every 10 trials. This is
+a conservative, rigorous method for establishing sensory non-classical responsiveness that is com-
+mensurate with more standard approaches for establishing tone responsiveness such as the z-score.
+To quantify the observed sustained increase or decrease in firing rate preceding the behavioral
+response, a ramp index was calculated adapted from the ‘build-up rate’ used in previous literature31.
+First, the trial averaged firing rate was determined in 50 ms bins leading up to the behavioral
+response. We then calculated the slope of a linear regression in a 500 ms long sliding window begin-
+ning 850 ms before behavioral response. The maximum value of these slopes was used as the ‘ramp
+index’ for each cell. Cells were classified as choice non-classically responsive if the ramp index did
+not indicate an appreciable change in the firing rate (less than 50% change) established via sub-
+sampled bootstrapping. Cells that were shown to be both sensory and choice non-classically respon-
+sive were considered non-classically responsive overall (Figure 4A,B, red circles).
+Additional firing statistics
+Spontaneous average firing rate was established by averaging spikes in a 100 ms time window
+immediately prior to tone onset on each trial. To quantify tone modulated responses observed dur-
+ing stimulus presentation, we calculated z-scores of changes in spike count from 100 ms before tone
+onset to 100 ms during tone presentation:
+z ¼ �
+s
+where � is the mean change in spike count and s is the standard deviation of the change in spike
+count.
+Analysis of receptive field properties
+Receptive fields were constructed by calculating the average change in firing rate from 50 ms before
+tone onset to 50 ms during tone presentation. The window used during tone presentation was iden-
+tical to that used to calculate the z-score. Best frequency was defined as the frequency where the
+largest positive deviation in the evoked firing rate was observed. Tuning curve bandwidth was deter-
+mined by calculating the width of the tuning curve measured at the mean of the maximum and mini-
+mum observed evoked firing rates.
+In vivo whole-cell recordings
+Sprague-Dawley rats 3–5 months old were anesthetized with pentobarbital. Experiments were car-
+ried out in a sound-attenuating chamber. Series of pure tones (70 dB SPL, 0.5–32 kHz, 50 ms, 3 ms
+cosine on/off ramps, inter-tone intervals between 50 and 500 ms) were delivered in pseudo-random
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+21 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ sequence. Primary AC location was determined by mapping multiunit responses 500–700 mm below
+the surface using tungsten electrodes. In vivo whole-cell voltage-clamp recordings were then
+obtained from neurons located 400–1100 mm below the pial surface. Recordings were made with an
+AxoClamp 2B (Molecular Devices). Whole-cell pipettes (5–9 MW) contained (in mM): 125 Cs-gluco-
+nate, 5 TEACl, 4 MgATP, 0.3 GTP, 10 phosphocreatine, 10 HEPES, 0.5 EGTA, 3.5 QX-314, 2 CsCl,
+pH 7.2. Data were filtered at 2 kHz, digitized at 10 kHz, and analyzed with Clampfit 10 (Molecular
+Devices). Tone-evoked excitatory postsynaptic currents were recorded at –70 mV.
+In vitro whole-cell recordings
+Acute brain slices of AC or FR2 were prepared from 2 to 5 month old Sprague-Dawley rats. Animals
+were deeply anesthetized with a 1:1 ketamine/xylazine cocktail and decapitated. The brain was rap-
+idly placed in ice-cold dissection buffer containing (in mM): 87 NaCl, 75 sucrose, 2.5 KCl, 1.25
+NaH2PO4, 0.5 CaCl2, 7 MgCl2, 25 NaHCO3, 1.3 ascorbic acid, and 10 dextrose, bubbled with 95%/
+5% O2/CO2 (pH 7.4). Slices (300–400 mm thick) were prepared with a vibratome (Leica), placed in
+warm dissection buffer (32–35˚C) for 10 min, then transferred to a holding chamber containing artifi-
+cial cerebrospinal fluid at room temperature (ACSF, in mM: 124 NaCl, 2.5 KCl, 1.5 MgSO4, 1.25
+NaH2PO4, 2.5 CaCl2, and 26 NaHCO3,). Slices were kept at room temperature (22–24˚C) for at least
+30 min before use. For experiments, slices were transferred to the recording chamber and perfused
+(2–2.5 ml min�1) with oxygenated ACSF at 33˚C. Somatic whole-cell current-clamp recordings were
+made from layer five pyramidal cells with a Multiclamp 700B amplifier (Molecular Devices) using IR-
+DIC video microscopy (Olympus). Patch pipettes (3–8 MW) were filled with intracellular solution con-
+taining (in mM): 120 K-gluconate, 5 NaCl, 10 HEPES, 5 MgATP, 10 phosphocreatine, and 0.3 GTP.
+Data were filtered at 2 kHz, digitized at 10 kHz, and analyzed with Clampfit 10 (Molecular Devices).
+Focal extracellular stimulation was applied with a bipolar glass electrode (AMPI Master-9, stimulation
+strengths of 0.1–10 V for 0.3 msec). Spike trains recorded from AC and FR2 units during behavior
+were then divided into 150–1000 msec fragments, and used as extracellular input patterns for these
+recordings.
+ISI-based single-trial Bayesian decoding
+Our decoding method was motivated by the following general principles: First, single-trial spike tim-
+ing is one of the only variables available to downstream neurons. Any observations about trial-aver-
+aged activity must ultimately be useful for single-trial decoding, in order to have behavioral
+significance. Second, there may not be obvious structure in the trial-averaged activity to suggest
+how non-classically responsive cells participate in behaviorally-important computations. This consid-
+eration distinguishes our method from other approaches that rely explicitly or implicitly on the PSTH
+for interpretation or decoding (Churchland et al., 2008; Erlich et al., 2011; Jaramillo et al., 2014;
+Jaramillo and Zador, 2011; Murakami et al., 2014; Wiener and Richmond, 2003). Third, we
+required a unified approach capable of decoding from both classically responsive and non-classically
+responsive cells in sensory and frontal areas with potentially different response profiles. Fourth, our
+model should contain as few parameters as possible to account for all relevant behavioral variables
+(stimulus category and behavioral choice). This model-free approach also distinguishes our method
+from others that rely on parametric models of neural activity.
+These requirements motivated our use of ISIs to characterize neuronal activity. For non-classically
+responsive cells with PSTHs that displayed no systematic changes over trials or between task condi-
+tions, the ISI distributions can be variable. The ISI defines spike timing relative to the previous spike
+and thus does not require reference to an external task variable such as tone onset or behavioral
+response. In modeling the distribution of ISIs, we use a non-parametric Kernel Density Estimator that
+avoids assumptions about whether or not firing occurs according to a Poisson (or another) parame-
+terized distribution. We used 10-fold cross validation to estimate the bandwidth of the Gaussian ker-
+nel in a data-driven manner. Finally, the use of the ISI was also motivated by previous work
+demonstrating that the ISI can encode sensory information (Lundstrom and Fairhall, 2006;
+Reich et al., 2000; Zuo et al., 2015) and that precise spike timing has been shown to be important
+for sensory processing in rat auditory cortex (DeWeese et al., 2003; Lu and Wang, 2004). Our
+data-driven method combines (1) non-parametric statistical procedures (Kernel Density Estimation),
+(2) use of the ISI as the response variable of interest (rather than an estimate of the instantaneous
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+22 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ firing rate locked to an external task variable), and (3) single-trial decoding via Bayesian inference
+rendering it a novel decoder capable of decoding responsive as well as non-classically responsive
+activity from any brain region.
+Training probabilistic model
+Individual trials were defined as the time from stimulus onset to the response time of the animal (or
+average response time in the case of no-go trials). Trials were divided into four categories corre-
+sponding to each of the four possible variable combinations (target/go, target/no-go, non-target/
+go, non-target/no-go). Approximately 90% of each category was set aside as a training set in order
+to determine the statistical relationship between the ISI and the two task variables (stimulus cate-
+gory, behavioral choice).
+Each ISI observed was sorted into libraries according to the stimulus category and behavioral
+choice of the trial. The continuous probability distribution of finding a particular ISI given the task
+condition of interest (target or non-target, go or no-go) was then inferred using nonparametric Ker-
+nel Density Estimation with a Gaussian kernel of bandwidth set using a 10-fold cross-validation
+(Jones et al., 1996). Because the domain of the distribution of ISIs is by definition positive (ISI > 0),
+the logarithm of the ISI was used to transform the domain to all real numbers. In the end, we pro-
+duced four continuous probability distributions quantifying the probability of observing an ISI on a
+trial of a given type: p(ISI|target), p(ISI|non-target), p(ISI|go), and p(ISI|no-go). These distributions
+were estimated in a 1 s long sliding window (recalculated every 100 ms) starting at the beginning of
+the trial and ending at the end of the trial to account for dynamic changes in the ISI distributions
+over the course of the trial. These likelihood functions assume that the observed ISIs are indepen-
+dent of the previous spiking history of the cell. While this assumption is violated in practice, estima-
+tion of the joint probability of an ISI and previous ISIs using non-parametric methods was infeasible
+given to the limited number of ISI combinations observed over the session without including addi-
+tional assumptions about the correlation structure between ISIs.
+Decoding
+The remaining 10% of trials in the test set are then decoded using the ISI likelihood function
+described in the previous section. Each trial begins with agnostic beliefs about the stimulus category
+and the upcoming behavioral choice (p(target)=p(non-target)=50%). Each time an ISI was observed,
+beliefs were updated according to Bayes’ rule with the four probability distributions obtained in the
+previous section serving as the likelihood function. To update beliefs in the probability of the target
+tone when a particular ISI has been observed, we used the following relationship:
+p targetjISI; t
+ð
+Þ ¼
+p ISIjtarget; t
+ð
+Þp target; t
+ð
+Þ
+p ISIjtarget; t
+ð
+Þp target; t
+ð
+Þ þ p ISIjnon � target;t
+ð
+Þp non � target;t
+ð
+Þ
+On the left hand side are the updated beliefs about the probability of a target. When the next ISI
+is observed this value would be inserted as p(target, t) on the right side of the equation and updated
+once more. Using the probability normalization, p(non-target, t) can be determined,
+p target; t
+ð
+Þ þ p non � target;t
+ð
+Þ ¼ 1
+Similarly, for choice,
+p gojISI; t
+ð
+Þ ¼
+p ISIjgo; t
+ð
+Þp go; t
+ð
+Þ
+p ISIjgo; t
+ð
+Þp go; t
+ð
+Þ þ p ISIjno� go;t
+ð
+Þp no� go;t
+ð
+Þ
+and
+p go; t
+ð
+Þ þ p no � go;t
+ð
+Þ ¼ 1
+As the likelihood functions were estimated in 1 s long sliding windows recalculated every 100 ms,
+Each ISI was assessed using the likelihood function that placed the final spike closest to the center of
+the sliding window.
+Continuing this process over the course of the trial, we obtain four probabilities – one for each of
+the variable outcomes – as a function of time during the trial: p(target, t), p(non-target, t), p(go, t),
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+23 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ and p(no-go, t). At each moment, the total probability of both stimuli and both choices are 1. The
+prediction for the entire trial was assessed at the end of the trial, using the overall likelihood func-
+tion. Given our independence assumption, the overall likelihood for a spike train is simply equal to
+product of the likelihoods for each ISI observed over the course of the trial,
+p
+ISIi
+f
+g
+ð
+jtargetÞ ¼
+Y
+n
+i¼1
+p ISIi
+ð
+j target; tiÞ:
+We used 10-fold cross-validation, meaning the trials in the four stimulus categories were ran-
+domly divided into ten parts and each part took a turn acting as the test set with the remaining 90%
+of trials acting as a training set. To estimate the statistical certainty of these results we used boot-
+strapping with 124 repetitions (except in the case of the null hypotheses where 1240 repetitions
+were used).
+Ensemble decoding
+Ensemble decoding proceeded very similarly to the single-unit case. The ISI probability distributions
+for each neuron in the ensemble were calculated independently as described above. However, while
+decoding a given trial, the spike trains of all neurons in the ensemble were used to simultaneously
+update the beliefs about stimulus category and behavioral choice. In other words, p(stimulus, t) and
+p(choice, t) were shared for the entire ensemble but each neuron updated them independently using
+Bayes’ rule whenever a new ISI was encountered. Correlations between neurons were ignored and
+each of the ISIs from each cell were assumed to were assumed to be independent. For example, if
+an ISI is observed at time t from neuron j with a likelihood pj:
+p targetjISI; t
+ð
+Þ ¼
+pj ISIjtarget; t
+ð
+Þp target; t
+ð
+Þ
+pj ISIjtarget; t
+ð
+Þp target; t
+ð
+Þ þ pj ISIjnon � target;t
+ð
+Þp non � target;t
+ð
+Þ
+This process is repeated every time a new ISI is encountered from any cell in the ensemble.
+The joint likelihood of observing a set of ISIs during a trial is then the product of the likelihoods
+of each neuron independently. For example, for a two neuron ensemble, the combined likelihood,
+p12, of observing the set ISIi
+f
+g1 from neuron 1 and ISIi
+f
+g2 from neuron 2 is:
+p12
+ISIi
+f
+g1; ISIi
+f
+g2
+�
+�
+�targetÞ ¼ p1
+ISIi
+f
+g1
+�
+�
+� targetÞp2
+ISIi
+f
+g2
+�
+�
+� targetÞ
+where pj is the likelihood of observing a given set of ISIs from neuron j.
+Synthetic spike trains
+To test the null hypothesis that the ISI-based single-trial Bayesian decoder performance was indistin-
+guishable from chance, synthetic spike trains were constructed for each trial of a given unit by ran-
+domly sampling with replacement from the set of all observed ISIs regardless of the original task
+variable values (synthetic spike trains, Figure 4E). In principle under this condition, ISIs should no
+longer bear any relationship to the task variables and decoding performance should be close to
+50%. For single-unit responses, this randomization was completed 1240 times. Significance from the
+null was assessed by a direct comparison to the 124 bootstrapped values observed from the true
+data to the 1240 values observed under the null hypotheses. The p-value was determined as the
+probability of finding a value from this synthetic condition that produced better decoding perfor-
+mance than the values actually observed as in a standard permutation test.
+As a secondary control, we used a traditional permutation test whereby observed spike trains
+were left intact, but the task variables that correspond to each spike train were randomly permuted
+(condition permutation, Figure 4F). This process was completed 1240 times.
+Rate-modulated Poisson decoding
+To decode using the trial-averaged firing rate, we implemented a standard method (Rieke et al.,
+1999) which uses the probability of observing a set of n spikes at times t1, . . ., tn assuming those
+spikes were generated by a rate-modulated Poisson process (Figure 4—figure supplement 4). Just
+as with this ISI-based decoder, we decoded activity from the entire trial. First, we use a training set
+comprising 90% of trials to estimate the time-varying firing rate for each condition from the PSTH
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+24 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ (rtarget t
+ð Þ; rnon�target t
+ð Þ; rgo t
+ð Þ; rno�go t
+ð ÞÞ by Kernel Density Estimation with 10-fold cross-validation. The
+remaining 10% of spike trains are then decoded using the probability of observing each spike train
+on each condition assuming they were generated according to a rate-modulated Poisson process:
+p
+ti
+f g
+ð
+jtargetÞ ¼ 1
+N! rtarget t1
+ð Þ rtarget t2
+ð Þ...rtarget tn
+ð Þ
+�
+�
+exp �
+Z Tf
+Ti
+rtarget t
+ð Þ dt
+�
+�
+;
+where Ti and Tf are the beginning and end of the trial respectively. This likelihood function is
+straightforward to interpret: the first product is the probability of observing spikes the spikes at the
+times they were observed (where the 1/N! term serves to divide out by the number of permutations
+of spike labels) and the exponential term represents the probability of silence in the periods
+between spikes. For comparison with our method, we can reformulate this equation using interspike
+intervals, if we first break up the exponential integral into domains that span the observed interspike
+intervals.
+p
+ti
+f gjtarget
+ð
+Þ
+¼ 1
+N! rtarget t1
+ð Þexp �
+R t1
+Ti rtarget t
+ð Þ dt
+�
+�
+�
+�
+� rtarget t2
+ð Þexp �
+R t2
+t1 rtarget t
+ð Þ dt
+�
+�
+�
+�
+... � exp �
+R Tf
+tn rtarget t
+ð Þ dt
+�
+�
+�
+�
+:
+Collecting the first and last terms relating to trial start and trial end as
+Li t1; Ti
+ð
+Þ � rtarget t1
+ð Þexp �
+Z t1
+Ti
+rtarget t
+ð Þ dt
+�
+�
+Lf tn;Tf
+�
+�
+� exp �
+Z Tf
+tn
+rtarget t
+ð Þ dt
+�
+�
+;
+this becomes
+p
+ti
+f g
+ð
+jtargetÞ ¼ 1
+N!Li
+Y
+n�1
+i¼1
+rtarget ti þ Dti
+ð
+Þ exp �
+Z tiþDti
+ti
+rtarget t
+ð Þ dt
+�
+�
+ 
+!
+Lf ;
+where Dti is the time difference between spikes ti and ti+1. The interpretation of each term in the
+product is straightforward: it is the infinitesimal probability of observing a spike a time Dt after a
+spike at time t multiplied by the probability of observing no spikes in the intervening time. In other
+words, it is simply p ISI
+ð
+j target;tÞ, the probability of observing an ISI conditioned on observing the
+first spike at time t, as predicted by the assumption of a rate-modulated Poisson process. We can
+easily verify that this term is normalized which allows us to write,
+p ISI
+ð
+j target;tÞ ¼ rtarget t þ ISI
+ð
+Þ exp �
+Z tþISI
+t
+rtarget t
+ð Þ dt
+�
+�
+:
+With the exception of the terms relating to trial start and end, we can then view the likelihood of a
+spike train as resulting from the likelihood of the individual ISIs (just as with our ISI-decoder),
+p
+ti
+f g
+ð
+jtargetÞ ¼ 1
+N!Li Lf
+Y
+n�1
+i¼1
+p ISIi
+ð
+j target; ti
+ 
+!
+Þ;
+with the key difference that these ISI probabilities are inferred from the firing rate rather than esti-
+mated directly using non-parametric methods.
+Inferring the ISI distribution predicted by a rate-modulated Poisson
+process
+To compare the ISI distribution inferred using non-parametric methods to one predicted by a rate-
+modulated Poisson process, we use the relationship above to calculate the predicted probability of
+observing an ISI of given length within the 1 s window used for our non-parametric estimates. The
+formula above assumes a spike has already occurred at time t, so we multiply by the probability of
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+25 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ observing a spike at time t, p t j target
+ð
+Þ ¼ rtarget t
+ð Þ, to obtain the total probability of finding an ISI at
+any given point in the trial.
+p ISI; tj target
+ð
+Þ ¼ p ISI
+ð
+j target;tÞpðtjtargetÞ
+¼ rtarget t
+ð Þ rtarget t þ ISI
+ð
+Þ exp �
+R tþISI
+t
+rtarget t
+ð Þ dt
+�
+�
+:
+In other words, the probability of observing an ISI beginning at time t is simply the probability of
+observing spikes at times t and t + ISI with silence in between.
+The probability of observing an ISI at any time within a time window spanning wi to wf is simply
+the integral of this ISI probability as a function of time across the window. To ensure the final spike
+occurs before wf the integral spans wi to (wf - ISI),
+pðISIjwI;wf ;targetÞ ¼ C�1
+Z wf �ISI
+wi
+pðISI;tjtargetÞdt
+where C is a normalization constant which ensures p(ISI | wi, wf, target) integrates to 1,
+C ¼
+Z wf �wi
+0
+Z wf �ISI
+wi
+pðISI;tjtargetÞdt
+�
+�
+dISI:
+Regression-based method for verifying multiplexing
+For each cell, we fit a Logit model for both the stimulus and choice decoding probabilities on indi-
+vidual trials with the true stimulus category and behavioral choice as regressors. We then calculated
+the extent to which the stimulus decoding probability was determined by true stimulus category by
+subtracting the regression coefficient for stimulus from that of choice (Figure 4—figure supplement
+3A,x-axis, stimulus selectivity index); when this number is positive it indicates that stimulus was a
+stronger predictor of stimulus decoding on a trial-by-trial basis. The same process was repeated for
+choice (Figure 4—figure supplement 3A,y-axis, choice selectivity index). According to this analysis,
+we took multiplexed cells to be those that were positive for both measures (Figure 4—figure sup-
+plement 3A, orange symbols, 19/90 cells). In other words, multiplexed cells were cells for which
+stimulus decoding probabilities were primarily a result of true stimulus category and choice decod-
+ing probabilities were primarily a result of true behavioral choice.
+Given the moderate negative correlation for these indices, we projected each of these points
+onto their linear regression to create a one-dimensional regression-based uniplexing index. Cells
+with a value near zero are the multiplexed cells described above and cells with positive or negative
+values are primarily stimulus or choice selective (Figure 4—figure supplement 3A).
+We compared the uniplexing values produced by this regression method to those produced by
+examining only the average decoding performance for stimulus and choice (Figure 4—figure sup-
+plement 3B). A decoding-based uniplexing index was defined as the difference between average
+stimulus and choice decoding for each cell. When these two values are comparable, this measure
+returns a value close to zero and the cell is considered multiplexed; moreover, cells that are uni-
+plexed for stimulus or choice receive positive and negative values, respectively, just as with the
+regression-based measure. While the overall magnitude of these two measures need not be related,
+both measures of multi/uniplexing rank cells on a one-dimensional axis from choice uniplexed to
+multiplexed to stimulus uniplexed centered on zero.
+Weighted log likelihood ratio
+The log likelihood ratio (LLR) was calculated by first calculating the conditional ISI probabilities and
+then taking the difference of the logarithm of these distributions. For stimulus,
+LLRstimulus ISI
+ð
+Þ ¼ log2 p ISIjtarget
+ð
+Þ
+ð
+Þ � log2 p ISIjnon � target
+ð
+Þ
+ð
+Þ;
+and for choice,
+LLRchoice ISI
+ð
+Þ ¼ log2 p ISIjgo
+ð
+Þ
+ð
+Þ � log2 p ISIjno � go
+ð
+Þ
+ð
+Þ:
+The weighted LLR weights the LLR according to the prevalence of a given ISI. For stimulus,
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+26 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ W:LLRstimulus ISI
+ð
+Þ ¼ p ISI
+ð
+Þ log2 p ISIjtarget
+ð
+Þ
+ð
+Þ � log2 p ISIjnon � target
+ð
+Þ
+ð
+Þ
+½
+�;
+and for choice,
+W:LLRchoice ISI
+ð
+Þ ¼ p ISI
+ð
+Þ log2 p ISIjgo
+ð
+Þ
+ð
+Þ � log2 p ISIjno � go
+ð
+Þ
+ð
+Þ
+½
+�:
+Consensus and unsigned consensus
+The consensus value evaluates the extent to which the LLR (or weighted LLR) is shared across an
+ensemble. It is the norm of the sum of the LLRs (W. LLRs) divided by the sum of the norms. In princi-
+ple, the functional norm can be anything but in this case we used the l1 norm (the absolute area
+under the curve),
+f
+k k1�
+Z
+f x
+ð Þ
+j
+j dx:
+The for an n-member ensemble, the consensus is then
+Consensus �
+P
+n
+i¼1
+LLRi
+�
+�
+�
+�
+�
+�
+�
+�
+1
+P
+n
+i¼1
+LLRi
+k
+k1
+:
+For the unsigned consensus, we first generate every permutation of the LLRs used and their inver-
+ses, -LLR, up to an overall sign. For example, for a pair of LLRs there are only two options,
+ðLLR1;LLR2ÞorðLLR1;�LLR2Þ;
+and for three LLRs there are four options,
+ðLLR1;LLR2;LLR3Þ;ð�LLR1;LLR2;LLR3Þ;ðLLR1;�LLR2;LLR3Þ; orðLLR1;LLR2;�LLR3Þ
+The consensus is then calculated over each these sets and the maximum value is taken to be the
+value of the unsigned consensus.
+To generate the consensus curves in Figure 8, LLRs are calculated using a 750 ms sliding window
+recalculated every 100 ms. The resulting consensus value is assigned to the center of the 750 ms
+window. For visual clarity, these values were interpolated by a third-degree univariate spline calcu-
+lated using the python package scipy.interpolate.InterpolatedUnivariateSpline (this technique is
+guaranteed to intercept the measured values).
+Analysis of Rodgers and DeWeese (2014) dataset
+Using our novel ISI-based decoding algorithm, we analyzed cells found to be non-classically respon-
+sive in a previously published study (Rodgers and DeWeese, 2014). Briefly, rats were trained on a
+novel auditory stimulus selection task where animals had to respond to one of two cues while ignor-
+ing the other depending on the context. Rats held their nose in a center port for 250 to 350 ms and
+were then presented with two simultaneous sounds (a white noise burst played from only the left or
+right speaker and a high- or low-pitched warble played from both speakers). In the ‘localization’ con-
+text, animals were trained to ignore the warble and respond to the location of the white noise burst
+and in the ‘pitch’ context they were trained to ignore the location of the white noise burst and
+respond to the pitch of the warble. Cells recorded from both primary auditory cortex and prefrontal
+cortex (prelimbic region) were shown to be classically responsive to the selection rule during the
+pre-stimulus period (i.e. firing rates differed between the two contexts). Non-classically responsive
+cells were reported but not further analyzed.
+We established that cells were non-classically responsive for the stimulus location or pitch using
+our own positive statistical criteria for non-classical responsiveness (described above) by comparing
+the average spiking activity in the 250 ms stimulus period and the 250 ms following stimulus to inter-
+trial baseline activity. Cells were also determined to be non-classically responsive for ramping using
+the same criteria as with our own data. We confirmed that cells were non-classically responsive for
+the selection rule by comparing their average spiking activity in the 100 ms immediately preceding
+stimulus onset across contexts.
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+27 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ To determine whether non-classically responsive cells also encoded task information (stimulus
+location, stimulus pitch, behavioral choice, and the selection rule), we decoded each variable on sin-
+gle-trials using our ISI-based decoding algorithm. Selection rule information was only assessed in the
+pre-stimulus hold period, whereas stimulus and choice information was assessed in the period after
+stimulus onset prior to behavioral response (as with our own data). Cells shown in Figure 5B were
+deemed statistically significant when compared to the decoding performance of a control using syn-
+thetically generated data (p<0.05).
+Statistical analysis
+All statistical analyses were performed in Python, MATLAB, or GraphPad Prism 6. Datasets were
+tested for normality, and appropriate statistical tests applied as described in the text (e.g. Student’s
+paired t-test for normally distributed data, Mann-Whitney U test for unmatched non-parametric
+data, and Wilcoxon matched-pairs signed rank test for matched non-parametric data).
+Code and sample data availability
+https://github.com/badralbanna/Insanally2017 (Albanna, 2019; copy archived at https://github.
+com/elifesciences-publications/Insanally2017).
+Acknowledgements
+We thank E Simoncelli, ND Daw, CS Peskin, AA Fenton, E Kelemen, K Kuchibhotla, E Morina, M Aoi,
+and A Charles for comments, discussions, and technical assistance, and CA Loomis and the NYU
+School of Medicine Histology Core for assistance with anatomical studies. Shari E Ross produced the
+illustration in Figure 1A. This work was funded by an NYU Provost’s Postdoctoral Fellowship and
+NIDCD (DC015543-01A1) to MNI; a NARSAD Young Investigators Award, NIMH (T32), and NIMH
+(KMH106744A) to IC; a James McDonnell Understanding Human Cognition Scholar Award to KR; a
+Fordham University Grant for Cloud Based Computing Research Projects to BFA; and NIDCD
+(DC009635 and DC012557), the NYU Grand Challenge Award, a Howard Hughes Medical Institute
+Faculty Scholarship, a Hirschl/Weill-Caulier Career Award, and a Sloan Research Fellowship to RCF
+The authors declare no competing financial interests.
+Additional information
+Funding
+Funder
+Grant reference number
+Author
+National Institute on Deafness
+and Other Communication
+Disorders
+DC015543
+Michele N Insanally
+New York University
+Provost’s Postdoctoral
+Fellowship
+Michele N Insanally
+National Alliance for Research
+on Schizophrenia and Depres-
+sion
+Young Investigators Award
+Ioana Carcea
+National Institute of Mental
+Health
+T32
+Ioana Carcea
+National Institute of Mental
+Health
+KMH106744A
+Ioana Carcea
+James S. McDonnell Founda-
+tion
+Understanding Human
+Cognition Scholar Award
+Kanaka Rajan
+Fordham University
+Grant for Cloud Based
+Computing Research
+Projects
+Badr F Albanna
+Howard Hughes Medical Insti-
+tute
+Faculty Scholarship
+Robert C Froemke
+Alfred P. Sloan Foundation
+Sloan Research Fellowship
+Robert C Froemke
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+28 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ National Institute on Deafness
+and Other Communication
+Disorders
+DC009635
+Robert C Froemke
+National Institute on Deafness
+and Other Communication
+Disorders
+DC012557
+Robert C Froemke
+New York University
+Grand Challenge Award
+Robert C Froemke
+Albert Einstein College of
+Medicine
+Hirschl/Weill-Caulier Career
+Award,
+Robert C Froemke
+The funders had no role in study design, data collection and interpretation, or the
+decision to submit the work for publication.
+Author contributions
+Michele N Insanally, Conceptualization, Resources, Data curation, Software, Formal analysis, Funding
+acquisition, Validation, Investigation, Visualization, Methodology, Writing—original draft, Project
+administration, Writing—review and editing; Ioana Carcea, Funding acquisition, Investigation, Meth-
+odology, Writing—review and editing; Rachel E Field, Chris C Rodgers, Investigation; Brian DePas-
+quale, Kanaka Rajan, Software, Formal analysis, Methodology, Writing—review and editing; Michael
+R DeWeese, Conceptualization, Software, Supervision, Methodology, Writing—review and editing;
+Badr F Albanna, Conceptualization, Resources, Data curation, Software, Formal analysis, Funding
+acquisition, Validation, Investigation, Methodology, Writing—review and editing; Robert C Froemke,
+Conceptualization, Supervision, Funding acquisition, Project administration, Writing—review and
+editing
+Author ORCIDs
+Brian DePasquale
+http://orcid.org/0000-0002-3830-3184
+Badr F Albanna
+http://orcid.org/0000-0002-5536-6443
+Robert C Froemke
+http://orcid.org/0000-0002-1230-6811
+Ethics
+Animal experimentation: All animal procedures were performed in accordance with National Insti-
+tutes of Health standards and were conducted under a protocol (#160611-03) approved by the New
+York University School of Medicine Institutional Animal Care and Use Committee.
+Decision letter and Author response
+Decision letter https://doi.org/10.7554/eLife.42409.028
+Author response https://doi.org/10.7554/eLife.42409.029
+Additional files
+Supplementary files
+. Transparent reporting form
+DOI: https://doi.org/10.7554/eLife.42409.026
+Data availability
+The code and data underlying our analyses are freely available online (https://github.com/badral-
+banna/Insanally2017; copy archived at https://github.com/elifesciences-publications/Insanally2017).
+The following datasets were generated:
+References
+Albanna B. 2019. Code Used for Analysis in Insanally, Et Al 2019, "Spike-Timing-Dependent Ensemble Encoding
+by Non-Classically Responsive Cortical Neurons". eLife, 2019.. cd77550. GitHub. https://github.com/
+badralbanna/Insanally2017
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+29 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ Carcea I, Insanally MN, Froemke RC. 2017. Dynamics of auditory cortical activity during behavioural engagement
+and auditory perception. Nature Communications 8:14412. DOI: https://doi.org/10.1038/ncomms14412,
+PMID: 28176787
+Churchland AK, Kiani R, Shadlen MN. 2008. Decision-making with multiple alternatives. Nature Neuroscience 11:
+693–702. DOI: https://doi.org/10.1038/nn.2123, PMID: 18488024
+David SV, Fritz JB, Shamma SA. 2012. Task reward structure shapes rapid receptive field plasticity in auditory
+cortex. PNAS 109:2144–2149. DOI: https://doi.org/10.1073/pnas.1117717109
+DeWeese MR, Wehr M, Zador AM. 2003. Binary spiking in auditory cortex. The Journal of Neuroscience 23:
+7940–7949. DOI: https://doi.org/10.1523/JNEUROSCI.23-21-07940.2003, PMID: 12944525
+Erlich JC, Bialek M, Brody CD. 2011. A cortical substrate for memory-guided orienting in the rat. Neuron 72:
+330–343. DOI: https://doi.org/10.1016/j.neuron.2011.07.010, PMID: 22017991
+Fritz J, Shamma S, Elhilali M, Klein D. 2003. Rapid task-related plasticity of spectrotemporal receptive fields in
+primary auditory cortex. Nature Neuroscience 6:1216–1223. DOI: https://doi.org/10.1038/nn1141, PMID: 145
+83754
+Fritz JB, David SV, Radtke-Schuller S, Yin P, Shamma SA. 2010. Adaptive, behaviorally gated, persistent
+encoding of task-relevant auditory information in ferret frontal cortex. Nature Neuroscience 13:1011–1019.
+DOI: https://doi.org/10.1038/nn.2598, PMID: 20622871
+Froemke RC, Carcea I, Barker AJ, Yuan K, Seybold BA, Martins AR, Zaika N, Bernstein H, Wachs M, Levis PA,
+Polley DB, Merzenich MM, Schreiner CE. 2013. Long-term modification of cortical synapses improves sensory
+perception. Nature Neuroscience 16:79–88. DOI: https://doi.org/10.1038/nn.3274, PMID: 23178974
+Gimenez TL, Lorenc M, Jaramillo S. 2015. Adaptive categorization of sound frequency does not require the
+auditory cortex in rats. Journal of Neurophysiology 114:1137–1145. DOI: https://doi.org/10.1152/jn.00124.
+2015, PMID: 26156379
+Hangya B, Ranade SP, Lorenc M, Kepecs A. 2015. Central cholinergic neurons are rapidly recruited by
+reinforcement feedback. Cell 162:1155–1168. DOI: https://doi.org/10.1016/j.cell.2015.07.057
+Hanks TD, Kopec CD, Brunton BW, Duan CA, Erlich JC, Brody CD. 2015. Distinct relationships of parietal and
+prefrontal cortices to evidence accumulation. Nature 520:220–223. DOI: https://doi.org/10.1038/nature14066,
+PMID: 25600270
+Hroma
+´dka T, Deweese MR, Zador AM. 2008. Sparse representation of sounds in the unanesthetized auditory
+cortex. PLOS Biology 6:e16. DOI: https://doi.org/10.1371/journal.pbio.0060016, PMID: 18232737
+Hubel DH, Henson CO, Rupert A, Galambos R. 1959. Attention units in the auditory cortex. Science 129:1279–
+1280. DOI: https://doi.org/10.1126/science.129.3358.1279, PMID: 13658956
+Izhikevich EM. 2000. Neural excitability, spiking and bursting. International Journal of Bifurcation and Chaos 10:
+1171–1266. DOI: https://doi.org/10.1142/S0218127400000840
+Jaramillo S, Borges K, Zador AM. 2014. Auditory thalamus and auditory cortex are equally modulated by context
+during flexible categorization of sounds. Journal of Neuroscience 34:5291–5301. DOI: https://doi.org/10.1523/
+JNEUROSCI.4888-13.2014, PMID: 24719107
+Jaramillo S, Zador AM. 2011. The auditory cortex mediates the perceptual effects of acoustic temporal
+expectation. Nature Neuroscience 14:246–251. DOI: https://doi.org/10.1038/nn.2688, PMID: 21170056
+Jones MC, Marron JS, Sheather SJ. 1996. A brief survey of bandwidth selection for density estimation. Journal of
+the American Statistical Association 91:401–407. DOI: https://doi.org/10.1080/01621459.1996.10476701
+Kadia SC, Wang X. 2003. Spectral integration in A1 of awake primates: neurons with single- and multipeaked
+tuning characteristics. Journal of Neurophysiology 89:1603–1622. DOI: https://doi.org/10.1152/jn.00271.2001,
+PMID: 12626629
+Kiani R, Shadlen MN. 2009. Representation of confidence associated with a decision by neurons in the parietal
+cortex. Science 324:759–764. DOI: https://doi.org/10.1126/science.1169405, PMID: 19423820
+King J, Shehu I, Roland JT, Svirsky MA, Froemke RC. 2016. A physiological and behavioral system for hearing
+restoration with cochlear implants. Journal of Neurophysiology 116:844–858. DOI: https://doi.org/10.1152/jn.
+00048.2016, PMID: 27281743
+Kuchibhotla KV, Gill JV, Lindsay GW, Papadoyannis ES, Field RE, Sten TA, Miller KD, Froemke RC. 2017. Parallel
+processing by cortical inhibition enables context-dependent behavior. Nature Neuroscience 20:62–71.
+DOI: https://doi.org/10.1038/nn.4436, PMID: 27798631
+Leavitt ML, Pieper F, Sachs AJ, Martinez-Trujillo JC. 2017. Correlated variability modifies working memory
+fidelity in primate prefrontal neuronal ensembles. PNAS 114:E2494–E2503. DOI: https://doi.org/10.1073/pnas.
+1619949114, PMID: 28275096
+Lu T, Wang X. 2004. Information content of auditory cortical responses to time-varying acoustic stimuli. Journal
+of Neurophysiology 91:301–313. DOI: https://doi.org/10.1152/jn.00022.2003, PMID: 14523081
+Lundstrom BN, Fairhall AL. 2006. Decoding stimulus variance from a distributional neural code of interspike
+intervals. Journal of Neuroscience 26:9030–9037. DOI: https://doi.org/10.1523/JNEUROSCI.0225-06.2006,
+PMID: 16943561
+Markram H, Tsodyks M. 1996. Redistribution of synaptic efficacy between neocortical pyramidal neurons. Nature
+382:807–810. DOI: https://doi.org/10.1038/382807a0, PMID: 8752273
+Martins AR, Froemke RC. 2015. Coordinated forms of noradrenergic plasticity in the locus coeruleus and primary
+auditory cortex. Nature Neuroscience 18:1483–1492. DOI: https://doi.org/10.1038/nn.4090, PMID: 26301326
+Merzenich MM, Knight PL, Roth GL. 1975. Representation of cochlea within primary auditory cortex in the cat.
+Journal of Neurophysiology 38:231–249. DOI: https://doi.org/10.1152/jn.1975.38.2.231, PMID: 1092814
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+30 of 31
+Research article
+Computational and Systems Biology
+Neuroscience
+ Murakami M, Vicente MI, Costa GM, Mainen ZF. 2014. Neural antecedents of self-initiated actions in secondary
+motor cortex. Nature Neuroscience 17:1574–1582. DOI: https://doi.org/10.1038/nn.3826, PMID: 25262496
+Nelson A, Mooney R. 2016. The basal forebrain and motor cortex provide convergent yet distinct Movement-
+Related inputs to the auditory cortex. Neuron 90:635–648. DOI: https://doi.org/10.1016/j.neuron.2016.03.031,
+PMID: 27112494
+Olshausen BA, Field DJ. 2006. What is the other 85% of V1 doing? In: Sejnowski T. J, van Hemmen L (Eds). 23
+Problems in Systems Neuroscience. Oxford University Press. p. 182–221.
+Otazu GH, Tai LH, Yang Y, Zador AM. 2009. Engaging in an auditory task suppresses responses in auditory
+cortex. Nature Neuroscience 12:646–654. DOI: https://doi.org/10.1038/nn.2306, PMID: 19363491
+Polley DB, Read HL, Storace DA, Merzenich MM. 2007. Multiparametric auditory receptive field organization
+across five cortical fields in the albino rat. Journal of Neurophysiology 97:3621–3638. DOI: https://doi.org/10.
+1152/jn.01298.2006, PMID: 17376842
+Raposo D, Kaufman MT, Churchland AK. 2014. A category-free neural population supports evolving demands
+during decision-making. Nature Neuroscience 17:1784–1792. DOI: https://doi.org/10.1038/nn.3865, PMID: 253
+83902
+Reich DS, Mechler F, Purpura KP, Victor JD. 2000. Interspike intervals, receptive fields, and information encoding
+in primary visual cortex. The Journal of Neuroscience 20:1964–1974. DOI: https://doi.org/10.1523/JNEUROSCI.
+20-05-01964.2000
+Rieke F, Warland D, Bialek W. 1999. Spikes: Exploring the Neural Code. MIT Press.
+Rigotti M, Barak O, Warden MR, Wang XJ, Daw ND, Miller EK, Fusi S. 2013. The importance of mixed selectivity
+in complex cognitive tasks. Nature 497:585–590. DOI: https://doi.org/10.1038/nature12160, PMID: 23685452
+Rodgers CC, DeWeese MR. 2014. Neural correlates of task switching in prefrontal cortex and primary auditory
+cortex in a novel stimulus selection task for rodents. Neuron 82:1157–1170. DOI: https://doi.org/10.1016/j.
+neuron.2014.04.031, PMID: 24908492
+Schneider DM, Nelson A, Mooney R. 2014. A synaptic and circuit basis for corollary discharge in the auditory
+cortex. Nature 513:189–194. DOI: https://doi.org/10.1038/nature13724, PMID: 25162524
+Schneider DM, Sundararajan J, Mooney R. 2018. A cortical filter that learns to suppress the acoustic
+consequences of movement. Nature 561:391–395. DOI: https://doi.org/10.1038/s41586-018-0520-5
+Wehr M, Zador AM. 2003. Balanced inhibition underlies tuning and sharpens spike timing in auditory cortex.
+Nature 426:442–446. DOI: https://doi.org/10.1038/nature02116, PMID: 14647382
+Weinberger NM. 2007. Auditory associative memory and representational plasticity in the primary auditory
+cortex. Hearing Research 229:54–68. DOI: https://doi.org/10.1016/j.heares.2007.01.004, PMID: 17344002
+Wiener MC, Richmond BJ. 2003. Decoding spike trains instant by instant using order statistics and the mixture-
+of-Poissons model. The Journal of Neuroscience 23:2394–2406. DOI: https://doi.org/10.1523/JNEUROSCI.23-
+06-02394.2003, PMID: 12657699
+Yaron A, Hershenhoren I, Nelken I. 2012. Sensitivity to complex statistical regularities in rat auditory cortex.
+Neuron 76:603–615. DOI: https://doi.org/10.1016/j.neuron.2012.08.025, PMID: 23141071
+Zuo Y, Safaai H, Notaro G, Mazzoni A, Panzeri S, Diamond ME. 2015. Complementary contributions of spike
+timing and spike rate to perceptual decisions in rat S1 and S2 cortex. Current Biology 25:357–363.
+DOI: https://doi.org/10.1016/j.cub.2014.11.065, PMID: 25619766
+Zylberberg J. 2018. The role of untuned neurons in sensory information coding. BioRxiv. DOI: https://doi.org/10.
+1101/134379
+Insanally et al. eLife 2019;8:e42409. DOI: https://doi.org/10.7554/eLife.42409
+31 of 31
+Research article
+Computational and Systems Biology
+Neuroscience

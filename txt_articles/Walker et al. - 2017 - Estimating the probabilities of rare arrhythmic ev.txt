@@ -1,0 +1,1459 @@
+ RESEARCH ARTICLE
+Estimating the probabilities of rare arrhythmic
+events in multiscale computational models of
+cardiac cells and tissue
+Mark A. Walker1, Viatcheslav Gurev2, John J. Rice2, Joseph L. Greenstein1, Raimond
+L. Winslow1*
+1 Department of Biomedical Engineering and Institute for Computational Medicine, Johns Hopkins University,
+Baltimore, MD, United States of America, 2 TJ Watson Research Center, IBM, Yorktown Heights, NY, United
+States of America
+* rwinslow@jhu.edu
+Abstract
+Ectopic heartbeats can trigger reentrant arrhythmias, leading to ventricular fibrillation and sud-
+den cardiac death. Such events have been attributed to perturbed Ca2+ handling in cardiac
+myocytes leading to spontaneous Ca2+ release and delayed afterdepolarizations (DADs).
+However, the ways in which perturbation of specific molecular mechanisms alters the proba-
+bility of ectopic beats is not understood. We present a multiscale model of cardiac tissue incor-
+porating a biophysically detailed three-dimensional model of the ventricular myocyte. This
+model reproduces realistic Ca2+ waves and DADs driven by stochastic Ca2+ release channel
+(RyR) gating and is used to study mechanisms of DAD variability. In agreement with previous
+experimental and modeling studies, key factors influencing the distribution of DAD amplitude
+and timing include cytosolic and sarcoplasmic reticulum Ca2+ concentrations, inwardly rectify-
+ing potassium current (IK1) density, and gap junction conductance. The cardiac tissue model
+is used to investigate how random RyR gating gives rise to probabilistic triggered activity in a
+one-dimensional myocyte tissue model. A novel spatial-average filtering method for estimat-
+ing the probability of extreme (i.e. rare, high-amplitude) stochastic events from a limited set of
+spontaneous Ca2+ release profiles is presented. These events occur when randomly orga-
+nized clusters of cells exhibit synchronized, high amplitude Ca2+ release flux. It is shown how
+reduced IK1 density and gap junction coupling, as observed in heart failure, increase the prob-
+ability of extreme DADs by multiple orders of magnitude. This method enables prediction of
+arrhythmia likelihood and its modulation by alterations of other cellular mechanisms.
+Author summary
+Arrhythmias are electrical abnormalities of the heart that can degenerate into fibrillation, thus
+preventing normal heartbeats and leading to sudden cardiac death. The mechanisms leading
+to ventricular arrhythmias and the unexpected nature of sudden cardiac death are not fully
+understood. One hypothesis is that a group of cardiac myocytes, which generate contraction,
+spontaneously depolarize at precisely the same moment to excite the surrounding tissue. In
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+1 / 30
+a1111111111
+a1111111111
+a1111111111
+a1111111111
+a1111111111
+OPEN ACCESS
+Citation: Walker MA, Gurev V, Rice JJ, Greenstein
+JL, Winslow RL (2017) Estimating the probabilities
+of rare arrhythmic events in multiscale
+computational models of cardiac cells and tissue.
+PLoS Comput Biol 13(11): e1005783. https://doi.
+org/10.1371/journal.pcbi.1005783
+Editor: Alexander V. Panfilov, Universiteit Gent,
+BELGIUM
+Received: May 16, 2017
+Accepted: September 18, 2017
+Published: November 16, 2017
+Copyright: © 2017 Walker et al. This is an open
+access article distributed under the terms of the
+Creative Commons Attribution License, which
+permits unrestricted use, distribution, and
+reproduction in any medium, provided the original
+author and source are credited.
+Data Availability Statement: The mode code
+(data) is available at the URL: https://github.com/
+mwalker174/mucell.
+Funding: This work was supported by the National
+Heart, Blood, and Lung Institute, National Institutes
+of Health, R01 HL105239 (https://www.nhlbi.nih.
+gov/). The funders had no role in study design,
+data collection and analysis, decision to publish, or
+preparation of the manuscript.
+Competing interests: The authors have declared
+that no competing interests exist.
+ individual myocytes, such misfires, known as delayed afterdepolarizations, are driven by ran-
+dom ion channel gating and thus stochastic in nature. While incidental afterdepolarizations in
+a large number of myocytes is highly improbable on any given beat, it may be feasible
+over a long time frame, thus explaining the unpredictability of arrhythmias. We devel-
+oped a detailed model spanning the molecular, cellular, and tissue scales that realistically
+reproduces the mechanisms underlying this hypothesis. An efficient method is presented
+for estimating the probability of extremely rare delayed afterdepolarizations in tissue
+from a limited set of simulations. Furthermore, we demonstrate how altered tissue and
+ion channel properties in heart disease increase the risk of arrhythmia. This approach can
+be used generally to probe the effects of specific molecular mechanisms on the likelihood
+of rare delayed afterdepolarizations.
+Introduction
+In cardiac myocytes, dyads are sites where the junctional sarcoplasmic reticulum (JSR) mem-
+brane closely approaches (~ 15 nm) invaginations of the cell membrane known as transverse
+tubules (TTs). Voltage-sensitive L-type calcium (Ca2+) channels (LCCs) are preferentially local-
+ized to the TT membrane of the dyad, where they closely appose Ca2+-binding Ca2+-release chan-
+nels known as ryanodine receptors (RyRs) in the dyad JSR membrane. Depolarization of the cell
+membrane during an action potential (AP) increases LCC open probability, generating a flux of
+Ca2+ ions into the dyad. The resulting local increases of dyad Ca2+ concentration ([Ca2+]d)
+increase RyR open probability, which when open allow flux of Ca2+ ions from the JSR into the
+dyad. This process, known as Ca2+-induced Ca2+ release (CICR), causes brief, spatially localized
+release events known as a Ca2+ sparks [1]. Due to their synchronization, these Ca2+ sparks cause
+a cell-wide rise in cytosolic [Ca2+] ([Ca2+]i), leading to myofilament activation and force genera-
+tion. This process, known as excitation-contraction coupling (ECC), is central to the function of
+the myocyte [2].
+Ca2+ sparks can also occur randomly at a single release site when the spontaneous opening
+of a single RyR triggers the CICR process [3]. Under conditions promoting cellular Ca2+ over-
+load, Ca2+ sparks are more likely to trigger RyRs at nearby release sites, thereby generating
+propagating Ca2+ waves [4]. Spontaneous Ca2+ release events generate an inward current via
+the Na+/Ca2+ exchanger (NCX), which transports 3 Na+ ions into the cell for every Ca2+ ion
+extruded, and additionally in canine myocytes via the Ca2+-activated chloride channel [5]. In
+diastole, this produces a net inward current, resulting in an elevation of cell membrane poten-
+tial (V) known as a delayed afterdepolarization (DAD) [6]. DADs of sufficient amplitude can
+lead to the activation of the fast inward Na+ current (INa) and trigger a premature AP. Gap
+junctions joining adjacent cells then conduct the aberrant AP across the myocardial syncy-
+tium. Such ectopic events in the heart can induce reentrant ventricular arrhythmias that lead
+to sudden cardiac death [7]. Furthermore, the propensity for spontaneous Ca2+ release is
+increased in heart diseases such as heart failure, hypertrophy, and some forms of long-QT
+syndrome, which are associated with increased risk for sudden cardiac death. Therefore,
+understanding Ca2+ dynamics in ventricular myocytes and the Ca2+ handling instability
+that arises under pathological conditions is fundamental to our understanding of cardiac
+arrhythmogenesis.
+Experimental studies have observed triggered activity under conditions evoking spontane-
+ous Ca2+ release in myocardial wedge preparations [8] and whole heart [9, 10]. These studies
+show that the likelihood of observing ectopic foci is correlated with the degree of Ca2+ loading.
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+2 / 30
+ In isolated myocytes, Ca2+ waves are observed when the sarcoplasmic reticulum (SR) Ca2+
+load achieves a critical level [11]. However, electrotonic coupling in tissue attenuates DAD
+amplitude by diverting inward current to adjacent myocytes through the gap junctions. Was-
+serstrom et al. reported that with increasing SR Ca2+ load, spontaneous Ca2+ waves exhibited
+greater synchrony following cessation of rapid pacing in intact heart [10]. Synchronous DADs
+result in smaller spatial gradients in membrane potential, less loss of depolarizing current into
+neighboring cells, and therefore larger DAD amplitude.
+An elegant theoretical study by Chen et al. analytically investigated the probability of trig-
+gered events in a 1D fiber as a first passage time problem using a minimal model of Ca2+
+release and membrane currents [12]. They showed that the expected time to a triggered event
+decreased according to a power law of the number of cells in the fiber, and that this effect
+depended on the balance of gap junction, NCX, and inwardly-rectifying potassium current
+(IK1) conductance. However, to be tractable, the model employed simplified models of the
+membrane currents. Here we present an approach that retains mechanistically realistic charac-
+terization of membrane current properties while at the same time is computationally tractable,
+permitting the evaluation of a sufficiently large number of stochastic simulations to estimate
+rare event probabilities.
+In this study, we present a multicellular model of cardiac tissue which incorporates a stochas-
+tic biophysically detailed spatial model of the ventricular myocyte as its fundamental building
+block. The single cell model is used to study the roles of stochastic RyR gating and Ca2+ wave
+dynamics on the statistical distribution of DADs under pathophysiological conditions. The cel-
+lular Ca2+ load and density of IK1 are shown to be two important factors influencing the mean
+and variance of DAD amplitude and timing. We then develop a one-dimensional (1D) myocyte
+tissue model comprised of these cells, and present a method for estimating the probability of
+rare events that are “surrogates” for ectopic beats. These surrogate events are defined as the
+occurrence of (rare) high-amplitude DADs with membrane potential exceeding a threshold
+value VT. We develop a computationally efficient approach for estimating the probability of
+these threshold crossings. This method enables us to estimate how changes in model parameters
+influence the probability of these surrogate events. As an example, the effects of reductions of
+IK1 density and gap junction coupling on the distribution of DAD amplitude and therefore the
+probability of threshold crossings are demonstrated, providing quantitative insight into how
+electrophysiological remodeling affects the probability of potentially arrhythmogenic ectopic
+beats.
+Methods
+Ventricular myocyte model
+We have developed a three-dimensional (3D) spatial model of a single myocyte based on the
+(non-spatial) Greenstein-Winslow canine ventricular myocyte model [13]. To enable repro-
+duction of realistic Ca2+ waves and DADs, the original model was adapted to include spatial
+Ca2+ diffusion on a rectangular lattice of 25,000 Ca2+ release sites (Fig 1) distributed within the
+cell. The cell was divided into 25 and 20 lattice points in the two transverse directions and 50
+lattice points in the longitudinal direction. Release sites were spaced 1 and 2 μm in the trans-
+verse and longitudinal directions, respectively [14]. The time constant for longitudinal Ca2+
+diffusion was twice (i.e. 2x slower) that for the transverse direction such that the model exhib-
+ited symmetric Ca2+ wave propagation [15]. This difference in diffusion rates arises from dif-
+ferences in diffusion along versus across TTs.
+A sub-membrane (SM) release site compartment (Fig 1A) was added to describe the vol-
+ume under the TT membrane where the Ca2+ concentration ([Ca2+]) is elevated during Ca2+
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+3 / 30
+ sparks and cell-wide Ca2+ release [16]. Detailed imaging studies of Ca2+ release sites have
+revealed that RyR clusters exhibit edge-to-edge spacing of less than 100 nm [17, 18]. This sug-
+gests that neighboring sites may be functionally coupled through local Ca2+ diffusion. There-
+fore Ca2+ diffusion between SM compartments was implemented to reflect Ca2+ transport
+across steep [Ca2+] gradients on the periphery of the release site during release [19]. The SM
+compartment was modeled as a cylinder encircling the TT membrane with inner radius 100
+nm, outer radius 180 nm, and 1 μm axis. It was assumed that 50% of NCX are located in the
+TT membrane of the SM compartment, and the remaining 50% are in the sarcolemmal mem-
+brane of the cytosolic compartment [20, 21]. Ca2+ in the SM is buffered by calmodulin and sar-
+colemmal binding sites. Ca2+ transport rates from the SM to the cytosol and between SM
+compartments were constrained to yield a realistic Ca2+ wave threshold (~100–150 μmol/[L
+cytosol]) [22] and velocity (50–100 μm/s) [4] in the baseline model.
+Each spatial site, with location defined by coordinate (i,j,k), is represented by a set of ordinary
+differential equations describing local Ca2+ transport (Fig 1A). [Ca2+] is assumed to be uniform
+within the local JSR ([Ca2+]JSR,i,j,k), dyadic subspace ([Ca2+]d,i,j,k), and SM ([Ca2+]SM,i,j,k) compart-
+ments. Spatial Ca2+ diffusion is modeled as transport between SM compartments of adjacent
+release sites in the 3D lattice (Fig 1B). Model equations and parameters are given in S1 Equations
+and S1 Table.
+Fig 1. Multiscale cell and tissue model schematics. (a) Diagram of intracellular Ca2+ compartments and transport. At each release site at coordinates (i,j,
+k), Ca2+ is released via RyRs from the JSR into the dyadic subspace (SS) and diffuses into a submembrane (SM) compartment. Ca2+ diffuses between SM
+compartments of adjacent release sites in the 3D lattice, as depicted in panel (b). Ca2+ can also diffuse from the SM into a single cell-averaged cytosolic
+compartment and can be transported by the SR Ca2+ ATPase (SERCA pump) from the cytosolic compartment into a single network SR (NSR), which refills
+the JSR. (c) Illustration of the different spatial scales incorporated in the tissue model including (from left to right) the 48 stochastic RyRs in each of the 25,000
+release sites of a single cell. Hundreds of cells are coupled via gap junction currents to form the fiber model.
+https://doi.org/10.1371/journal.pcbi.1005783.g001
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+4 / 30
+ Global compartments are used to represent average cytosolic [Ca2+]i and network SR [Ca2
++] ([Ca2+]NSR). The use of global compartments to represent these quantities eliminates two
+Ca2+ diffusion parameters and provides a three-fold reduction in the number of Ca2+ diffusion
+terms, thus substantially reducing model complexity and computational burden. While these
+simplifications result in over-estimation of the rise in [Ca2+]i and fall of [Ca2+]NSR at sites far
+away from an initiating Ca2+ wave, the model produces realistic spatiotemporal dynamics of
+spontaneous Ca2+ release and DADs.
+Each release site contains a set of 48 RyRs and 8 LCCs that gate stochastically according to
+Markov chain models. The LCC model is as described in the Greenstein-Winslow model [13],
+with adjustments made to the rate of Ca2+-dependent inactivation (see S1 Text). Briefly, the
+LCC inactivation rate is a saturating function of [Ca2+]SS, which was necessary to reproduce
+inactivation kinetics consistent with the original model. Note, however, that as a result AP
+duration does not substantially decrease at reduced SR Ca2+ loads as exhibited previously [13].
+RyR gating is described by a minimal two-state Markov model based on the work of Williams
+et al. [23], described in detail in Walker et al. [19]. Briefly, mean open time of each channel is 2
+ms, and the opening rate is given by
+ro ¼ ϕkþð½Ca2þ�SS;i;j;kÞ
+Z
+ð1Þ
+where k+ = 1.107 × 10−4 ms-1 μM-η is the opening rate constant, η = 2.1 is the Ca2+ Hill coeffi-
+cient, and ϕ is a [Ca]JSR,i,j,k-dependent regulation term given by
+ϕ ¼ 0:8025 þ
+½Ca2þ�JSR;i;j;k
+1:5mM
+�
+�4
+ð2Þ
+Fiber model
+The 3D cell model was incorporated into a tissue-scale model of a 1D fiber of myocytes. Fig 1C
+depicts the multiple biological scales represented in the model, from single ion channels to the
+multicellular fiber. The 3D cell model was augmented with a current carried by the gap junc-
+tions at either end of each cell (Igap). The current from cell i into an adjacent cell i+1 is given
+by:
+Igap;i;iþ1 ¼ ggapðVi � Viþ1Þ
+ð3Þ
+where ggap is the gap junction conductance, which was adjusted to yield a conduction velocity
+of 55 cm/s. The membrane potential in the fiber was solved using the Crank-Nicolson method
+[24] with 50 μs time steps. Operator splitting was used to explicitly solve each cell model using
+an embedded adaptive Runge-Kutta method described previously [13].
+Beta-adrenergic stimulation
+Sympathetic stimulation of the heart occurs through β-adrenergic receptor activation, which
+activates intracellular signaling pathways, most notably Protein Kinase A (PKA) and Ca2+/cal-
+modulin-activated protein kinase II (CaMKII), that increase contractility [25]. β-adrenergic
+stimulation is also known to be pro-arrhythmic, and can contribute to spontaneous Ca
+2+
+release [26] in pathological conditions. Cell model parameters were modified to reflect the
+effects of acute β-adrenergic stimulation. LCC open probability was increased [27] by changing
+the fraction of gating LCCs from 25% to 60% and setting 3–5% of the channels to gate in a
+high-activity mode in which the mean open time was increased from 0.5 to 5.8 ms [28, 29].
+Enhanced activation of inward currents was implemented for IKr using modifications
+described previously [29] and for IKs by shifting the voltage-dependence of activation by -35
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+5 / 30
+ mV and increasing conductance by 40% [30]. SR Ca2+ loading was facilitated by reducing
+SERCA pump Kd for [Ca2+]i by 50% [31]. RyR opening rate was increased by either 50% to
+reflect increased SR Ca2+ leak observed in experimental studies [32] or 400% to reproduce
+pathological behavior after ouabain overdose [33]. Unless otherwise noted, these conditions
+were applied to all simulations in this study.
+Results
+Model properties
+In order to reproduce protocols designed to measure ECC properties, membrane potential
+was stepped to varying test potentials for 200 ms from a holding potential of -80 mV. The
+dependence of normalized peak RyR and LCC Ca2+ fluxes on the test potential and corre-
+sponding ECC gain values are similar to those observed experimentally [34] (Fig 2A and 2B).
+The peak normalized RyR flux curve is right-shifted with respect to that of the LCC flux curve.
+The ECC gain is 13.8 at 0 mV and decreases monotonically with increasingly depolarized test
+potentials. The lack of high gain at potentials below -10 mV is a result of consolidating the four
+distinct dyadic subspace compartments utilized in the previous Greenstein-Winslow canine
+ventricular myocyte model [13] into one, a simplification of the Ca2+ release site model result-
+ing in improved computational efficiency, but which attenuates the local [Ca2+]d signal caused
+by the brief high-amplitude unitary LCC currents characteristic in this potential range.
+Under control conditions, model APs and [Ca2+]i transients are similar to those of normal
+canine ventricular myocytes [35], with an AP duration (APD), defined as the time to reach
+90% repolarization, of approximately 320 ms (Fig 2C and 2D). The model reaches a stable
+steady state after ~ 10 seconds when paced at 1 Hz (S2 Fig). The NCX current during an action
+potential (S1 Fig) is in agreement with experimental and theoretical studies [36–38]. Reducing
+IK1 density by 50% prolongs the action potential to 469 ms due to the reduction in repolarizing
+current. Note that this is shown for the first paced beat with identical initial conditions as the
+baseline model, as the model fails to repolarize under these conditions after continued pacing
+(see Discussion). Simulating the effect of β-adrenergic stimulation increases the amplitude of
+the AP plateau as well as [Ca2+]i transient amplitude and decay rate in addition to decreasing
+the APD to ~255 ms [29]. Additionally reducing IK1 density by 50% resulted in a marked
+increase in APD to ~300 ms at steady state. This prolonged AP increased Ca2+ loading, result-
+ing in marginally higher systolic [Ca2+]i.
+[Ca2+]NSR was clamped at increasing values to test the relationship between SR Ca2+ load
+and leak. The model exhibits an exponential leak-load relationship that is similar to experi-
+mental estimates [39, 40] (Fig 2E). Spontaneous Ca2+ waves form at a threshold SR Ca2+ load,
+at which wave fronts of propagating Ca2+ sparks emanate from random regions of high spark
+activity. Fig 2F shows a plot of SR Ca2+ leak along a cross-section through the center of the cell
+during a representative Ca2+ wave under β-adrenergic stimulation, this wave occurred at a
+lower SR Ca2+ load (82 μmol/L cytosol) compared to under baseline conditions due to greater
+RyR Ca2+ sensitivity. The wave shape and velocity of 68 μm/s are similar to those observed in
+experimental studies [4].
+Delayed afterdepolarizations during pacing
+Liu et al. demonstrated that ouabain overdose causes accumulation of [Na+]i, leading to Ca2+
+overload and DADs [33]. In addition, the authors showed that the production of reactive oxy-
+gen species, which are known to oxidize RyRs [41] and CaMKII [42], both of which enhance
+RyR activity, contributed to DAD generation. To induce Ca2+ overload, model parameters
+were modified to simulate β-adrenergic stimulation and to reflect the conditions in Liu et al.
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+6 / 30
+ [33] by inhibiting the Na+/K+ ATPase by 90%, which leads to accumulation of intracellular
+Na+ (>20 mM).
+To demonstrate the emergence of DADs in the model, we simulated a protocol in which the
+RyR opening rate and [Na+]i were controlled over time. β-adrenergic stimulation was applied
+and the cell was paced at 1 Hz. First, [Na+]i was fixed to 15 mM and the RyR opening rate was
+ramped from 1.5x to 5x that of baseline over t = 0 to 5 s. Intermittent Ca2+ waves, triggered by
+overload of JSR Ca2+, cause spontaneous [Ca2+]i transients, which began to occur (Fig 3A).
+RyR sensitization initially causes an increase in [Ca2+]i transient peak from 1.73 to 1.93 μM, fol-
+lowed by a decrease (Fig 3B) as the Ca2+ wave threshold decreases (Fig 3C) and cellular Ca2+ is
+extruded by NCX. Many of these events begin just prior to (<100 ms before) the next stimulus
+(Fig 3A inset). Prominent DADs occur at t = 4 and 6 s. This causes lower Ca2+ transient ampli-
+tude in the following beats due to the lost Ca2+ stores. The threshold SR load for Ca2+ waves was
+reduced to 80 μmol/[L cytosol] compared to the baseline model threshold of 140 μmol/[L cyto-
+sol] (see Fig 2E). This is due to high [Na+]i and the greater RyR opening rate, which increases
+Ca2+ spark frequency and results in Ca2+ wave nucleation and propagation.
+To induce triggered APs, [Na+]i was ramped from 15 to 23 mM over t = 10 to 15 s. This
+causes Ca2+ waves to form more readily by reducing extrusion of Ca2+ via NCX in the SM
+compartment, thus elevating [Ca2+]d at sites adjacent to Ca2+ sparks and increasing the
+Fig 2. Ventricular myocyte model properties. (a) Normalized peak LCC (triangles) and RyR (circles) flux
+when the membrane was stepped to test potentials between -20 and 40 mV. (b) Excitation-contraction
+coupling gain, defined as the ratio of the normalized peak RyR to LCC Ca2+ flux at each test potential. (c)
+Representative action potentials and (d) [Ca2+]i transients under control conditions (solid black), with 50% IK1
+inhibition (dashed black), with β-adrenergic stimulation (solid red) conditions, and with β-adrenergic
+stimulation and 50% IK1 inhibition (dashed red). (e) Cell-wide SR Ca2+ leak rate via RyRs at varying SR Ca2+
+loads in the baseline model. The dotted line indicates the lowest SR Ca2+ load tested that exhibited
+spontaneous Ca2+ waves. (f) Example linescan plot showing a Ca2+ wave under β-adrenergic stimulation.
+https://doi.org/10.1371/journal.pcbi.1005783.g002
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+7 / 30
+ probability of Ca2+ spark propagation. Note that elevated diastolic [Ca2+]i has been implicated
+in DAD formation in experimental studies [8, 43]. Diastolic [Ca2+]i was at first ~140 nM when
+the DADs are sub-threshold. Higher [Na+]i decreases the delay until the DADs, resulting in
+higher diastolic [Ca2+]i. A DAD of sufficient amplitude to activate INa occurs at t = 18.7 s and
+triggers a spontaneous AP. Triggered APs result in greater spontaneous [Ca2+]i transients due
+to activation of LCCs, and the cells exhibit elevated diastolic [Ca2+]i in the range of ~470-520
+nM. This causes a reduction in the SR Ca2+ load threshold for spontaneous release to 63 μmol/
+[L cytosol] due to the resulting increase in RyR opening rate and Ca2+ spark frequency. Note
+that under these conditions, triggered APs exhibit pacemaker-like automaticity, occurring
+every ~570 ms after cessation of pacing (S3 Fig) but stop when [Na+]i is lowered below ~20
+mM. This behavior is consistent with spontaneous contractions observed in mouse heart in
+the presence of ouabain [44].
+Fig 3. DADs induced by Ca2+ overload during 1 Hz pacing under β-adrenergic stimulation in the myocyte model. (a) Sub-
+threshold DADs (red arrows) and triggered APs (blue arrows) in between paced APs. Inset illustrates how the first DAD occurred just
+prior to the next stimulus. (b) Spontaneous [Ca2+]i transients caused by underlying Ca2+ waves. Dotted lines indicate diastolic [Ca2+]i.
+(c) Average [Ca2+]JSR. Dotted lines indicate threshold for Ca2+ overload that resulted in spontaneous Ca2+ waves. This threshold
+decreased over the course of the protocol due to increased RyR sensitivity, increased [Na+]i, and elevated diastolic [Ca2+]i.
+https://doi.org/10.1371/journal.pcbi.1005783.g003
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+8 / 30
+ The protocol also produced changes in AP duration (APD) (S3 Fig). The first beat has an
+APD of 235 ms, 27% shorter than under normal conditions due reduced inward NCX current
+in the presence of elevated [Na+]i, [45]. Upon RyR sensitization, APD decreases to ~215 ms
+due to decreased inward NCX current accompanying the smaller [Ca2+]i transients. Further
+increasing [Na+]i to 23 mM reduced APD to 150 ms. A previous study showed that APD
+increases following spontaneous Ca2+ release due to slowed Ca2+-dependent inactivation of
+the LCCs [46]. The model does not reproduce this behavior because of the LCC Markov chain
+has a saturating dependence on [Ca2+]d and is therefore not sensitive to Ca2+ load (see Discus-
+sion). Rather, the lower [Ca2+]i transient results in less inward NCX current, thus reducing
+time to repolarization.
+These results demonstrate how the model reproduces SR Ca2+ overload as a driver of DADs
+under pathophysiological conditions. Elevated RyR sensitivity and [Na+]i accumulation led to
+DADs of sufficient amplitude to trigger action potentials during the diastolic intervals. In addi-
+tion, these results illustrate the interplay between [Ca2+]i and SR load dynamics during sponta-
+neous Ca2+ release.
+Effect of SR Ca2+ load on DADs
+The relationship between SR Ca2+ load and spontaneous Ca2+ release was investigated. Simula-
+tions were run using initial conditions reflecting the cell state just prior to the moment when
+SR Ca2+ load reaches the Ca2+ wave threshold following an AP. Initial [Ca2+]i was set to 150
+nM, similar to the level during the late decay phase of a cytosolic Ca2+ transient. Fig 4A shows
+DADs occurring at the five different values of initial SR Ca2+ load shown in Fig 4B. At the
+highest SR Ca2+ load, DAD amplitude is large enough to trigger an AP, as shown in simulation
+(v) in Fig 4A. Elevating SR Ca2+ load reduces the delay until the spontaneous release event,
+consistent with the observations of Wasserstrom et al. [10]. The increase in DAD amplitude is
+consistent with a study by Schlotthauer and Bers, who demonstrated increased amplitude of
+caffeine-induced DADs at higher SR Ca2+ loads [47].
+Fig 4C shows volume renderings of [Ca2+]SM at three time points in each simulation. The
+number of Ca2+ wave nucleation sites (Nnuc) was defined as the number of independently
+formed wave front epicenters and was estimated by inspection of the volume renderings (S1
+Movie). Nnuc generally increases with SR Ca2+ load, in agreement with experimental studies in
+intact heart [9, 10]. Therefore, the increase in SR Ca2+ load also increases RyR Ca2+ release flux
+(JRyR) by enhancing the synchrony of RyR opening and number of nucleation sites.
+Ensemble properties of DADs
+We hypothesized that stochastic gating of the RyRs drives variability in Ca2+ wave dynamics
+and thus DAD amplitude and timing. To test this, five independent realizations were gener-
+ated, each of which had identical initial conditions similar to simulation (i) from Fig 4. The
+pseudorandom number generator seed was varied among the realizations in order to produce
+independent patterns of RyR gating. Fig 5A shows the resulting DADs, which exhibit marked
+variability in timing and amplitude. Time of occurrence of the DAD peak varies from 520 to
+1209 ms and peak amplitudes range from 2.3 to 6.2 mV. These DADs appear qualitatively sim-
+ilar to experimental observations in rat myocytes, with delays ranging by ~1 s and amplitude
+~2-fold, although the SR Ca2+ load was not reported [6]. The area under the curve of each
+DAD, measured relative to the resting potential, varied from 0.79 in (iii) to 1.18 in (ii) (50%
+greater). This roughly correlated with DAD amplitude, with the exception of the prolonged
+DAD (iv), which had the second greatest area under the curve despite having the lowest
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+9 / 30
+ amplitude. Thus substantial DAD variability can be attributed to the stochastic nature of RyR
+gating.
+Spontaneous Ca2+ release generates DADs by driving an inward current through NCX [6].
+Imaging, electrophysiological, and modeling [38] studies have all suggested that NCX senses a
+[Ca2+]SM that is greater than [Ca2+]i because it can be localized near the release sites [16, 20,
+21]. Therefore, the driving force for inward NCX current is likely to be determined, in part, by
+the aggregate number of concurrent Ca2+ sparks occurring across the cell. This is consistent
+with a study showing that peak Ca2+ release flux is strongly correlated with the likelihood of
+ectopic activity [48]. An ensemble of 98 independent simulations were performed to deter-
+mine how peak [Ca2+]i and JRyR are related to DAD amplitude. Fig 5B and 5C show there is a
+strong linear correlation between the peak membrane potential during the DAD (Vmax) and
+the maximum of [Ca2+]i during the spontaneous [Ca2+]i transient (r2 = 0.950). There is an
+even stronger relationship between Vmax and the peak JRyR value (r2 = 0.998). This confirms
+that the inward NCX current is primarily driven by JRyR via the resulting rise in [Ca2+]SM.
+Note that JRyR reflects the combined Ca2+ release flux associated with all Ca2+ sparks occur-
+ring at any time. It was therefore expected that the variability in DADs was the result of spatio-
+temporal variations in Ca2+ wave dynamics. Fig 5D and S2 Movie show volume renderings of
+the Ca2+ waves in each simulation. Waves emanate from nucleation sites of high Ca2+ spark
+activity. For example, in the simulation (iv) of Fig 5D at 700 ms, a large cluster of Ca2+ sparks
+Fig 4. Elevating SR Ca2+ load accelerated Ca2+ wave formation and increased DAD amplitude. (a)
+DADs resulting from initializing SR Ca2+ load to five different values as shown in (b). (c) Volume renderings of
+Ca2+ in the simulations at three time points illustrating the greater spontaneous Ca2+ wave activity at higher
+SR Ca2+ loads. The number of Ca2+ wave nucleation sites (Nnuc) is tabulated for each simulation. All
+simulations initialized with [Na+]i = 10 mM.
+https://doi.org/10.1371/journal.pcbi.1005783.g004
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+10 / 30
+ is visible at the left end of the cell, and by 900 ms a wave front of Ca2+ is seen propagating radi-
+ally away from this cluster site. The random nature of nucleation site locations results in DAD
+variability across simulations. Simulations i and ii are both associated with the highest-ampli-
+tude DADs as well as the greatest number of nucleation sites, as shown in Fig 5D. These nucle-
+ation sites are spaced widely across the cell, resulting in independent propagating wave fronts
+of high [Ca2+]SM that drive inward INCX. The remaining three simulations have lower ampli-
+tudes due to fewer nucleation sites. Note that in simulation iv, two separate Ca2+ waves form
+over 100 ms apart, resulting in a prolonged low-amplitude DAD with two peaks. These results
+are consistent with the strong correlation between Vmax and maximum JRyR, which reflects the
+timing and pattern of Ca2+ wave formation.
+Dependence of DAD distribution on Ca2+ load and IK1 density
+In this section, the statistical relationships between Ca2+ loading and DAD amplitude and tim-
+ing in ensemble simulations are investigated. Fig 6A shows variability in sub-threshold DAD
+Fig 5. Variability of DAD timing and amplitude in five independent model realizations with identical
+initial conditions. (a) Variability in DAD timing and amplitude. Inset shows the area under the curve above
+resting potential of each DAD. Strong correlations were observed between Vmax and the maxima of both the
+spontaneous [Ca2+]i transient (b) and the RyR Ca2+ release flux (c). (d) Volume renderings of Ca2+ wave
+dynamics at three time points in each simulation. Approximate locations of the nucleation sites are circled in
+white. Nnuc was higher in simulations i and ii which had greater DAD amplitude. All simulations initialized with
+[Na+]i = 10 mM.
+https://doi.org/10.1371/journal.pcbi.1005783.g005
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+11 / 30
+ properties when initial SR Ca2+ load is varied. The dark lines indicate the median value of
+membrane voltage over time, and the shaded regions illustrate the range of the second and
+third quartiles (25th to 75th percentile). Consistent with findings from the individual cell simu-
+lations of Fig 4, DAD delay decreases and amplitude increases with increasing SR Ca2+ load.
+The peaks of the upper and lower bounds are -92.4 and -90.6, -82.7 and -79.5, and -73.2 and
+-68.1 mV for initial SR [Ca2+] values of 0.32, 0.36, and 0.40 mM, respectively. This suggests
+that there is an increase in DAD amplitude variability at higher SR Ca2+ loads. Note also that
+the width of the shaded regions decreases as SR load increased, reflecting increased DAD
+synchrony.
+Recall that diastolic [Ca2+]i plays a critical role in determining the SR Ca2+ wave threshold
+during pacing (Fig 3). The effect of increasing [Ca2+]i on the DAD distribution with SR Ca2+
+load held constant was next tested (Fig 6B). Elevating [Ca2+]i yields identical effects as seen
+when increasing SR Ca2+ load, with both reducing the delay and increasing the amplitude of
+DADs.
+The inward rectifier K+ current, IK1, is the primary membrane current that stabilizes V at
+the cell’s resting potential and plays a critical role in protecting the cell from triggered APs.
+Down-regulation of IK1 is associated with ventricular arrhythmias in diseases such as heart fail-
+ure [49], Andersen’s syndrome [50], and long QT syndrome [51]. Fig 6C shows DAD distribu-
+tions when IK1 density is reduced by 50% and [Ca2+]i is varied. These changes increase DAD
+amplitude and variability compared to cells with normal IK1. Note that in the 350 nM [Ca2+]i
+case, only one of the 98 realizations produces a sub-threshold DAD, while all others exhibit
+triggered APs.
+Fig 6D shows the average and SD of Vmax as a function of total cell Ca2+, defined as the total
+of buffered and free Ca2+ in the cytosol and SR. Changes in either initial [Ca2+]i or [Ca2+]SR
+(which implicitly include changes in Ca2+-bound buffer concentrations to their equilibrium
+values) are reflected in initial total cell Ca2+. The effect of 50% IK1 density reduction on the
+[Ca2+]i-dependence of Vmax was also analyzed. These results demonstrate two important
+conclusions.
+First, in the baseline model with normal IK1, the distributions of Vmax as a function of initial
+total cell Ca2+ are identical in both cases, as shown by overlap of the blue (initial [Ca2+]i varied)
+and red (initial [Ca2+]SR varied) traces. This strongly suggests that DADs are driven by both
+[Ca2+]i and [Ca2+]SR and is consistent with the notion that total cell Ca2+ plays a major role in
+setting the DAD distribution, as observed in other models [52].
+Second, reducing IK1 by 50% causes a marked increase in the average and SD of Vmax. In
+this case, Vmax was more sensitive to inward INCX during the DAD because IK1 rectification
+reduces its outward current upon membrane depolarization which increases the contribution
+of INCX to the net membrane current, and this imbalance between the currents becomes
+greater with reduction in IK1 density. This phenomenon is illustrated in a phase plane plot of
+example simulations at baseline and 50% IK1 densities exhibiting both sub- and supra-thresh-
+old DADs (Fig 6E). For a given NCX current, V rises substantially higher at 50% IK1 density
+compared to the baseline model. The rightward shift of the trajectories also illustrates the
+~50% reduction in peak NCX current required to trigger an AP (~3.4 to ~1.7 pA/pF). There-
+fore, DAD amplitudes are greater for a given INCX amplitude, causing an increase in the mean.
+Similarly, amplitude SD is also increased. At the lowest Ca2+ load tested, 50% IK1 reduction
+caused ~3x greater SD, which is mainly accounted for by the fact that the amplitude is on aver-
+age ~2.6x greater.
+DAD delay and synchrony is also strongly correlated with total cell Ca2+, as measured by
+the distribution of the time until the DAD peak occurred (Fig 6F). Increasing initial total cell
+Ca2+ reduces DAD delay and increases synchrony, similar to the observations of Wasserstrom
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+12 / 30
+ et al. [10]. In the baseline model, the standard deviation of the delay was 178 ms at the lowest
+SR load tested. This variability is similar to that measured by Wasserstrom et al. (162 ms) in
+whole rat heart paced at 1 Hz and elevated [Ca]o = 7.0 mM. DAD delay does not considerably
+change with 50% IK1 reduction because it is determined primarily by the timing of Ca2+ wave
+formation, which is not affected by IK1 density.
+With increasing initial total cell Ca2+, in the form of increased initial [Ca2+]i or [Ca2+]SR,
+the higher DAD amplitudes makes it more likely that the threshold membrane potential for
+triggering an AP (~ -55 mV) will be reached. The probability that a DAD-triggered beat
+occurred is shown in Fig 6G. Increasing cell Ca2+ results in a steep increase in trigger probabil-
+ity. This switch-like behavior is due to the DAD amplitude reaching threshold AP-triggering
+potential with high certainty. Reducing IK1 by 50% reduces the critical Ca2+ load at which APs
+are triggered, consistent with the observed increase in DAD amplitude. The effect is signifi-
+cant: at normal IK1 density zero of 96 cells exhibit triggered APs when initial [Ca2+] is 5.8 fmol,
+Fig 6. Roles of cytosolic and SR Ca2+ and IK1 density in DAD distribution. DAD distributions when initial (a) [Ca2+]SR and (b) [Ca2+]i
+were varied in the presence of β-adrenergic stimulation. (c) DAD distributions when varying initial [Ca2+]i after reducing IK1 density by
+50%. Shaded regions indicate the middle quartiles of the membrane potential for sub-threshold events out of 96 simulations. Dark lines
+indicate median values. Statistics of Vmax (d) of sub-threshold events, phase plane plot of V and NCX current (e), and statistics of delay
+until DAD peak (f) are shown when SR [Ca2+] was varied (blue), [Ca2+]i was varied (red), and [Ca2+]i was varied with 50% reduction in
+IK1 density (magenta) as a function of initial total cell Ca2+. Error bars indicate standard deviation (SD) of the estimates. Panel (e) shows
+representative sub- and supra-threshold DADs for the baseline model and IK1 reduced by 50% with [Ca2+]i initially at 3.5 and 2 μM,
+respectively. Arrows indicate direction of time. (g) Dependence of triggered AP probability on initial total cell Ca2+. All simulations
+initialized with [Na+]i = 10 mM.
+https://doi.org/10.1371/journal.pcbi.1005783.g006
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+13 / 30
+ but reducing IK1 density by 50% increases the probability to ~ 0.5. Thus IK1 density plays a crit-
+ical role in modulating the Ca2+ load at which arrhythmia-triggering events occur.
+Probabilistic triggered activity in a paced fiber of myocytes
+In the previous section, it was shown that triggered APs occur with a probability that depends
+on Ca2+ load and that varying IK1 density shifts the Ca2+ load dependence. Simulations were
+performed to test whether the model could produce probabilistic triggered activity in a 1D
+fiber of myocytes during pacing, where electrotonic loading of any cell by adjacent cells
+becomes important. Fig 7A shows the membrane potential of a fiber paced at 0.5 Hz under
+conditions similar to those in Fig 3 with elevated [Na+]i set to 19 mM, as may be observed in
+heart failure [53]. Note also that [Na+] sensed by membrane channels during contraction may
+be higher than [Na+]i in the bulk cytosol due to local buildup of Na+ imported by NCX [54].
+To reflect a state of pathological remodeling, IK1 density and gap junction conductance were
+each reduced by 50% as observed in HF [49, 55]. To limit boundary effects, [Na+]i was set to
+10 mM in the outer twenty-four cells near each end of the cable in order to prevent DAD gen-
+eration. DADs, appearing as faint bands of depolarization between the paced beats, and reach
+Vmax values between approximately -70 and -60 mV. This is consistent with experimental
+observations of synchronized spontaneous Ca2+ release causing DADs in intact heart following
+rapid pacing [9].
+The model exhibited considerable variability in Vmax along the length of the fiber. To inves-
+tigate the source of this variability, the state of the model at time trestart immediately after the
+Fig 7. Probabilistic triggered activity caused by DADs in the fiber model. (a) Fiber of 192 cells paced at 0.5 Hz by applying a stimulus current for 2 ms to
+the first two cells in the fiber (black arrows). DADs occurred between paced beats (red arrows). (b) Ensemble simulations (i)-(iv) initialized to the state at time
+trestart in panel (a). Realization (i) corresponds to the simulation in panel (a). Enhanced view of (iv) is shown at right.
+https://doi.org/10.1371/journal.pcbi.1005783.g007
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+14 / 30
+ third paced beat was recorded. A set of three independent realizations were run, each starting
+from this same model initial condition but with simulations performed using different initial
+pseudorandom number generator seeds. These realizations therefore differ in the particular
+pattern of LCC and RyR channel gating.
+Fig 7B shows: (i) the DAD from the original simulation in Fig 7A at 4.9 s; and (ii)-(iv) the
+three additional simulations initialized at trestart. Each simulation exhibits substantial differ-
+ences in DAD amplitude along the fiber. In panel (iv), a spontaneous traveling action potential
+wave is observed. The wave originates from a region of locally high DAD amplitude near cell
+#50 and emanates in either direction along the fiber.
+These results illustrate that arrhythmic events can occur probabilistically in tissue. By
+restarting the simulations immediately prior to the DADs, it became evident that the variabil-
+ity in DAD amplitude was due to variations in the stochastic events that occurred in this brief
+time window. Taken together with the results from Figs 5 and 6, the variability in DAD ampli-
+tude in the fiber can therefore be attributed to the underlying randomness of Ca2+ wave
+dynamics and thus stochastic RyR gating.
+Roles of Ca2+ loading, IK1 density, and ggap in fiber DADs
+Conditions reflecting pathological remodeling influenced the distribution of Vmax in the fiber.
+Fig 8A shows fiber simulations when all cells are initialized to identical initial conditions with
+Ca2+ overload and β-adrenergic stimulation. The resulting DADs resemble those from the
+paced fiber shown in Fig 7. As in individual cells, Vmax increases with initial [Ca2+]i. At the
+highest [Ca2+]i, Vmax lies between -74.1 mV and -70.7 mV, a range of 3.4 mV. There is notably
+less variability than in individual cells at a similar Ca2+ load (SD of 0.7 compared to 4.6 mV,
+see Fig 6D). This reduction in variability is due to electrotonic coupling through inter-cellular
+gap junctional conductance, ggap, which attenuates spatial gradients in V.
+Fig 8B shows similar simulations where IK1 density was reduced by 50%. This results in
+greater fluctuations of Vmax over a range of 8.0 mV (SD 1.5 mV) compared to baseline. This is
+consistent with the increase in Vmax SD from 1.7 to 6.1 mV when IK1 density was decreased to
+50% in isolated cells (see Fig 6D) and also reflects a substantial reduction in Vmax variability
+due to electrotonic coupling in the fiber. Reducing ggap by 50% in addition to the 50% IK1
+reduction further amplifies Vmax spatial fluctuations, resulting in a range of 10.2 mV (SD 2.2
+mV, Fig 8C). The increase in variability arises from the reduced electrotonic load experienced
+by each cell. These results demonstrate how perturbations of IK1 and ggap increase the likeli-
+hood of observing large DADs.
+Overview of method for estimating rare event probabilities
+The DAD results presented thus far indicate that spatial fluctuations in Vmax can result in a
+triggered beat emanating from a cluster of cells in which Vmax exceeds the threshold voltage (~
+-55 mV). For a fiber of a given length, the probability of this event depends upon both the
+mean Vmax and the likelihood of a deviation from the mean with sufficient amplitude to reach
+threshold. Under conditions where the mean Vmax is far below threshold, however, it is unclear
+whether it would be plausible to observe a sufficiently large fluctuation that causes a triggered
+beat. We sought to characterize the likelihood of such events by estimating the upper tail of the
+Vmax distribution.
+In Fig 5, we showed that Vmax was strongly correlated with Jmax in DAD simulations of iso-
+lated cells. In tissue, however, electrotonic coupling attenuates DAD amplitude by drawing
+current to neighboring cells via gap junctions. However, if spontaneous Ca2+ release occurs
+synchronously in a cluster of cells, the potential gradient between cells is smaller, thus reducing
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+15 / 30
+ the gap junction current and increasing DAD amplitude. Therefore the Vmax of a given myo-
+cyte in tissue depends on the relative timing and amplitude of Ca2+ release in nearby cells.
+We hypothesize that extreme deviations in Vmax are caused by rare spatially clustered syn-
+chronized Ca2+ release events. However, estimating the probability of extremely rare events
+(e.g. 1 in 106) by direct simulation is computationally prohibitive using the full biophysical
+model since it would require potentially millions of simulations. Therefore, a method was
+developed for estimating the probability of such events using the output from a limited set of
+simulations.
+As shown in the previous sections, stochastic RyR activity gives rise to random Ca2+ wave
+patterns and thus variable profiles of JRyR. Therefore JRyR is a stochastic process that is depen-
+dent on complex microscopic events, which are computationally intensive to sample. The
+method leverages the fact that JRyR has a relatively simple distribution by resampling JRyR pro-
+files from a set of simulations that is sufficiently large to approximate the distribution of JRyR.
+Multiple realizations of release events (i.e., the JRyR values from each separate simulation of the
+full cable model) are generated using a resampling method in which cell positions along the
+cable are shuffled to produce independent, distinct realizations. The key to this approach is the
+fact that spontaneous Ca2+ release events are decoupled across the cells in the fiber (see
+Discussion).
+Fig 8. Roles of initial [Ca2+]i, IK1 density, and ggap in DAD variability in the fiber model. (a)
+Spatiotemporal profile of V (left) and Vmax profile (right) in a 480-cell fiber under baseline conditions. Similar
+simulations are shown with 50% IK1 reduction (b) and both 50% IK1 and 50% ggap (c). The range of Vmax
+values are indicated for the red traces, which correspond to the images on the left. To avoid boundary effects,
+the outer 24 cells on either end were initialized to normal SR loads. The inner cells were initialized to identical
+initial conditions to those of Fig 6. All simulations initialized with [Na+]i = 10 mM.
+https://doi.org/10.1371/journal.pcbi.1005783.g008
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+16 / 30
+ In principle, in using this approach one could develop a modified tissue model in which
+JRyR in each cell is fixed to one of the resampled JRyR profiles rather than being simulated, thus
+greatly reducing the computational burden. However, this would still require immense
+computational power to simulate the remaining differential equations when estimating the
+probability of extreme events. The second part of the method further increases computational
+efficiency by fitting a linear spatial-averaging model to predict Vmax.from JRyR alone. This per-
+mits the rapid estimation of the greatest Vmax in a 1D tissue model in millions of simulations
+and thus can estimate the probability that the cable will reach a proarrhythmic threshold
+potential.
+The following sections describe this method and validate its accuracy for estimating DAD
+probabilities. We then apply this new technique to show how myocyte properties within a
+fiber, using IK1 density and ggap as examples, affect the likelihood of rare large amplitude
+DADs.
+Filtering method for estimating Vmax from JRyR
+A filtering method was developed for estimating Vmax from the spatiotemporal profile of JRyR
+in a single 1D fiber simulation. The left column of Fig 9A shows the simulation from Fig 8A
+where [Ca2+]i was initialized to 300 nM, and the right column illustrates the steps used in the
+filtering method. The first step in the method is to apply a uniform averaging filter to JRyR at
+each point in time to obtain a spatially smoothed profile
+J
+f
+RyR x; t
+ð
+Þ ¼ 1
+W
+X
+ðW� 1Þ=2
+k¼� ðW� 1Þ=2
+JRyR x þ k; t
+ð
+Þ
+ð4Þ
+where x refers to cell index, t refers to time, and W is the width of the filter (an odd integer).
+The rational for doing this is that membrane potential fluctuations of the cell at position x is
+influenced not only by the way its own complement of NCX responding to the local JRyR, but
+is also influenced by membrane potential fluctuations produced in response to JRyR and NCX
+activity in neighboring cells. The filter width W will therefore depend on the strength of gap
+junction coupling. For each cell, the maximum Jf
+RyR value over all time was computed as
+Jf
+maxðxÞ ¼ max
+t fJ
+f
+RyRðx; tÞg
+ð5Þ
+The value of W maximizing the correlation coefficient between Vmax and Jf
+max was calcu-
+lated at each different value of gap junction coupling conductance used. Jf
+max was then normal-
+ized to obtain estimates of Vmax using the formula
+Vf
+max x
+ð Þ ¼ mV þ sV
+sV
+ðJf
+maxðxÞ � mJÞ
+6
+where μV and σV are estimates of the mean and SD respectively of Vmax, and μJ and σJ are esti-
+mates of the mean and SD respectively of Jf
+max. These estimates are calculated from a single
+full 1D tissue simulation containing ~ 450 cells. Note how in the example of Fig 9A the esti-
+mated voltage profile Vf closely resembles that of V. This approach therefore leverages the
+strong linear correlation between JRyR and Vmax (Fig 5B and 5C) and the statistical indepen-
+dence of Ca2+ release events to dramatically reduce the number of simulations needed to esti-
+mate the probability distribution of membrane potential fluctuations.
+The filtering method was applied to simulations of DADs with baseline conditions, with
+50% IK1, and with both 50% IK1 and 50% ggap (Fig 9B). In the non-baseline conditions, initial
+[Ca2+]i was adjusted from 300 to 220 nM so that μV would be approximately equal to that of
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+17 / 30
+ the baseline. The width W of the smoothing filter is dependent on the fiber model parameters
+and therefore was optimized separately for each case. Table 1 shows the parameter fits for each
+condition. The resulting fits of Vf
+max to Vmax have high correlation coefficient values (r2 �
+0.90). All values of μV fall within a narrow range from -77.0 mV to -79.1 mV, while the values
+of μJ in the two non-baseline conditions are less than half of the baseline value due to their
+lower Ca2+ loads.
+The increase in Vmax variability in the two pathological conditions is reflected in the param-
+eters of the filtering model. It can be shown that the quantity SV = (σV/σJ)/W scales with the
+Fig 9. Filtering method for estimating Vmax from the spatiotemporal JRyR profile in a fiber. (a)
+Illustration of the filtering method for an example fiber simulation. A uniformly-weighted spatial smoothing filter
+of width W was applied to the spatiotemporal JRyR profile. The maximum values of the filtered profile were
+then normalized to obtain an estimate of the voltage profile (see Eq 6). (b) The filtering method was applied to
+three fiber simulations using the conditions indicated above each plot. The filtering method estimate (red)
+accurately reproduced Vmax from the original simulation (black). Parameters are listed in Table 1.
+https://doi.org/10.1371/journal.pcbi.1005783.g009
+Table 1. Parameters used for filtering method in Fig 9B.
+[Ca2+]i (nM)
+r2
+μV (mV)
+μJ (μM ms-1)
+σV (mV)
+σJ (μM ms-1)
+W (cells)
+SV
+Baseline
+300
+0.900
+-77.0
+0.526
+0.665
+0.00873
+43
+1.77
+50% IK1
+220
+0.946
+-78.3
+0.248
+1.38
+0.0124
+49
+2.27
+50% IK1, 50% ggap
+220
+0.953
+-79.1
+0.242
+1.34
+0.0150
+27
+3.31
+https://doi.org/10.1371/journal.pcbi.1005783.t001
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+18 / 30
+ SD of Vf
+max (see S1 Text). Recall that 50% IK1 reduction increased variability of V in the cell
+model (Fig 6). For this condition in the fiber, SV is 28% larger compared to baseline, primarily
+reflecting the higher value of σV. Imposing 50% ggap results in a filter width of only 27 cells
+compared to 43 and 49 in the other cases due to local decoupling of cells when gap junction
+conductance is decreased. This resulted in an SV that is 87% larger than baseline and 46%
+larger than with 50% IK1 alone.
+These results show that the filtering method accurately estimates fluctuations in Vmax based
+on the JRyR profile. Moreover, the new empirical relationships derived here between JRyR and
+Vmax provide an approach to yield new insight and intuition into how changes in cellular prop-
+erties and environment, such as reductions in outward currents and electrotonic coupling ana-
+lyzed here, alter and in this case enhance spatial fluctuations in Vmax.
+Resampling method for estimating rare event probabilities
+The filtering method enables studies of properties of Vmax without the need to simulate the full
+biophysical model. Studying the statistical properties of Vmax requires the generation of large
+numbers of realizations. To do this, independent samples of Vmax were generated by shuffling
+cell positions in the JRyR profile, as illustrated in Fig 10A. Note that boundary effects the outer
+24 cells on either end of the fiber are initialized to normal SR Ca2+ loads and are not included
+in the shuffle. The filter method was then applied to the shuffled JRyR profile to estimate Vmax.
+An example Vmax profile obtained using this method is shown on the right. Note that the fluc-
+tuations about the mean μV are qualitatively similar to those of the original simulation. In Fig
+7, it was shown how a triggered propagating ectopic beat originated from a region of the fiber
+that experienced extreme DADs. Unfortunately it is impossible to perform the millions of
+Fig 10. Method for estimation of rare extreme DAD probabilities. (a) Example illustrating how independent fiber realizations are
+generated by shuffling cell positions and applying the filtering method. The resulting Vmax profile of the original simulation (black) and
+Vf
+max obtained after shuffling (red) are plotted on the right. Vpeak is defined as the maximum potential achieved along the length of the
+fiber. (b) Histograms of Vpeak from model simulations (black), the filtering-only method (blue), and filtering and shuffling method (red).
+See text for details. (c) Upper tail of the distributions from (b). (d) Predicted tail of Vpeak distributions plotted relative to μV for fibers with
+the baseline model (blue), with 50% IK1 reduction (red), and with both 50% IK1 reduction and 50% ggap (magenta).
+https://doi.org/10.1371/journal.pcbi.1005783.g010
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+19 / 30
+ cable simulations using the full biophysical model that are needed to study the probability of
+generating ectopic beats as model parameters are varied. However, our shuffling and filtering
+method does enable us to study the probability of a surrogate event of interest for each fiber
+simulation, with the surrogate event defined as the greatest value of Vmax realized along the
+fiber, referred to here as Vpeak.
+The shuffling of cell positions makes two assumptions. The first is that the JRyR profiles of
+the cells are decoupled stochastic processes. The second assumption is that the fiber contains a
+sufficient number of cells such that the true distribution of JRyR is well represented by the col-
+lection obtained from a single simulation.
+Previous work has shown that sub-threshold membrane depolarization induces Ca2+ sparks
+and waves [56]. It is unclear whether local depolarizations in the membrane potential caused
+by spontaneous release affects release in neighboring cells, which would invalidate the inde-
+pendence assumption. This was tested by computing the peak amplitude and peak time of
+[Ca2+]i in the fiber simulation represented by the red trace in Fig 8C. The absolute difference
+in the peak amplitude and peak time were then computed for all adjacent cell pairs and all cell
+pairs separated by a 50-cell distance along the fiber. Assuming that Ca2+ release in 50th neigh-
+bors are decoupled, if release in adjacent cells were coupled then one would expect the distri-
+butions of peak amplitude and timing to differ from those of the 50th neighbor pairs. In
+particular, if local Ca2+ release events were more synchronized, one would expect the differ-
+ence in timing to be smaller. However, no substantial differences in Ca2+ release peak or tim-
+ing were observed (S4 Fig), as these distributions also were not significantly different
+according to non-parametric Kruskal-Wallis tests (p = 0.77, 0.66). Therefore the coupling
+effect of adjacent cells does not substantially affect spontaneous Ca2+ release, which can thus
+be treated as a decoupled process in each cell in the fiber.
+Validation of these assumptions also requires that the distribution of Vpeak generated
+using this method match that obtained when using the detailed biophysical model. This
+distribution was estimated from 1,000 independent realizations. Simulating the ~500-cell
+fiber with 25,000 release sites in each cell is computationally prohibitive. For the purposes
+of the validation, the number of release sites was reduced to 2,500 and the fiber length to
+96 cells. The values of μV and σV were computed using the Vmax values from all cells in all
+fibers.
+Fig 10B compares the true distribution of Vpeak computed using the full biophysical
+model to that obtained from applying only the filtering method to the simulated JRyR pro-
+files (without shuffling). While this distribution exhibits a very small bias of ~ -0.05 mV, it
+is not significantly different from the true distribution on the basis of a Kruskal-Wallis test
+after correcting for the bias by subtracting their means (p = 0.89). The shuffling method was
+then validated by resampling from the JRyRs in all 1,000 fibers to produce 1,000 96-cell fiber
+realizations and computing Vpeak with the filtering method. While the resulting distribution
+also exhibits a very small bias of ~ -0.08 mV, it is not significantly different from the true
+distribution after adjusting the means (p = 0.69) (Fig 10B). The upper tails of the distribu-
+tions containing the extreme DADs of interest are also similar (Fig 10C). To validate the
+second assumption that the sampling population of JRyR is sufficiently large, these tests were
+repeated using a subset of 5 of the 1,000 fibers to compute μV, σV, and the population of
+resampled JRyR’s (bias +0.05 mV, p = 0.68). Therefore, the method is accurate using a total
+of ~ 500 simulated cells. In summary, the method outlined here is a computationally effi-
+cient approach that permits the rapid estimation of the Vpeak distribution using output from
+a single 500-cell fiber simulation.
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+20 / 30
+ Prediction of rare events
+Fig 10D plots the probability that Vpeak—μV exceeds a given potential estimated from an
+ensemble of 106 realizations. Reducing IK1 by 50% shifts the distribution tail to greater ampli-
+tude DADs compared to the baseline model. The probability of observing a Vpeak 3 mV greater
+than μV (-77.1 mV) is 9.9 × 10−5 in the baseline model compared to 0.096 with 50% reduction
+in IK1, a nearly 1000-fold increase. The most extreme event observed with 50% IK1 was 6.1 mV
+greater than μV compared to 3.4 mV in baseline, corresponding to DAD amplitudes 41% and
+21% above average, respectively. Reducing ggap by 50% further increases the likelihood of
+large-amplitude DADs, with the probability of a 3 mV DAD reaching 0.50, a 5000-fold
+increase over baseline, and the most extreme event observed at 7.5 mV, corresponding to a
+DAD amplitude 53% higher than average. These results demonstrate how changes ion channel
+expression or function can alter the probability of supra-threshold membrane potential fluctu-
+ations. In this case, reductions in IK1 and ggap considerably widen the distribution of Vpeak and
+increase the probability of occurrence of larger Vpeak values by multiple orders of magnitude.
+To illustrate the nature of these rare events, the realizations exhibiting the greatest Vpeak val-
+ues were examined in each condition. Fig 11A plots Vmax—μV. Because Vmax at any position is
+determined by an average of the Ca2+ release profiles over a window of cells, each rare depolar-
+ization occurs at a cluster of cells whose width corresponds to the window size. Fig 11B shows
+the underlying JRyR profiles and the filter window centered on the Vpeak. In each case, the
+extreme event occurs at a cluster of cells within the window where JRyR tends to be greater and
+more synchronized than in the rest of the fiber. This result demonstrate that rare (occurring
+~1 in 106 beats in a 500-cell fiber) proarrhythmic events result from spontaneous Ca2+ release
+exhibiting high (1) flux magnitude, (2) synchronization, and (3) spatial clustering. None of the
+999,999 other simulations result in such an extreme event due to a lack of one or more of these
+properties. Note that because the window size is smaller in the case of 50% ggap, fewer cells
+need to fulfill these three criteria and thus the probability of extreme events is much higher.
+Discussion
+In this study we have presented a biophysically detailed stochastic computational model of the
+ventricular cardiac myocyte describing spatial Ca2+ diffusion between release sites and incor-
+porated it into a tissue-scale model to study the mechanisms and statistical properties of
+DADs. Loading of SR Ca2+ is known to cause spontaneous Ca2+ release [6, 47, 57]. In this
+model, Ca2+ waves were generated when passive diffusion of Ca2+ between release sites caused
+Ca2+ sparks to propagate across the cell. In agreement with experimental studies, RyR sensitiv-
+ity modulated the threshold SR Ca2+ load at which this instability arises [58]. Rather than
+explicitly modeling RyR regulation mechanisms such as interaction with calmodulin [59],
+phosphorylation by activated CaMKII [60] and PKA [61], allosteric channel decoupling due to
+PKA-dependent dissociation of FKBP12.6 [62], and oxidation by reactive oxygen species [33,
+41], RyR opening rate was scaled such that the model reproduced experimentally observed
+triggered APs at 1 Hz pacing [33]. [Ca2+]JSR-dependent regulation of the RyRs increases their
+sensitivity to cytosolic [Ca2+] [63, 64], but its role in spontaneous Ca2+ release is controversial.
+In our model of RyR gating, it was assumed that this mechanism has little effect on RyR open
+probability when [Ca2+]JSR < 1 mM [65, 66] and therefore played a negligible role in dynami-
+cally regulating the RyRs in this study.
+In our investigation, we found that pacing the baseline model at 1 Hz with 50% IK1 inhibi-
+tion (in the absence of β-adrenergic stimulation) caused increased APD and cellular Ca2+ load-
+ing over time. This resulted in greater inward NCX current during the repolarization phase,
+thus further increasing APD and Ca2+ loading. This positive-feedback loop led to EADs and
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+21 / 30
+ ultimately failure to repolarize. It is possible that the saturating behavior of LCC Ca2+-depen-
+dent activation in this model prevents sufficient LCC inhibition required for repolarization in
+the presence of elevated SR Ca
+2+. The LCC model also does not incorporate “global” [Ca2+]i
+sensing [67], which would inhibit LCC openings in the presence of sustained elevated [Ca2+]i.
+Future work is needed to understand the contributions of these mechanisms, as they may
+affect the conditions under which the model exhibits DADs during pacing.
+The distribution of DADs was controlled by both [Ca2+]i and [Ca2+]SR. This was revealed
+by the apparent change in the threshold SR Ca2+ load for spontaneous Ca2+ wave formation
+during pacing (see Fig 3). Elevated diastolic [Ca2+]i increased RyR opening rate and thus per-
+petuated Ca2+ wave formation at lower SR Ca2+ loads. It also caused more rapid loading of the
+SR to induce overload. Cellular Ca2+ loading also increased the amplitude of DADs due to the
+greater number and concurrence of Ca2+ wave nucleation sites, which is in agreement with
+Fig 11. Realizations of rare extreme DADs. (a) Plots of Vmax—μV in the realizations from Fig 10D containing the most extreme DADs out of 106
+trials. Curves correspond to the baseline model (blue), 50% reduction of IK1 (red), and both 50% IK1 and 50% ggap (magenta). (b) Spatiotemporal
+JRyR profiles in each realization from panel (a). Brackets and dotted lines mark the location of the filter window centered on the extreme DAD.
+https://doi.org/10.1371/journal.pcbi.1005783.g011
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+22 / 30
+ experimental studies [9, 10]. Consistent with our results, Wasserstrom et al. reported that cel-
+lular Ca2+ loading reduced DAD delay and increased synchrony associated this with greater
+likelihood of triggered activity [10].
+The formation of Ca2+ sparks and waves may be influenced by additional factors not con-
+sidered in this study. These include intrinsic properties such as release site heterogeneity,
+including dyad geometry, RyR cluster morphology [19, 68], local SR connectivity [69], and
+release site spacing [70, 71]. Additionally, cell-to-cell heterogeneity would also affect DADs in
+tissue. Further work is needed to quantify the contributions of these factors to DAD
+variability.
+Triggered events were investigated using a fiber model. Experimental study of the nature of
+DAD-induced arrhythmias is difficult due the limited temporal and spatial resolutions of live
+multiplex fluorescence imaging of tissue preparations. Xie et al. used a computational tissue
+model to study how the critical size of an isolated cluster of cells exhibiting identical spontane-
+ous Ca2+ release events required to trigger an AP depended on a variety of tissue geometries
+and was reduced under pathophysiological conditions [72]. They further showed that DAD
+amplitude and the critical cell mass depended sensitively on the amplitude of the spontaneous
+[Ca2+]i transient. Here we have investigated stochastic variability in DAD amplitude in a long
+fiber of Ca2+-overloaded cells. We showed that large DADs occurred probabilistically due to
+random patterns of RyR gating and the formation of Ca2+ waves that gave rise to high-ampli-
+tude, synchronized Ca2+ release flux in a cluster of cells. Such events trigger arrhythmias by
+causing ectopic beats, inducing regional conduction block via Na+ channel inactivation [73],
+and increasing variability of repolarization [46]. Heterogeneity of cell types and intercellular
+variability of Ca2+ handling may also play an important role in determining the likelihood and
+location of triggered foci [10] but exploration of these factors remains beyond the scope of this
+study. Furthermore, the potential effects of pro-arrhythmic beat-to-beat AP variability [74] or
+EADs [75], which could affect Ca2+ loading and DAD timing, were not examined.
+The role of IK1, which acts to stabilize the resting membrane potential, affected the DAD
+distribution in isolated cells. Loss of IK1 function has been associated with arrhythmogenesis
+in diseases such as heart failure [49], Andersen’s syndrome [50], and long QT syndrome [51].
+Maruyama et al. showed that the Ca2+-membrane voltage gain, defined as the ratio of DAD
+amplitude to spontaneous [Ca2+]i transient amplitude, increased following IK1 suppression
+[76]. Consistent with this finding, the model exhibited a considerable increase in DAD ampli-
+tude in both isolated cells and in the fiber when IK1 density was reduced by 50%. Most notably,
+IK1 suppression increased DAD amplitude variability, dramatically increasing (by 1000-fold)
+the probability of occurrence of potentially arrhythmogenic large-amplitude DADs. Note that
+the model does not include Ca2+-dependent regulation of IK1, as this mechanism has been con-
+troversial [77–79]. While a recent study by Nagy et al. [80] suggests elevating [Ca2+]i at a fixed
+concentration upregulates IK1 via an increase in CaMKII activity, there remains insufficient
+data to constrain a model of this mechanism. Future models could be informed by further
+studying dynamic changes in CaMKII activity and IK1 in response to elevated [Ca2+]i. Reduc-
+tion of gap junction conductance, another pathological feature of diseases such as HF [55], fur-
+ther increased the variability of DAD amplitude in the fiber by reducing the spatial scale of
+electrotonic coupling. These findings are consistent with a previous modeling study that
+showed that fewer contiguous cells are required to exhibit DADs to produce a triggered beat
+under such conditions [72].
+The relationship between IK1 and/or ggap to the probability of occurrence of extreme DADs
+demonstrated here is but one of many possible examples of how alterations of cellular mecha-
+nisms or environment can modulate propensity for arrhythmia. For example, HF also causes
+extensive remodeling of the TTs and dyads, leading to reduced CICR efficiency [81, 82]. The
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+23 / 30
+ model can be used to directly probe the effects of corresponding perturbations such as the
+number of release sites, RyR cluster size, and dyad volume on intracellular Ca2+ cycling, the
+formation of spontaneous Ca2+ sparks and waves, and rare arrhythmic events. Thus the novel
+method presented here provides a general framework for prediction of arrhythmia likelihoods
+in response to specific aspects of disease-related physiological remodeling.
+A significant contribution of this work is that the emergence of sudden arrhythmias can be
+causally linked to stochastic molecular events. A computationally efficient method was devel-
+oped to estimate the probability of extreme DADs. An important assumption of this method is
+that the spontaneous Ca2+ release events in neighboring cells are decoupled. It is known that
+membrane depolarization increases the frequency of Ca2+ waves by reducing NCX-mediated
+Ca2+ efflux and thus promoting Ca2+ waves due to increased intracellular [Ca2+] [56]. There-
+fore, a release event in one cell that causes a local increase in V may hasten spontaneous Ca2+
+release in its neighbors. Validation of our method suggests that this coupling phenomenon has
+negligible impact on the Vmax distribution because the effect is weak compared to the intrinsic
+variability of spontaneous Ca2+ release. Note that the model does not account for gap junction
+mediated intercellular Ca2+ diffusion, resulting in cell-to-cell transfer of Ca2+ waves, though
+the prevalence of such events remains unclear [9, 83–87].
+There are two important conclusions that emerge from using this method. First, variability
+of the inward current due to stochastic RyR gating causes random patterns of Ca2+ wave
+dynamics and results in substantial DAD variability at the tissue scale, particularly in the path-
+ological states tested where IK1 and ggap were reduced. Second, while one can imagine a case
+where a contiguous cluster of cells exhibit large synchronized spontaneous Ca2+ release, the
+probability distribution of such events has not been well characterized. In a 496-cell fiber with
+reduced IK1 and gap junction coupling, the largest DAD amplitude observed in an ensemble of
+106 realizations had amplitude ~50% greater than the mean DAD amplitude. For such a fiber
+paced at 1 Hz and exhibiting a DAD after every beat, one could expect to observe such an
+event approximately once every 11 days. Thus extreme DADs, while quite rare, are still possi-
+ble over relevant time frames. Further work is needed to estimate the probability of such events
+in whole heart, as 3D tissue is ~1–2 orders of magnitude less likely to exhibit triggered beats
+due to the increased electrotonic coupling [72] but also contain a much greater number of
+cells than tested here. Nevertheless, the results presented here suggest that variability due to
+stochastic molecular events play a large role in the initiation of cardiac arrhythmias and sud-
+den cardiac death.
+Supporting information
+S1 Fig. NCX current during an action potential at 1 Hz pacing under normal conditions.
+(EPS)
+S2 Fig. Baseline model paced at 1 Hz for 16 seconds. The (a) action potential and (b, c) Ca2+
+dynamics reach steady state after ~ 10 seconds.
+(EPS)
+S3 Fig. Extended version of protocol in Fig 3. (a) DADs and triggered APs continue to occur
+after cessation of pacing after t = 30 s. [Na+]i is ramped down to 15 mM over t = 35 to 40 s,
+resulting in sub-threshold DADs that occur at lower frequency. (b) APD of paced and DAD-
+triggered APs. APD decreases mainly as [Na+]i rises due to reduced inward NCX current. (c)
+[Ca2+]i and (d) average [Ca2+]JSR are shown.
+(EPS)
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+24 / 30
+ S4 Fig. Independence of spontaneous Ca2+ release in a fiber. [Ca2+]i profiles were taken
+from the simulation represented by the red trace in Fig 8C, a 496-cell fiber with 50% IK1 and
+50% ggap. The absolute difference in peak [Ca2+]i was computed for each pair of adjacent (dC1)
+and 50th neighbor (dC50) cells. The absolute difference in the times of the peaks was also com-
+puted (dT1, dT50). Histograms and QQ plots of the differences in (a) time of peak and (b) peak
+[Ca2+]i. Both QQ plots exhibit linear trends, implying that the distributions are indeed alike.
+Therefore, the timing and amplitude of spontaneous Ca2+ release of adjacent cells do not differ
+substantially from those of distant cells.
+(EPS)
+S1 Equations. Release site Ca2+ transport equations.
+(DOCX)
+S1 Table. Release site Ca2+ transport parameters.
+(DOCX)
+S1 Text. Supporting description of model and filtering method.
+(DOCX)
+S1 Movie. Volume rendering of single-cell spontaneous Ca2+ release. This illustrates the
+effect of varying SR Ca2+ loads on Ca2+ wave dynamics, as shown in Fig 4.
+(M4V)
+S2 Movie. Volume rendering of nine independent single-cell simulations. Each was started
+with identical initial conditions to illustrate the variability in Ca2+ wave dynamics due to sto-
+chastic Ca2+ spark activity, as shown in Fig 5.
+(M4V)
+Author Contributions
+Conceptualization: Mark A. Walker, Viatcheslav Gurev, John J. Rice, Joseph L. Greenstein,
+Raimond L. Winslow.
+Formal analysis: Mark A. Walker.
+Funding acquisition: Raimond L. Winslow.
+Investigation: Mark A. Walker.
+Methodology: Mark A. Walker, Viatcheslav Gurev, Joseph L. Greenstein, Raimond L.
+Winslow.
+Project administration: John J. Rice.
+Resources: Viatcheslav Gurev, John J. Rice, Raimond L. Winslow.
+Software: Mark A. Walker, Viatcheslav Gurev.
+Supervision: John J. Rice, Joseph L. Greenstein, Raimond L. Winslow.
+Validation: Mark A. Walker.
+Visualization: Mark A. Walker.
+Writing – original draft: Mark A. Walker.
+Writing – review & editing: Mark A. Walker, Viatcheslav Gurev, John J. Rice, Joseph L.
+Greenstein, Raimond L. Winslow.
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+25 / 30
+ References
+1.
+Cheng H, Lederer WJ, Cannell MB. Calcium sparks: elementary events underlying excitation-contrac-
+tion coupling in heart muscle. Science. 1993; 262(5134):740–4. PMID: 8235594.
+2.
+Stern MD. Theory of excitation-contraction coupling in cardiac muscle. Biophys J. 1992; 63(2):497–517.
+https://doi.org/10.1016/S0006-3495(92)81615-6 PMID: 1330031
+3.
+Cannell MB, Cheng H, Lederer WJ. Spatial non-uniformities in [Ca2+]i during excitation-contraction
+coupling in cardiac myocytes. Biophys J. 1994; 67(5):1942–56. https://doi.org/10.1016/S0006-3495(94)
+80677-0 PMID: 7858131
+4.
+Cheng H, Lederer MR, Lederer WJ, Cannell MB. Calcium sparks and [Ca2+]i waves in cardiac myo-
+cytes. Am J Physiol. 1996; 270(1 Pt 1):C148–59. PMID: 8772440.
+5.
+Zygmunt AC. Intracellular calcium activates a chloride current in canine ventricular myocytes. Am J
+Physiol. 1994; 267(5 Pt 2):H1984–95. PMID: 7977830.
+6.
+Berlin JR, Cannell MB, Lederer WJ. Cellular origins of the transient inward current in cardiac myocytes.
+Role of fluctuations and waves of elevated intracellular calcium. Circul Res. 1989; 65(1):115–26. https://
+doi.org/10.1161/01.RES.65.1.115
+7.
+Moss AJ, Davis HT, DeCamilla J, Bayer LW. Ventricular ectopic beats and their relation to sudden and
+nonsudden cardiac death after myocardial infarction. Circulation. 1979; 60(5):998–1003. https://doi.org/
+10.1161/01.cir.60.5.998 PMID: 487558
+8.
+Laurita KR, Katra RP. Delayed afterdepolarization-mediated triggered activity associated with slow cal-
+cium sequestration near the endocardium. Journal of Cardiovascular Electrophysiology. 2005; 16(2
+cc):418–24. https://doi.org/10.1046/j.1540-8167.2005.40429.x PMID: 15828888
+9.
+Fujiwara K, Tanaka H, Mani H, Nakagami T, Takamatsu T. Burst emergence of intracellular ca2+
+waves evokes arrhythmogenic oscillatory depolarization via the Na+-Ca2+ exchanger: Simultaneous
+confocal recording of membrane potential and intracellular Ca2+ in the heart. Circul Res. 2008;
+103:509–18. https://doi.org/10.1161/CIRCRESAHA.108.176677 PMID: 18635824
+10.
+Wasserstrom JA, Shiferaw Y, Chen W, Ramakrishna S, Patel H, Kelly JE, et al. Variability in timing of
+spontaneous calcium release in the intact rat heart is determined by the time course of sarcoplasmic
+reticulum calcium load. Circul Res. 2010; 107(9):1117–26. https://doi.org/10.1161/CIRCRESAHA.110.
+229294 PMID: 20829511
+11.
+Satoh H, Blatter LA, Bers DM. Effects of [Ca2+]i, SR Ca2+ load, and rest on Ca2+ spark frequency in
+ventricular myocytes. American Journal of Physiology Heart and Circulation Physiology. 1997; 272:
+H657–H68.
+12.
+Chen W, Asfaw M, Shiferaw Y. The statistics of calcium-mediated focal excitations on a one-dimen-
+sional cable. Biophys J. 2012; 102(3):461–71. https://doi.org/10.1016/j.bpj.2011.12.045 PMID:
+22325268
+13.
+Greenstein JL, Winslow RL. An integrative model of the cardiac ventricular myocyte incorporating local
+control of Ca2+ release. Biophys J. 2002; 83(6):2918–45. https://doi.org/10.1016/S0006-3495(02)
+75301-0 PMID: 12496068
+14.
+Chen-Izu Y, McCulle SL, Ward CW, Soeller C, Allen BM, Rabang C, et al. Three-dimensional distribu-
+tion of ryanodine receptor clusters in cardiac myocytes. Biophys J. 2006; 91(1):1–13. https://doi.org/10.
+1529/biophysj.105.077180 PMID: 16603500; PubMed Central PMCID: PMCPMC1479079.
+15.
+Subramanian S, Viatchenko-Karpinski S, Lukyanenko V, Gyo
+¨rke S, Wiesner TF. Underlying mecha-
+nisms of symmetric calcium wave propagation in rat ventricular myocytes. Biophys J. 2001; 80(1):1–11.
+https://doi.org/10.1016/S0006-3495(01)75991-7 PMID: 11159379
+16.
+Weber CR, Piacentino V 3rd, Ginsburg KS, Houser SR, Bers DM. Na+-Ca2+ Exchange Current and
+Submembrane [Ca2+] During the Cardiac Action Potential. Circul Res. 2001; 90(2):182–9. https://doi.
+org/10.1161/hh0202.103940
+17.
+Hayashi T, Martone ME, Yu Z, Thor A, Doi M, Holst MJ, et al. Three-dimensional electron microscopy
+reveals new details of membrane systems for Ca2+ signaling in the heart. J Cell Sci. 2009; 122(Pt
+7):1005–13. https://doi.org/10.1242/jcs.028175 PMID: 19295127
+18.
+Hou Y, Jayasinghe I, Crossman DJ, Baddeley D, Soeller C. Nanoscale analysis of ryanodine receptor
+clusters in dyadic couplings of rat cardiac myocytes. J Mol Cell Cardiol. 2015; 80:45–55. https://doi.org/
+10.1016/j.yjmcc.2014.12.013 PMID: 25536181.
+19.
+Walker MA, Williams GS, Kohl T, Lehnart SE, Jafri MS, Greenstein JL, et al. Superresolution modeling
+of calcium release in the heart. Biophys J. 2014; 107(12):3018–29. https://doi.org/10.1016/j.bpj.2014.
+11.003 PMID: 25517166; PubMed Central PMCID: PMCPMC4269784.
+20.
+Scriven DR, Dan P, Moore ED. Distribution of proteins implicated in excitation-contraction coupling in
+rat ventricular myocytes. Biophys J. 2000; 79(5):2682–91. https://doi.org/10.1016/S0006-3495(00)
+76506-4 PMID: 11053140
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+26 / 30
+ 21.
+Jayasinghe ID, Cannell MB, Soeller C. Organization of ryanodine receptors, transverse tubules, and
+sodium-calcium exchanger in rat myocytes. Biophys J. 2009; 97(10):2664–73. https://doi.org/10.1016/j.
+bpj.2009.08.036 PMID: 19917219
+22.
+Diaz ME, Trafford AW, O’Neill SC, Eisner DA. Measurement of sarcoplasmic reticulum Ca2+ content
+and sarcolemmal Ca2+ fluxes in isolated rat ventricular myocytes during spontaneous Ca2+ release. J
+Physiol. 1997; 501 (Pt 1):3–16. PMID: 9174989; PubMed Central PMCID: PMCPMC1159499.
+23.
+Williams GSB, Chikando AC, Tuan H-TM, Sobie EA, Lederer WJ, Jafri MS. Dynamics of calcium sparks
+and calcium leak in the heart. Biophys J. 2011; 101(6):1287–96. https://doi.org/10.1016/j.bpj.2011.07.
+021 PMID: 21943409
+24.
+Crank J, Nicolson P, Hartree DR. A practical method for numerical evaluation of solutions of partial dif-
+ferential equations of the heat-conduction type. 1947. p. 50-.
+25.
+Belardinelli L, Isenberg G. Actions of adenosine and isoproterenol on isolated mammalian ventricular
+myocytes. Circul Res. 1983; 53(3):287–97. https://doi.org/10.1161/01.RES.53.3.287
+26.
+Priori SG, Corr PB. Mechanisms underlying early and delayed afterdepolarizations induced by catechol-
+amines. Am J Physiol. 1990; 258(6 Pt 2):H1796–805. PMID: 2163219.
+27.
+Yue DT, Herzig S, Marban E. Beta-Adrenergic Stimulation of Calcium Channels Occurs by Potentiation
+of High-Activity Gating Modes. Proc Natl Acad Sci USA. 1990; 87(2):753–7. https://doi.org/10.1073/
+pnas.87.2.753 PMID: 1689051
+28.
+Foteinou PT, Greenstein JL, Winslow RL. Mechanistic Investigation of the Arrhythmogenic Role of Oxi-
+dized CaMKII in the Heart. Biophys J. 2015; 109(4):838–49. https://doi.org/10.1016/j.bpj.2015.06.064
+PMID: 26287635; PubMed Central PMCID: PMCPMC4547162.
+29.
+Greenstein JL, Tanskanen AJ, Winslow RL. Modeling the actions of beta-adrenergic signaling on exci-
+tation—contraction coupling processes. Ann N Y Acad Sci. 2004; 1015:16–27. https://doi.org/10.1196/
+annals.1302.002 PMID: 15201146
+30.
+Volders PG, Stengl M, van Opstal JM, Gerlach U, Spatjens RL, Beekman JD, et al. Probing the contri-
+bution of IKs to canine ventricular repolarization: key role for beta-adrenergic receptor stimulation. Cir-
+culation. 2003; 107(21):2753–60. https://doi.org/10.1161/01.CIR.0000068344.54010.B3 PMID:
+12756150.
+31.
+Soltis AR, Saucerman JJ. Synergy between CaMKII substrates and β-adrenergic signaling in regulation
+of cardiac myocyte Ca(2+) handling. Biophys J. 2010; 99(7):2038–47. https://doi.org/10.1016/j.bpj.
+2010.08.016 PMID: 20923637
+32.
+Curran J, Hinton MJ, Rı
+´os E, Bers DM, Shannon TR. Beta-adrenergic enhancement of sarcoplasmic
+reticulum calcium leak in cardiac myocytes is mediated by calcium/calmodulin-dependent protein
+kinase. Circul Res. 2007; 100(3):391–8. https://doi.org/10.1161/01.RES.0000258172.74570.e6 PMID:
+17234966
+33.
+Liu T, Brown DA, O’Rourke B. Role of mitochondrial dysfunction in cardiac glycoside toxicity. J Mol Cell
+Cardiol. 2010; 49(5):728–36. https://doi.org/10.1016/j.yjmcc.2010.06.012 PMID: 20620145; PubMed
+Central PMCID: PMCPMC2949492.
+34.
+Wier WG, Egan TM, Lopez-Lopez JR, Balke CW. Local control of excitation-contraction coupling in rat
+heart cells. J Physiol. 1994; 474(3):463–71. PMID: 8014907; PubMed Central PMCID:
+PMCPMC1160337.
+35.
+O’Rourke B, Kass DA, Tomaselli GF, Ka
+¨a
+¨b S, Tunin R, Marba
+´n E. Mechanisms of Altered Excitation-
+Contraction Coupling Canine Tachycardia-Induced Heart Failure, I: Experimental Studies. Circul Res.
+1999; 84(5):562–70. https://doi.org/10.1161/01.RES.84.5.562
+36.
+Hobai IA, O’Rourke B. Enhanced Ca2+-activated Na+-Ca2+ exchange activity in canine pacing-
+induced heart failure. Circul Res. 2000; 87(8):690–8. WOS:000090149900011.
+37.
+Fujioka Y, Hiroe K, Matsuoka S. Regulation kinetics of Na+-Ca2+ exchange current in guinea-pig ven-
+tricular myocytes. Journal of Physiology-London. 2000; 529(3):611–24. https://doi.org/10.1111/j.1469-
+7793.2000.00611.x WOS:000166307000009.
+38.
+Chu L, Greenstein JL, Winslow RL. Modeling Na+-Ca2+ exchange in the heart: Allosteric activation,
+spatial localization, sparks and excitation-contraction coupling. J Mol Cell Cardiol. 2016; 99:174–87.
+https://doi.org/10.1016/j.yjmcc.2016.06.068 PMID: 27377851.
+39.
+Zima AV, Bovo E, Bers DM, Blatter LA. Ca(2)+ spark-dependent and -independent sarcoplasmic reticu-
+lum Ca(2)+ leak in normal and failing rabbit ventricular myocytes. J Physiol. 2010; 588(Pt 23):4743–57.
+https://doi.org/10.1113/jphysiol.2010.197913 PMID: 20962003; PubMed Central PMCID:
+PMCPMC3010143.
+40.
+Shannon TR, Ginsburg KS, Bers DM. Quantitative assessment of the SR Ca2+ leak-load relationship.
+Circul Res. 2002; 91(7):594–600. https://doi.org/10.1161/01.RES.0000036914.12686.28
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+27 / 30
+ 41.
+Terentyev D, Gyo
+¨rke I, Belevych AE, Terentyeva R, Sridhar A, Nishijima Y, et al. Redox modification of
+ryanodine receptors contributes to sarcoplasmic reticulum Ca2+ leak in chronic heart failure. Circul
+Res. 2008; 103(12):1466–72. https://doi.org/10.1161/CIRCRESAHA.108.184457 PMID: 19008475
+42.
+Erickson JR, Joiner ML, Guan X, Kutschke W, Yang J, Oddis CV, et al. A dynamic pathway for calcium-
+independent activation of CaMKII by methionine oxidation. Cell. 2008; 133(3):462–74. https://doi.org/
+10.1016/j.cell.2008.02.048 PMID: 18455987; PubMed Central PMCID: PMCPMC2435269.
+43.
+Katra RP, Laurita KR. Cellular mechanism of calcium-mediated triggered activity in the heart. Circul
+Res. 2005; 96:535–42. https://doi.org/10.1161/01.RES.0000159387.00749.3c PMID: 15718502
+44.
+Gonano LA, Sepulveda M, Rico Y, Kaetzel M, Valverde CA, Dedman J, et al. Calcium-calmodulin
+kinase II mediates digitalis-induced arrhythmias. Circ Arrhythm Electrophysiol. 2011; 4(6):947–57.
+https://doi.org/10.1161/CIRCEP.111.964908 PMID: 22009705.
+45.
+Aa Armoundas, Ia Hobai, Tomaselli GF, Winslow RL, O’Rourke B. Role of sodium-calcium exchanger
+in modulating the action potential of ventricular myocytes from normal and failing hearts. Circul Res.
+2003; 93(1):46–53. https://doi.org/10.1161/01.RES.0000080932.98903.D8 PMID: 12805237
+46.
+Johnson DM, Heijman J, Bode EF, Greensmith DJ, van der Linde H, Abi-Gerges N, et al. Diastolic spon-
+taneous calcium release from the sarcoplasmic reticulum increases beat-to-beat variability of repolari-
+zation in canine ventricular myocytes after beta-adrenergic stimulation. Circ Res. 2013; 112(2):246–56.
+https://doi.org/10.1161/CIRCRESAHA.112.275735 PMID: 23149594.
+47.
+Schlotthauer K, Bers DM. Sarcoplasmic Reticulum Ca2+ Release Causes Myocyte Depolarization:
+Underlying Mechanism and Threshold for Triggered Action Potentials. Circul Res. 2000:774–80.
+48.
+Hoeker GS, Katra RP, Wilson LD, Plummer BN, Laurita KR. Spontaneous calcium release in tissue
+from the failing canine heart. American Journal of Physiology Heart and Circulation Physiology. 2009;
+297:H1235–H42. https://doi.org/10.1152/ajpheart.01320.2008 PMID: 19648256
+49.
+Pogwizd SM, Schlotthauer K, Li L, Yuan W, Bers DM. Arrhythmogenesis and Contractile Dysfunction in
+Heart Failure. Circul Res. 2001; 88:1159–67. https://doi.org/10.1161/hh1101.091193
+50.
+Dhamoon AS, Jalife J. The inward rectifier current (IK1) controls cardiac excitability and is involved in
+arrhythmogenesis. Heart Rhythm. 2005; 2(3):316–24. https://doi.org/10.1016/j.hrthm.2004.11.012
+PMID: 15851327.
+51.
+Domenighetti AA, Boixel C, Cefai D, Abriel H, Pedrazzini T. Chronic angiotensin II stimulation in the
+heart produces an acquired long QT syndrome associated with IK1 potassium current downregulation.
+J Mol Cell Cardiol. 2007; 42(1):63–70. https://doi.org/10.1016/j.yjmcc.2006.09.019 PMID: 17070838.
+52.
+Fink M, Noble PJ, Noble D. Ca2+-induced delayed afterdepolarizations are triggered by dyadic sub-
+space Ca2+ affirming that increasing SERCA reduces aftercontractions. American Journal of Physiol-
+ogy Heart and Circulation Physiology. 2011; 301:H921–H35. https://doi.org/10.1152/ajpheart.01055.
+2010 PMID: 21666112
+53.
+Despa S, Islam Ma, Weber CR, Pogwizd SM, Bers DM. Intracellular Na+ concentration is elevated in
+heart failure but Na/K pump function is unchanged. Circulation. 2002; 105(21):2543–8. https://doi.org/
+10.1161/01.CIR.0000016701.85760.97 PMID: 12034663
+54.
+Hegyi B, Banyasz T, Shannon TR, Chen-Izu Y, Izu LT. Electrophysiological Determination of Submem-
+brane Na(+) Concentration in Cardiac Myocytes. Biophys J. 2016; 111(6):1304–15. https://doi.org/10.
+1016/j.bpj.2016.08.008 PMID: 27653489; PubMed Central PMCID: PMCPMC5034366.
+55.
+Jongsma HJ, Wilders R. Gap junctions in cardiovascular disease. Circ Res. 2000; 86(12):1193–7.
+PMID: 10864907.
+56.
+Sato D, Bartos DC, Ginsburg KS, Bers DM. Depolarization of cardiac membrane potential synchronizes
+calcium sparks and waves in tissue. Biophys J. 2014; 107(6):1313–7. https://doi.org/10.1016/j.bpj.
+2014.07.053 PMID: 25229139
+57.
+Jiang D, Xiao B, Yang D, Wang R, Choi P, Zhang L, et al. RyR2 mutations linked to ventricular tachycar-
+dia and sudden death reduce the threshold for store-overload-induced Ca2+ release (SOICR). Pro-
+ceedings of the National Academy of Sciences. 2004; 101(35):13062–7. https://doi.org/10.1073/pnas.
+0402388101 PMID: 15322274
+58.
+La Venetucci, Trafford AW, Eisner Da. Increasing ryanodine receptor open probability alone does not
+produce arrhythmogenic calcium waves: threshold sarcoplasmic reticulum calcium content is required.
+Circul Res. 2007; 100(1):105–11. https://doi.org/10.1161/01.RES.0000252828.17939.00 PMID:
+17110597
+59.
+Meissner G, Henderson JS. Rapid calcium release from cardiac sarcoplasmic reticulum vesicles is
+dependent on Ca2+ and is modulated by Mg2+, adenine nucleotide, and calmodulin. J Biol Chem.
+1987; 262:3065–73. PMID: 2434495
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+28 / 30
+ 60.
+Wehrens XHT, Lehnart SE, Reiken SR, Marks AR. Ca2+/calmodulin-dependent protein kinase II phos-
+phorylation regulates the cardiac ryanodine receptor. Circul Res. 2004; 94(6):e61–70. https://doi.org/
+10.1161/01.RES.0000125626.33738.E2 PMID: 15016728
+61.
+Reiken S, Gaburjakova M, Guatimosim S, Gomez AM, D’Armiento J, Burkhoff D, et al. Protein kinase A
+phosphorylation of the cardiac calcium release channel (ryanodine receptor) in normal and failing
+hearts. Role of phosphatases and response to isoproterenol. J Biol Chem. 2003; 278(1):444–53.
+https://doi.org/10.1074/jbc.M207028200 PMID: 12401811.
+62.
+Marx SO, Reiken S, Hisamatsu Y, Jayaraman T, Burkhoff D, Rosemblit N, et al. PKA phosphorylation
+dissociates FKBP12.6 from the calcium release channel (ryanodine receptor): defective regulation in
+failing hearts. Cell. 2000; 101(4):365–76. PMID: 10830164
+63.
+Lukyanenko V, Subramanian S, Gyorke I, Wiesner TF, Gyorke S. The role of luminal Ca2+ in the gener-
+ation of Ca2+ waves in rat ventricular myocytes. The Journal of Physiology. 1999; 518 (Pt 1(1999):173–
+86. https://doi.org/10.1111/j.1469-7793.1999.0173r.x PMID: 10373699
+64.
+Chen W, Wang R, Chen B, Zhong X, Kong H, Bai Y, et al. The ryanodine receptor store-sensing gate
+controls Ca2+ waves and Ca2+-triggered arrhythmias. Nat Med. 2014; 20(2):184–92. https://doi.org/
+10.1038/nm.3440 PMID: 24441828
+65.
+Chen H, Valle G, Furlan S, Nani A, Gyorke S, Fill M, et al. Mechanism of calsequestrin regulation of sin-
+gle cardiac ryanodine receptor in normal and pathological conditions. J Gen Physiol. 2013; 142(2):127–
+36. https://doi.org/10.1085/jgp.201311022 PMID: 23858002; PubMed Central PMCID:
+PMCPMC3727306.
+66.
+Cannell MB, Kong CHT, Imtiaz MSS, Laver DR. Control of sarcoplasmic reticulum Ca2+ release by sto-
+chastic RyR gating within a 3D model of the cardiac dyad and importance of induction decay for CICR
+termination. Biophys J. 2013; 104(10):2149–59. https://doi.org/10.1016/j.bpj.2013.03.058 PMID:
+23708355
+67.
+Tadross MR, Dick IE, Yue DT. Mechanism of local and global Ca2+ sensing by calmodulin in complex
+with a Ca2+ channel. Cell. 2008; 133(7):1228–40. https://doi.org/10.1016/j.cell.2008.05.025 PMID:
+18585356; PubMed Central PMCID: PMCPMC4262405.
+68.
+Walker MA, Kohl T, Lehnart SE, Greenstein JL, Lederer WJ, Winslow RL. On the Adjacency Matrix of
+RyR2 Cluster Structures. PLoS Comput Biol. 2015; 11(11):e1004521. https://doi.org/10.1371/journal.
+pcbi.1004521 PMID: 26545234; PubMed Central PMCID: PMCPMC4636394.
+69.
+Picht E, Zima AV, Shannon TR, Duncan AM, Blatter LA, Bers DM. Dynamic calcium movement inside
+cardiac sarcoplasmic reticulum during release. Circ Res. 2011; 108(7):847–56. https://doi.org/10.1161/
+CIRCRESAHA.111.240234 PMID: 21311044; PubMed Central PMCID: PMCPMC3084972.
+70.
+Hernandez-Hernandez G, Alvarez-Lacalle E, Shiferaw Y. Role of connectivity and fluctuations in the
+nucleation of calcium waves in cardiac cells. Phys Rev E Stat Nonlin Soft Matter Phys. 2015; 92(5–
+1):052715. https://doi.org/10.1103/PhysRevE.92.052715 PMID: 26651731.
+71.
+Soeller C, Jayasinghe ID, Li P, Holden AV, Cannell MB. Three-dimensional high-resolution imaging of
+cardiac proteins to construct models of intracellular Ca2+ signalling in rat ventricular myocytes. Experi-
+mental Physiology. 2009; 94(5):496–508. https://doi.org/10.1113/expphysiol.2008.043976 PMID:
+19139064
+72.
+Xie Y, Sato D, Garfinkel A, Qu Z, Weiss JN. So little source, so much sink: requirements for afterdepo-
+larizations to propagate in tissue. Biophys J. 2010; 99(5):1408–15. https://doi.org/10.1016/j.bpj.2010.
+06.042 PMID: 20816052
+73.
+Liu MB, de Lange E, Garfinkel A, Weiss JN, Qu Z. Delayed afterdepolarizations generate both triggers
+and a vulnerable substrate promoting reentry in cardiac tissue. Heart Rhythm. 2015; 12(10):2115–24.
+https://doi.org/10.1016/j.hrthm.2015.06.019 PMID: 26072025; PubMed Central PMCID:
+PMCPMC4583816.
+74.
+Zaniboni M, Pollard aE, Yang L, Spitzer KW. Beat-to-beat repolarization variability in ventricular myo-
+cytes and its suppression by electrical coupling. American Journal of Physiology Heart and Circulation
+Physiology. 2000; 278(3):H677–H87.
+75.
+Tanskanen AJ, Greenstein JL, O’Rourke B, Winslow RL. The role of stochastic and modal gating of car-
+diac L-type Ca2+ channels on early after-depolarizations. Biophys J. 2005; 88(1):85–95. https://doi.org/
+10.1529/biophysj.104.051508 PMID: 15501946
+76.
+Maruyama M, Joung B, Tang L, Shinohara T, On YK, Han S, et al. Diastolic intracellular calcium-mem-
+brane voltage coupling gain and postshock arrhythmias: role of purkinje fibers and triggered activity.
+Circ Res. 2010; 106(2):399–408. https://doi.org/10.1161/CIRCRESAHA.109.211292 PMID: 19926871;
+PubMed Central PMCID: PMC2818796.
+77.
+Li J, Marionneau C, Zhang R, Shah V, Hell JW, Nerbonne JM, et al. Calmodulin kinase II inhibition short-
+ens action potential duration by upregulation of K+ currents. Circ Res. 2006; 99(10):1092–9. https://doi.
+org/10.1161/01.RES.0000249369.71709.5c PMID: 17038644.
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+29 / 30
+ 78.
+Nitta J, Furukawa T, Marumo F, Sawanobori T, Hiraoka M. Subcellular mechanism for Ca(2+)-depen-
+dent enhancement of delayed rectifier K+ current in isolated membrane patches of guinea pig ventricu-
+lar myocytes. Circul Res. 1994; 74(1):96–104. https://doi.org/10.1161/01.res.74.1.96
+79.
+Matsuda H, Cruz JdS. Voltage-dependent block by internal Ca2+ ions of inwardly rectifying K+ channels
+in guinea-pig ventricular cells. The Journal of Physiology. 1993; 470(1):295–311. https://doi.org/10.
+1113/jphysiol.1993.sp019859 PubMed Central PMCID: PMC1143918.
+80.
+Nagy N, Acsai K, Kormos A, Sebok Z, Farkas AS, Jost N, et al. [Ca(2)(+)] i-induced augmentation of the
+inward rectifier potassium current (IK1) in canine and human ventricular myocardium. Pflugers Arch.
+2013; 465(11):1621–35. https://doi.org/10.1007/s00424-013-1309-x PMID: 23807312.
+81.
+Zhang H-B, Li R-C, Xu M, Xu S-M, Lai Y-S, Wu H-D, et al. Ultrastructural uncoupling between T-tubules
+and sarcoplasmic reticulum in human heart failure. Cardiovascular Research. 2013; 98(2):269–76.
+https://doi.org/10.1093/cvr/cvt030 PMID: 23405000
+82.
+Wu HD, Xu M, Li RC, Guo L, Lai YS, Xu SM, et al. Ultrastructural remodelling of Ca(2+) signalling appa-
+ratus in failing heart cells. Cardiovasc Res. 2012; 95(4):430–8. https://doi.org/10.1093/cvr/cvs195
+PMID: 22707157; PubMed Central PMCID: PMCPMC3422078.
+83.
+Lamont C, Luther PW, Balke CW, Wier WG. Rapid Report Intercellular Ca2+ waves in rat heart muscle.
+Journal of Physiology. 1998; 512(3):669–76.
+84.
+Li Y, Eisner Da, O’Neill SC. Do calcium waves propagate between cells and synchronize alternating cal-
+cium release in rat ventricular myocytes? The Journal of Physiology. 2012; 590(August):6353–61.
+https://doi.org/10.1113/jphysiol.2012.245241 PMID: 23090944
+85.
+Tveito A, Lines GT, Edwards AG, Maleckar MM, Michailova A, Hake J, et al. Slow Calcium-Depolariza-
+tion-Calcium waves may initiate fast local depolarization waves in ventricular tissue. Progress in Bio-
+physics and Molecular Biology. 2012; 110(2–3):295–304. https://doi.org/10.1016/j.pbiomolbio.2012.07.
+005 PMID: 22841534
+86.
+Takamatsu T, Minamikawa T, Kawachi H, Fujita S. Imaging of calcium wave propagation in guinea-pig
+ventricular cell pairs by confocal laser scanning microscopy. Cell Struct Funct. 1991; 16(4):341–6.
+https://doi.org/10.1247/csf.16.341 PMID: 1782671
+87.
+Kaneko T, Tanaka H, Oyamada M, Kawata S, Takamatsu T. Three Distinct Types of Ca2+ Waves in
+Langendorff-Perfused Rat Heart Revealed by Real-Time Confocal Microscopy. Circul Res. 2000:1093–
+9.
+Rare arrhythmic events in computational models of cardiac tissue
+PLOS Computational Biology | https://doi.org/10.1371/journal.pcbi.1005783
+November 16, 2017
+30 / 30

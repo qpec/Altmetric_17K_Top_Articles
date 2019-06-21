@@ -1,0 +1,901 @@
+ Individual Finger Control of the Modular Prosthetic Limb using 
+High-Density Electrocorticography in a Human Subject
+Guy Hotson#1,7, David P McMullen#2, Matthew S. Fifer3, Matthew S. Johannes4, Kapil D. 
+Katyal4, Matthew P. Para4, Robert Armiger4, William S. Anderson2, Nitish V. Thakor3, Brock 
+A. Wester4, and Nathan E. Crone5
+1Department of Electrical and Computer Engineering, Johns Hopkins University, 3400 N Charles, 
+Baltimore, MD 21218, USA
+2Department of Neurosurgery, Johns Hopkins University, 600 N Wolfe, Baltimore, MD 21205, 
+USA
+3Department of Biomedical Engineering, Johns Hopkins University, 600 N Wolfe, Baltimore, MD 
+21205, USA
+4Applied Neuroscience, JHU Applied Physics Laboratory, 7701 Montpelier Rd, Laurel, MD 20723, 
+USA
+5Department of Neurology, Johns Hopkins University, 600 N Wolfe, Baltimore, MD 21205, USA
+# These authors contributed equally to this work.
+Abstract
+Objective—We used native sensorimotor representations of fingers in a brain-machine interface 
+to achieve immediate online control of individual prosthetic fingers.
+Approach—Using high gamma responses recorded with a high-density ECoG array, we rapidly 
+mapped the functional anatomy of cued finger movements. We used these cortical maps to select 
+ECoG electrodes for a hierarchical linear discriminant analysis classification scheme to predict: 1) 
+if any finger was moving, and, if so, 2) which digit was moving. To account for sensory feedback, 
+we also mapped the spatiotemporal activation elicited by vibrotactile stimulation. Finally, we used 
+this prediction framework to provide immediate online control over individual fingers of the Johns 
+Hopkins University Applied Physics Laboratory (JHU/APL) Modular Prosthetic Limb (MPL).
+Main Results—The balanced classification accuracy for detection of movements during the 
+online control session was 92% (chance: 50%). At the onset of movement, finger classification 
+was 76% (chance: 20%), and 88% (chance: 25%) if the pinky and ring finger movements were 
+coupled. Balanced accuracy of fully flexing the cued finger was 64%, and 77% had we combined 
+pinky and ring commands. Offline decoding yielded a peak finger decoding accuracy of 96.5% 
+(chance: 20%) when using an optimized selection of electrodes. Offline analysis demonstrated 
+significant finger-specific activations throughout sensorimotor cortex. Activations either prior to 
+movement onset or during sensory feedback led to discriminable finger control.
+7Author to whom any correspondence should be addressed. ; Email: Hotson.Guy@gmail.com, Phone: (650) 269-2165 . 
+HHS Public Access
+Author manuscript
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Published in final edited form as:
+J Neural Eng. 2016 April ; 13(2): 026017. doi:10.1088/1741-2560/13/2/026017.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Significance—Our results demonstrate the ability of ECoG-based BMIs to leverage the native 
+functional anatomy of sensorimotor cortical populations to immediately control individual finger 
+movements in real time.
+1. Introduction
+Brain-machine interfaces (BMIs) offer a promising approach for restoring function to 
+patients with severe paralysis. By delivering direct cortical control over robotic prosthetic 
+devices, BMIs could enable spinal cord injury (SCI) patients to perform activities of daily 
+living (ADLs) necessary for self-sufficiency. However, many of these activities, such as 
+preparing food or taking medications, require a level of hand dexterity that has yet to be 
+achieved by BMIs. This dexterity can only be achieved by means of complex hand 
+movements based on control of individual fingers. Decoding the neural correlates of finger 
+control has been explored [1]–[6], but researchers have so far been unable to demonstrate 
+online independent control of individual fingers.
+To date, online cortical control of finger movements has only been achieved in the context of 
+coordinated movements of multiple fingers. Electrocorticography (ECoG) signals recorded 
+from sensorimotor areas have been used offline to reconstruct hand aperture [7] and classify 
+different hand gestures [8]–[10]. ECoG has also been used online to continuously control 
+grasping movements in parallel with arm movements [11], [12] and to classify different 
+grasp types [9]. Neuronal firing rates from microelectrode arrays (MEAs) have also been 
+used to achieve online cortical control over grasping in both nonhuman primates [13]–[16] 
+and humans [17]–[19].
+Offline decoding of single finger movements has been achieved with MEAs in non-human 
+primates [2], [20], but MEA recordings in humans are rare and suffer from attrition of 
+reliable single units over time [21]. Moreover, the restricted cortical areas covered by MEAs 
+may not sufficiently sample the cortical networks of potential use in BMIs. Finger 
+movements are represented in a larger area of sensorimotor cortex in humans than monkeys, 
+and although there may be significant overlap in motor representations for individual fingers 
+[22], [23], it is inherently difficult for MEA’s to leverage what somatotopic organization is 
+present.
+In contrast, ECoG is able to deliver stable large-area coverage of sensorimotor areas [24], 
+delivering control from multiple anatomical sites. For example, coverage of both arm and 
+hand areas with a single ECoG grid enabled a subject to simultaneously control the ability to 
+reach and grasp with a prosthetic limb [12]. This and other studies have chiefly used ECoG 
+high gamma responses for online control. These spectral responses are robust enough to be 
+detected in single trials, but because they reflect firing rate changes in populations of cortical 
+neurons, their utility depends on the degree of functional segregation among these 
+populations.
+In spite of the evidence of limited finger somatotopy in motor cortex [22], [23], [25], both 
+ECoG and fMRI studies have found a degree of separability in the peak population 
+responses for different fingers in the precentral gyrus [26], [27]. These differential finger 
+Hotson et al.
+Page 2
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ responses have been used to perform offline classification and reconstruction of finger 
+movements from ECoG recordings over sensorimotor areas [1], [3]. Offline classification 
+between rest and four fingers (ignoring pinky) was near perfect in one subject in [9], though 
+the system’s performance dropped drastically when translated to an online grasp 
+classification system synchronized to cue presentation. Additionally, several groups have 
+performed offline regression of single finger movements [1], [4]–[6]. However, until now 
+these achievements in offline classification and regression have not been translated into 
+asynchronous (i.e., without knowledge of the cue) online control of individual fingers.
+Here we show that high-density electrocorticography (ECoG) electrodes over sensorimotor 
+areas can not only discriminate individual fingers offline, but that they can be used to 
+asynchronously detect and classify finger movements online. A human subject demonstrated 
+online control of the highly dexterous Modular Prosthetic Limb (MPL) [28]. The BMI relied 
+only on the subject’s cortical responses during movements of his corresponding native 
+fingers, without extensive training or arbitrary mapping of user inputs to finger movements. 
+Our approach of using the native functional anatomy of sensorimotor cortex obviates the 
+need for operant conditioning, potentially providing immediate intuitive control to patients 
+that can be expanded to a large number of degrees of freedom without placing significant 
+cognitive burden on the patient. We performed further offline analysis to control for possible 
+somatosensory feedback. These results demonstrate, for the first time, online control of 
+individual fingers of a prosthetic hand, as well as offline analyses indicating a role for pre-
+movement signals in achieving this control.
+2. Methods
+2.1 Subject Info
+The patient, a 20-year old right-handed male, underwent a left craniotomy for implantation 
+of intracranial electrodes to localize the brain regions responsible for his seizures to guide 
+resective surgery. These included a high-density 8 × 16 array of subdural electrodes (PMT 
+Corp., Chanhassen, MN; 3mm center-to-center spacing, 1mm diameter) over sensorimotor 
+regions. ECoG signals were recorded using distant standard subdural electrodes (2.3 mm 
+diameter exposed) for ground and reference.
+The subject gave informed consent for testing to be done according to a protocol approved 
+by the Institutional Review Board of the Johns Hopkins Medical Institutions. Electrodes 
+were localized with respect to cortical surface anatomy by volumetric co-registration of the 
+subject’s pre-implantation MRI with their post-surgical CT using the BioImage Suite [29]. 
+This was used to help guide our electrode selection process for the BMI. After running the 
+BMI, the reconstruction was checked against intraoperative photos from the implantation 
+and explantation of the high density grid. The electrode locations on a two-dimensional 
+snapshot of the reconstruction were manually adjusted relative to the underlying cortex via 
+rotation, scaling, and translation of the grid to optimize the alignment between the grid and 
+prominent gyral and sulcal landmarks present in both the 3D reconstruction and the 
+intraoperative photos.
+Hotson et al.
+Page 3
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ 2.2. Offline Experimental Testing
+A finger tapping task was performed to collect training data for the online finger decoder. 
+Online BMI testing was performed the subsequent day. A passive vibration task and an 
+additional finger tapping task were performed for offline analysis. Table 1 outlines the 
+experiments performed. The tasks are described in more detail below.
+2.2.1. Vibrotactile Stimulation—To investigate activation due to somatosensory 
+feedback, we ran a vibrotactile stimulation experiment. While activation of post-central 
+gyrus has been observed in paralyzed individuals [30] and able-bodied individuals during 
+motor-imagery (without overt movement) [31]–[35], deafferented subjects lack cortical 
+activation directly induced by somatosensory feedback. To address this, we used a 
+vibrotactile stimulation experiment as a control. Vibrational motors were placed on the 
+fingertips of the subject’s right hand. The motors were turned on for 0.5 seconds every two 
+seconds in a pseudorandom order by an Arduino microcontroller (Sparkfun Electronics, 
+Boulder, CO) with two Adafruit v2.3 motor control shields (Adafruit Industries, New York 
+City, NY). Each finger was vibrated 50 times, for a total of 250 trials.
+2.2.2. Finger Tapping—The subject performed a visually cued finger tapping experiment. 
+Trials were initiated by an experimenter on a presentation computer running psychtoolbox-3 
+[36] in MATLAB (MathWorks, Inc., Natick, MA, USA). After a trial was initiated, the 
+system paused for two seconds, then displayed an image of a hand with one finger pseudo-
+randomly highlighted. The patient then alternately flexed and extended the corresponding 
+finger on his right hand 5 times. Each finger was cued 25 times, for a total of 125 trials. 
+Finger movements were recorded with a CyberGlove II (CyberGlove Systems LLC, San 
+Jose, CA).
+2.3. BMI Classifier Training
+To perform online classifications of finger movements, we trained a hierarchical classifier on 
+the offline finger tapping data. For any given time point, a binary linear discriminant 
+analysis (LDA) classification was first used to determine if a movement was occurring. This 
+allowed us to decode finger movements without synchronization to any cues (i.e. 
+asynchronously). If a movement was detected, a classification from a second LDA classifier 
+was used to determine which of the five fingers moved. The binary movement classifier was 
+given a first-order Markovian transition probability; the prior for a prediction at time t was 
+determined by the prediction at time t-1. These priors were calibrated online just before the 
+online testing session to find a good tradeoff between false positives and false negatives.
+To extract features for training the classifiers, we first re-referenced the high-density grid 
+channels to a common average reference (CAR) with bad channels removed. The high 
+gamma power was then extracted from each channel using the Hilbert transform with a flat-
+top Gaussian bandpass filter with cutoffs of 72 and 110 Hz using a 256 ms window and 128 
+ms step size. The average of the high gamma powers extracted from an 896 ms period before 
+cue onset of each trial was used to gauge baseline activity for each electrode. The average of 
+the high gamma power in an 896 ms period during finger movement of each trial was used 
+to estimate activation due to the finger movement. This resulted in 125 feature vectors (one 
+Hotson et al.
+Page 4
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ for each trial) for both baseline and activation. These feature vectors were then used to train 
+the movement detection and finger classification LDA classifiers.
+When using the classifiers online, we used the same feature extraction workflow we used for 
+training. To ensure smooth classifications, the features from the previous 50 samples were 
+averaged at each time point. Due to slower computation speeds than anticipated, this resulted 
+in a moving average of approximately 2.3 seconds of data to be used for classifications.
+2.3. Online BMI Testing
+When a finger movement was detected from the neural data, the corresponding MPL finger 
+was commanded to flex at a fixed velocity. If a finger was not classified as moving, it was 
+commanded to extend back towards the resting position at a fixed velocity. Before the online 
+testing session began, the subject was given open use time and a practice session to 
+acclimate to controlling the MPL fingers. During this acclimation period, the false positive 
+rate of the movement classifier was tuned by adjusting the priors on the Markovian transition 
+probabilities. The speed at which the fingers would flex/extend was also adjusted at this 
+time, resulting in an extension velocity set to 40% of the flexion velocity. Figure 1 displays a 
+flow diagram for the online BMI.
+During the online testing session, the experimenter typically waited for all the MPL fingers 
+to return to rest before initiating the next trial. There was a two second system pause before 
+the appearance of the visual cue after trial initiation. This was used as a baseline (rest) 
+period during post-hoc analysis.
+2.4. BMI Control Evaluation
+To evaluate the performance of the BMI control, we inspected the accuracy of the binary 
+movement detection classifications and the 5-way individual finger classifications. 
+Movement times relative to trial onsets were obtained from video analysis for trials where 
+the subject’s hand was visible. The proportion of movement vs non-movement predictions 
+was binned in 250 ms bins relative to movement onset and averaged across trials. The 
+proportion of movement predictions over time was used to evaluate the performance of the 
+movement detection classifier.
+The individual finger classifier performance was evaluated similarly by binning the single 
+finger classifications that occurred when a movement was predicted. Because it was 
+observed that the ring and little finger movements were often linked, the classification 
+accuracy was calculated both considering them as the same and as separate fingers. Finger 
+classification confusion matrices were calculated at the onset of peak movement detection, 
+and during the time period where movements were most consistently predicted.
+We also evaluated the global asynchronous finger classification performance. This was 
+accomplished by calculating the accuracy of the individual finger classifier at any time a 
+movement was predicted within seven seconds of cue onset. We also calculated the 
+percentage of trials where the cued finger, and not any of the others, was fully flexed by the 
+MPL. To find the balanced accuracy of flexing the cued finger, we averaged the accuracy of 
+Hotson et al.
+Page 5
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ fully flexing during the correct trial with the accuracy of not fully flexing during the 
+incorrect trial.
+To approximate the relative contributions of the electrodes to classification accuracies, we 
+examined the cross-validated regularized LDA performance on its training data with varying 
+numbers of electrodes.
+2.5. Offline Analysis
+Offline analysis was performed to determine the expected range of decoding performance 
+with an optimized electrode selection during time periods preceding somatosensory 
+feedback. While a lack of somatosensory feedback does not preclude activation of S1[37]–
+[39], direct cortical activation caused by somatosensory feedback is not be present in 
+deafferented patients in need of BMIs. We attempted to control for this by comparing the 
+time course of finger-specific activation during the finger tapping and finger vibration tasks. 
+We expect similar patterns of activation between paralyzed and able-bodied patients during 
+the time period preceding somatosensory feedback, as suggested by the spatial patterns of 
+activation seen in paralyzed patients during attempted movements [30]. The signals during 
+this pre-sensory time period are likely representative of the minimum of what could be 
+expected from paralyzed individuals for BMI control.
+To view the time-course of activation relative to movement onset, the ECoG and CyberGlove 
+data were segmented using the CyberGlove recordings. However, it was observed that the 
+subject often initiated trials with a gross relaxation/extension movement of his hand and 
+fingers before flexing the finger of interest. We therefore aligned the recordings separately to 
+both the onset of any detected movement and the onset of flexion by the finger of interest. 
+We then excluded any trial with more than a 400 ms disparity between the two alignment 
+points, or excessive hand movements before onset of the finger movement; 19 trials were 
+excluded in this way. The selection of onset times was verified by performing cross-
+validated LDA to predict which finger was moving using only the CyberGlove data (i.e., 
+finger kinematics, not neural data). Chance levels were computed via permutation testing, 
+and time points significantly above chance were detected via the Wilcoxon rank-sum test 
+with a Bonferroni correction for multiple comparisons. We found the CyberGlove tracings of 
+hand movement had differentiable features for different fingers during the preliminary hand 
+movement (Supplementary Figure 1). We therefore aligned to our more conservative 
+estimate of movement onset for all our subsequent offline analyses.
+The conservative movement onset marker was used to compare the time course of activation 
+during the finger tapping and vibration experiments. Spectrograms were created using the 
+multitaper method from Chronux toolbox (http://chronux.org) with a window size of 128 
+ms, step size of 10 ms, passband of 16-160 Hz, cutoff frequencies of 10 Hz and 170 Hz, a 
+time-bandwidth product of three, and five tapers.
+We then investigated the time course of high gamma activation by using the same high 
+gamma feature extraction method used for our online BMI. We removed visibly bad 
+electrodes, CAR filtered the high-density grid electrodes, and used the Hilbert transform 
+with a 72 to 110 Hz bandpass filter to compute the high gamma band power with a window 
+Hotson et al.
+Page 6
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ of 128 ms and a 16 ms step size. For every electrode in the motor and vibrotactile 
+stimulation experiments, we only included activity during trials for the finger that evoked the 
+strongest high gamma response. This allowed us to detect significant trial-averaged 
+activations even if an electrode was only modulated by one finger. We then performed a 
+Bonferroni corrected Wilcoxon rank-sum test for significant activation of high gamma 
+relative to baseline at every point between 256 ms before and 240 ms after the onset of 
+movement (or vibration, in the sensory trials). This allowed us to identify the earliest time 
+points of cortical activation in each electrode for the motor and sensory task.
+Finally, we investigated the time course of discriminable information between individual 
+fingers during the motor and vibrotactile experiments. This was done to examine the 
+decoding accuracy of finger movements during the period of time before finger-specific 
+information was received through somatosensory feedback, which would not be present in 
+deafferented subjects. The extracted high gamma features were smoothed using a 15th order 
+moving average filter (window centers spanning 224 ms). We then performed 10-fold cross-
+validated LDA classification on the smoothed features; ten disjoint testing sets (each 
+containing 10% of the trials) were each evaluated by (during each fold, separately) using the 
+other 90% of the trials for feature selection and model training. The feature selection was 
+performed using cross-validated regularization [40]. This regularization phase helped inform 
+us as to what electrodes most consistently contributed to decoding performance. The number 
+of times each electrode was chosen across the 10 folds of cross-validation was used as an 
+index of its importance. We used extracted features in a causal manner, meaning that for a 
+given time point t, features pertaining to that time point were extracted from windows which 
+did not extend past t. This alignment was used to ensure our classifications were not 
+dependent on future information, and therefore approximate the earliest time points when 
+sensory feedback could have been included in the classifications. Feature extraction was 
+repeated in a non-causal manner, aligned to the peak flexion time with a 30th order moving 
+average filter (window centers spanning 464 ms) to estimate the upper limit on expected 
+online decoding performance.
+3. Results
+3.1 BMI Electrode Selection
+Preliminary inspection of high gamma activation during the motor task and vibrotactile 
+stimulation, along with a preliminary reconstruction of the electrode locations, informed our 
+feature selection process for the online decoder. Spectral features were used from a subset of 
+electrodes that was chosen to avoid postcentral somatosensory cortex, though an error in the 
+preliminary electrode localization led to the inclusion of two electrodes over postcentral 
+gyrus. In training data from this subset of electrodes, cross-validated classification achieved 
+80% accuracy. Figure 2 depicts the locations of the electrodes chosen for the training set and 
+for online BMI testing (below), as well as which electrodes showed significant activation 
+during the motor and sensory tasks.
+Hotson et al.
+Page 7
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ 3.2. Online Testing
+The subject performed 39 visually cued trials during online control of the MPL fingers 
+(example performance, Supplementary Video 1). The subject began moving the prompted 
+finger, on average, 1.43 seconds after cue onset.
+Predictions were made at an average rate of 24 Hz. The average of the 50 most recently 
+extracted spectral features was used for all predictions. This resulted in using the mean of 
+features extracted over 2.34 seconds on average, with a group delay of approximately 1.17 
+seconds.
+Figure 3 shows the accuracy of the binary movement classifier and the individual finger 
+classifier as a function of time relative to cue onset. Movement detection accuracy reached a 
+peak of 97%, sustained between 1.6 and 3.1 seconds after movement onset. Classifier 
+accuracy during the baseline period was 87%, resulting in a balanced accuracy of 92%. 
+Individual finger prediction accuracy peaked at 81% (chance 20%) when predicting which of 
+all five fingers was moving, and 94% when classification for the ring and little finger was 
+coupled (chance 25%).
+At the onset of the peak movement detection period (1.6 seconds post-movement-onset), 
+classification among all five fingers had an accuracy of 76%. When combining the ring and 
+pinky fingers (they often moved together), accuracy was 88% (Figure 4, top row). The 
+average classification accuracy during the peak movement detection period (1.6-3.1 seconds 
+post-onset) was 67% for all five fingers, and 79% when combining ring and pinky fingers 
+(Figure 4, middle row). The average accuracy at any time a movement was detected within 
+seven seconds of trial onset (cue displayed) was 55% and 68% for five and four fingers, 
+respectively (Figure 4, bottom row). Given that the accuracy in the baseline period was 87%, 
+this equates to 60% and 72% accuracy for 6 and 5 class classifiers that include “rest” 
+(chance levels of 17% and 20%, respectively).
+The balanced accuracy of flexing the cued MPL finger (within seven seconds of trial onset) 
+was 64%, and 77% when pinky and ring positions were summed together. The cued finger 
+was the only finger fully flexed by the MPL during 43% of the trials, and 62% when pinky 
+and ring commands were combined. The average traces of the normalized MPL finger 
+positions during their respectively cued trials are shown in Figure 5. The dashed lines 
+represent the average position of the other four fingers during that trial (e.g. the solid blue 
+line depicts the thumb, while the dashed blue line depicts the mean position of the other 
+fingers during thumb trials).
+A cross-validated, regularized parameter search limited to the electrodes selected for the 
+online BMI revealed that adding five electrodes (shown in Figure 2) led to the greatest 
+reductions in error on the training data, and the addition of other electrodes typically 
+increased error. In spite of excluding electrodes identified by preliminary electrode 
+localization as being over the postcentral gyrus, the four electrodes which contributed the 
+most to decoding accuracy all showed significant activation during the vibration task. We 
+therefore performed offline analyses to investigate the motor decoding results when 
+controlling for the contributions of somatosensory cortex activity.
+Hotson et al.
+Page 8
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ 3.3. Offline Analysis
+To investigate the relative contributions of somatosensory and motor cortex to the BMI, we 
+compared the spatiotemporal patterns of activation during offline passive vibrotactile 
+stimulation vs. finger movement. Figure 6 shows spectral activation during passive vibration 
+and offline finger movement in the two electrodes that contributed most to online decoding 
+performance. Intensities are saturated to better see the earliest activation times.
+A total of 33 electrodes displayed significant task-related spectral modulation during finger 
+movement in the 512 ms centered on movement onset. These electrodes crossed significance 
+thresholds a median of 16 ms before onset of movement. The 25 electrodes with significant 
+modulation in the 512 ms centered on vibrotactile stimulus onset reached significance a 
+median of 80 ms after vibration onset. This suggests that a good deal of the activation during 
+finger movements was not solely due to somatosensory feedback.
+Spectral modulations during the motor task significantly exceeded baseline levels in four of 
+the five electrodes that contributed most to the classifier performance. In these electrodes, 
+activation first became significant during feature extraction windows (256 ms long) centered 
+16, 48, 128, and 160 ms before the onset of movement (one did not display significant 
+activation). In the sensory task, activation first reached significance 48 ms after the onset of 
+vibration in three of the five electrodes, 64 ms in one electrode, and never in one electrode.
+To investigate the ability of early motor-related spectral modulations to discriminate between 
+fingers, we built and tested classifiers throughout the time course of the finger movement 
+task and passive finger vibrations. Supplementary Figure 2 displays finger classification 
+accuracies over time relative to the movements recorded by their respective finger sensors in 
+the CyberGlove. Prediction of thumb movements was particularly early and robust. Figure 7 
+shows the electrodes selected during the regularization phase. The size of the red circle for 
+each electrode represents how often that electrode was selected during regularization across 
+the ten folds of cross-validation. A high degree of overlap was found between the most 
+important electrodes during the sensory and motor tasks, though additional precentral 
+electrodes were selected for decoding early in the motor task.
+Mean classification accuracy is shown for motor task and vibrotactile stimulation in Figure 
+8. Time points were referenced to the onset of any detected movement (via CyberGlove) or 
+the onset of vibration. At each time point, the mean of the previous 15 feature extraction 
+windows was used for cross-validated classification. This causal decoding scheme made use 
+of the 352 ms of data preceding each time point. Classification accuracy during the finger 
+tapping task was significantly higher than the corresponding accuracy during vibrotactile 
+stimulation between −32 ms to 224 ms (p < 0.05, Wilcoxon rank sum, Bonferroni corrected 
+for 30 comparisons). The classification accuracy for finger vibration exceeded chance 192 
+ms after stimulation onset. The mean classification accuracy during the motor task reached 
+70.7% at the corresponding time of 192 ms after movement onset. Decoding based on the 
+ECoG signals showed similar accuracy over time relative to using the CyberGlove 
+recordings for finger decoding. This was in spite of the fact that the ECoG features were 
+associated with a group delay of 184 ms, whereas CyberGlove relied only on the 
+instantaneous time value.
+Hotson et al.
+Page 9
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ While peak performance without somatosensory feedback cannot be reliably ascertained 
+from this data, the time course of classification accuracies indicate that accuracy using 
+signals only related to motor function (without accuracy inflated by sensory feedback not 
+present in paralyzed subjects) would likely achieve at least 70.7% accuracy in discriminating 
+which finger was being moved. When data was aligned to the peak flexion time and the 
+smoothing window was increased to 480 ms, we obtained a maximum accuracy of 96.5% 
+and a mean accuracy of 90.2% between 190 ms before to 1250 ms after the peak flexion 
+(after correcting for group delays). Based on these findings, we estimate that a high-density 
+ECoG array over sensorimotor areas would yield individual finger classification accuracies 
+in the range of 70.7-96.5% using motor signals in the deafferented patient population that 
+would benefit most from invasive BMI systems.
+4. Discussion
+We have demonstrated, for the first time in humans, online neural decoding of individual 
+finger movements to control a dexterous modular prosthetic limb. We utilized high gamma 
+power extracted from a high-density ECoG grid situated over a subject’s sensorimotor cortex 
+to produce intuitive BMI finger control. This was accomplished without arbitrary mappings 
+of user inputs or extensive training by using the native cortical representations of finger 
+movements. During online control, we utilized all available neural information in a subset of 
+electrodes to produce highly accurate control of fingers. For further offline analysis, we 
+limited our analysis to time periods preceding discriminable sensory afferent information to 
+more closely mimic SCI patients’ neural activity. We found this still yielded discriminable 
+information useful for finger control.
+We were able to accurately decode finger flexions online using the native sensorimotor 
+representations of fingers in the brain. The classification accuracy for the online BMI at the 
+onset of the most reliable time period for detecting movements (1.6 seconds post-cue) was 
+76% (88% with ring and pinky combined). The balanced accuracy of correctly flexing the 
+cued MPL finger was 64% (77% with ring/pinky combined). Our asynchronous binary 
+prediction of whether the subject was moving any finger yielded a balanced accuracy of 
+92%. To our knowledge, this is the first online demonstration by a human subject of neural 
+control of individual finger flexion with a robotic prosthetic limb. We further believe that the 
+control of five individual fingers in this study marks the greatest number of distinct degrees 
+of freedom controlled online with ECoG signals. By accomplishing this without the need for 
+operant conditioning, we have shown that high density ECoG can leverage the native 
+somatotopy of individual fingers to provide patients with immediate, more intuitive finger 
+control.
+Our online results contribute to the growing literature of online ECoG control over robotic 
+prosthetics. Subjects have used ECoG to asynchronously modulate the aperture of two grasp 
+types (77% of trials correct to completion) while simultaneously controlling elbow 
+movements (34% of trials correct to completion) with a prosthetic limb [11]. The ability to 
+simultaneously control reach and grasp independently with a prosthetic limb was 
+demonstrated with mean accuracies of 84% and 81% for reach and grasp respectively [12]. 
+ECoG control signals have been further integrated with intelligent robotics to pick up and 
+Hotson et al.
+Page 10
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ move objects with a mean success rate of 70% [41]. Yanagisawa et al. was able to 
+asynchronously detected hand movements (61% detected within one second) then decode 
+which of three different hand movements was performed (69.2% accuracy) [42]. Chestek et 
+al. showed 97% accuracy in classifying between resting and grasping at a fixed time relative 
+to cue in two subjects [9]. Their accuracy was 57% in one subject when expanded to two 
+different grasp types vs rest, and 55% accuracy in another subject when classifying between 
+rest and four grasp types. ECoG signals from hand somatosensory areas were also used in 
+[43], where attempted thumb, wrist, and elbow movements were used as control signals for 
+3D arm position. Their subject achieved 80% accuracy in a 3D cursor task leading up to 
+their MPL endpoint control, demonstrating the ability of postcentral hand area ECoG signals 
+recorded from a paralyzed subject to control a BMI. Our online asynchronous classification 
+accuracies of 64% and 77% for rest vs five and four fingers respectively build on the 
+previous literature to show, for the first time, that neural recordings can be used to provide 
+immediate online control of individual fingers without the need for operant conditioning.
+In order to more closely mimic the neural activity of an SCI patient, we performed further 
+offline analyses where we limited neural activity to time periods preceding sensory 
+feedback. Slight pre-trial movements of our subject’s hands led to loss of data from 
+conservative estimates of movement onset determination. While cortical reorganization 
+occurs after SCI/amputation, multiple groups have demonstrated continued sensorimotor 
+activity during imagined or triggered phantom hand movements [44]–[47]. We believe SCI 
+patients could harness this continued neural activity to control a robotic limb BMI. Indeed, 
+groups working with a SCI patient implanted with ECoG have demonstrated SCI patients' 
+ability to modulate this rhythms to control a BMI [43]. In spite of the very conservative 
+estimate of movement onset, spectrograms of high gamma activation revealed significant 
+pre-movement activity (Figure 6). We estimate a lower bound of 70.7% decoding accuracy 
+without sensory feedback. Higher single finger decoding accuracies at movement onset was 
+previously found [1], but this was achieved with a non-causal methodology that did not 
+account for sensory feedback. Our peak accuracy during offline analysis of the motor task 
+reached 96.5%, with a mean accuracy of over 90% during a time period lasting over a 
+second. This establishes an upper bound of over 90% for expected online single finger 
+decoding accuracy using high-definition ECoG over sensorimotor areas. A comparable drop 
+in performance was seen previously [9] when predictions were only made using data from 
+before movement onset. This is consistent with our estimate of the expected lower bound 
+accuracy.
+Our analysis revealed widespread pre-movement activity across both precentral and, 
+interestingly, postcentral gyri during the finger tapping task. Much of our decoding accuracy 
+was derived from electrodes that also showed activation during vibrotactile stimulation 
+(Figure 7). This may have been due in part to the high-density grid having better coverage of 
+the finger representation on the postcentral gyrus than the precentral gyrus. Another possible 
+reason the somatosensory-modulated electrodes were essential to decoding can be traced to 
+more distinct somatotopy of individual fingers in the postcentral gyrus than in the precentral 
+gyrus [22], [23], [25], [48], [49]. A large portion of the post-movement activity detected in 
+postcentral gyrus was no doubt the result of afferent cutaneous and proprioceptive 
+information. However, it is possible that a subset of the pre-movement activity in this region 
+Hotson et al.
+Page 11
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ was the result of an “efference copy” sent from premotor and associated motor planning 
+cortices [32], [50], [51]. These results are similar to a human ECoG study that showed pre-
+movement signals in sensory areas that were led by signals in task-related areas in premotor 
+cortices [52]. This movement-related activation, observed in both pre- and postcentral 
+cortex, has been noted in paralyzed subjects [37]–[39]. Furthermore, postcentral activity was 
+recently used to provide control over a three dimensional brain-machine interface to a 
+paralyzed subject [43].
+Further advancements in ours and other systems are necessary before BMIs will be able to 
+meet the clinical needs of SCI patients. Although we were able to demonstrate immediate 
+robust online control of individual fingers, future users will need more accurate systems 
+before they can perform the ADLs necessary for full autonomy. However, while the raw 
+decoding accuracy found in this study would not meet the performance requirements of a 
+functionally useful prosthetic device, cortical adaptation has been shown to increase BMI 
+performance over time [53]–[55]. This would likely improve results for patients that can 
+work with the BMI system longer than the brief testing session performed in this study. 
+Additionally, decoding from more comprehensive coverage of precentral areas would likely 
+further improve system robustness [1], [9]. Finally, other avenues of research may also 
+create more functionally useful BMIs. Incorporating intelligent robotics into neural-only 
+BMIs may allow users to perform a wide variety of tasks [41], [56]. By using environmental 
+sensors to inform the system of which fingers the user likely wants to flex, the system could 
+incorporate prior knowledge of grasp trajectories to accomplish advanced tasks in the 
+presence of noisy cortical control signals.
+5. Conclusions
+We demonstrated the ability of a patient implanted with high density ECoG over 
+sensorimotor areas to asynchronously control individual finger movements intuitively in an 
+online BMI, without the need for online training sessions. Offline analysis showed a large 
+amount of the decoding accuracy in our coverage area was derived from postcentral gyrus. 
+While our online control was likely highly influenced by sensory feedback, we found that 
+the signals in somatosensory areas showed significant activation before movement onset, 
+which might still occur in patients lacking afferent somatosensory inputs. Furthermore, 
+decoding accuracy over the course of the movement mirrored the separability of hand 
+positions—the more the CyberGlove recordings became identifiable as a specific finger 
+movement, the more the finger movement could be decoded from the preceding window of 
+neural data. Our findings support previous studies suggesting an efference copy activating 
+somatosensory cortex [32], [50], [51]. Here we demonstrated that this information can be 
+used to control individual fingers in an able-bodied subject. Future studies will need to 
+determine whether the same or similar signals can be used in paralyzed patient populations, 
+but recent work has demonstrated promising results showing sensorimotor activation in 
+deafferented patients [37]–[39], [43].
+We have demonstrated, for the first time, online control of all five individual fingers of a 
+robotic prosthetic hand independently and hope that insights from this study can one day be 
+applied to paralyzed patient populations to enable them to perform dexterous ADLs.
+Hotson et al.
+Page 12
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Supplementary Material
+Refer to Web version on PubMed Central for supplementary material.
+Acknowledgements
+The Authors would like to thank G. Milsap for assistance with experimental testing, G. Milsap, Y. Wang, K. Rupp, 
+and A. Korzeniewska for lab meeting discussions of our approach and analysis. The authors would like to thank 
+John Roycroft and John Helder for their help with configuring the MPL systems for development, experimentation, 
+and data acquisition. This work was funded by the National Institutes of Health (NIH) through a National Institute 
+of Neurological Disorders and Stroke (NINDS) grant 1R01NS088606-01.
+References
+[1]. Kubanek J, Miller KJ, Ojemann JG, Wolpaw JR, Schalk G. Decoding flexion of individual fingers 
+using electrocorticographic signals in humans. J Neural Eng. Dec.2009 6(no. 6):66001.
+[2]. Acharya S, Tenore F, Aggarwal V, Etienne-Cummings R, Schieber MH, Thakor NV. Decoding 
+individuated finger movements using volume-constrained neuronal ensembles in the M1 hand 
+area. IEEE Trans. Neural Syst. Rehabil. Eng. Feb.2008 16(no. 1):15–23. [PubMed: 18303801] 
+[3]. Wang, W.; Degenhart, AD.; Collinger, JL.; Vinjamuri, R.; Sudre, GP.; Adelson, PD.; Holder, DL.; 
+Leuthardt, EC.; Moran, DW.; Boninger, ML.; Schwartz, AB.; Crammond, DJ.; Tyler-Kabara, 
+EC.; Weber, DJ. Human motor cortical activity recorded with micro-ECoG electrodes during 
+individual finger movements. Conf. Proc. Annu. Int. Conf. IEEE Eng. Med. Biol. Soc. IEEE Eng. 
+Med. Biol. Soc. Conf.; 2009. p. 586-589.
+[4]. Flamary R, Rakotomamonjy A. Decoding finger movements from ECoG signals using switching 
+linear models. Front. Neurosci. Mar.2012 6
+[5]. Liang N, Bougrain L. Decoding finger flexion from band-specific ECoG signals in humans. Front. 
+Neurosci. Jun.2012 6
+[6]. Nakanishi Y, Yanagisawa T, Shin D, Chen C, Kambara H, Yoshimura N, Fukuma R, Kishima H, 
+Hirata M, Koike Y. Decoding fingertip trajectory from electrocorticographic signals in humans. 
+Neurosci. Res. Aug.2014 85:20–27. [PubMed: 24880133] 
+[7]. Acharya S, Fifer MS, Benz HL, Crone NE, Thakor NV. Electrocorticographic amplitude predicts 
+finger positions during slow grasping motions of the hand. J. Neural Eng. Aug.2010 7(no. 4):
+046002. [PubMed: 20489239] 
+[8]. Pistohl T, Schulze-Bonhage A, Aertsen A, Mehring C, Ball T. Decoding natural grasp types from 
+human ECoG. NeuroImage. Jan.2012 59(1):248–260. [PubMed: 21763434] 
+[9]. Chestek CA, Gilja V, Blabe CH, Foster BL, Shenoy KV, Parvizi J, Henderson JM. Hand posture 
+classification using electrocorticography signals in the gamma band over human sensorimotor 
+brain areas. J. Neural Eng. Apr.2013 10(no. 2):026002. [PubMed: 23369953] 
+[10]. Bleichner MG, Freudenburg ZV, Jansma JM, Aarnoutse EJ, Vansteensel MJ, Ramsey NF. Give 
+me a sign: decoding four complex hand gestures based on high-density ECoG. Brain Struct. 
+Funct. Oct.2014 :1–14.
+[11]. Yanagisawa T, Hirata M, Saitoh Y, Kishima H, Matsushita K, Goto T, Fukuma R, Yokoi H, 
+Kamitani Y, Yoshimine T. Electrocorticographic control of a prosthetic arm in paralyzed patients. 
+Ann. Neurol. Mar.2012 71(no. 3):353–361. [PubMed: 22052728] 
+[12]. Fifer MS, Hotson G, Wester B, McMullen DP, Wang Y, Johannes MS, Katyal KD, Helder JB, 
+Para MP, Vogelstein RJ, Anderson WS, Thakor NV, Crone NE. Simultaneous neural control of 
+simple reaching and grasping with the modular prosthetic limb using intracranial EEG. IEEE 
+Trans. Neural Syst. Rehabil. Eng. May; 2014 22(no. 3):695–705. [PubMed: 24235276] 
+[13]. Carmena JM, Lebedev MA, Crist RE, O’Doherty JE, Santucci DM, Dimitrov DF, Patil PG, 
+Henriquez CS, Nicolelis MAL. Learning to control a brain-machine interface for reaching and 
+grasping by primates. PLoS Biol. Nov.2003 1(no. 2):E42. [PubMed: 14624244] 
+Hotson et al.
+Page 13
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ [14]. Kim HK, Biggs SJ, Schloerb DW, Carmena JM, Lebedev MA, Nicolelis MAL, Srinivasan MA. 
+Continuous shared control for stabilizing reaching and grasping with brain-machine interfaces. 
+IEEE Trans. Biomed. Eng. Jun.2006 53(no. 6):1164–1173. [PubMed: 16761843] 
+[15]. Velliste M, Perel S, Spalding MC, Whitford AS, Schwartz AB. Cortical control of a prosthetic 
+arm for self-feeding. Nature. Jun.2008 453(no. 7198):1098–101. [PubMed: 18509337] 
+[16]. Zhuang J, Truccolo W, Vargas-Irwin C, Donoghue JP. Decoding 3-D reach and grasp kinematics 
+from high-frequency local field potentials in primate primary motor cortex. IEEE Trans. Biomed. 
+Eng. Jul.2010 57(no. 7):1774–1784. [PubMed: 20403782] 
+[17]. Hochberg LR, Bacher D, Jarosiewicz B, Masse NY, Simeral JD, Vogel J, Haddadin S, Liu J, Cash 
+SS, van der Smagt P, Donoghue JP. Reach and grasp by people with tetraplegia using a neurally 
+controlled robotic arm. Nature. May; 2012 485(no. 7398):372–375. [PubMed: 22596161] 
+[18]. Collinger JL, Wodlinger B, Downey JE, Wang W, Tyler-Kabara EC, Weber DJ, McMorland AJ, 
+Velliste M, Boninger ML, Schwartz AB. High-performance neuroprosthetic control by an 
+individual with tetraplegia. The Lancet. Feb.2013 381(no. 9866):557–564.
+[19]. Wodlinger B, Downey JE, Tyler-Kabara EC, Schwartz AB, Boninger ML, Collinger JL. Ten-
+dimensional anthropomorphic arm control in a human brain–machine interface: difficulties, 
+solutions, and limitations. J. Neural Eng. Feb.2015 12(no. 1):016011. [PubMed: 25514320] 
+[20]. Hamed SB, Schieber MH, Pouget A. Decoding M1 neurons during multiple finger movements. J. 
+Neurophysiol. Jul.2007 98(no. 1):327–333. [PubMed: 17428905] 
+[21]. Vaidya, M.; Dickey, A.; Best, MD.; Coles, J.; Balasubramanian, K.; Suminski, AJ.; Hatsopoulos, 
+NG. Ultra-Long Term Stability of Single Units Using Chronically Implanted Multielectrode 
+Arrays. Conf. Proc. Annu. Int. Conf. IEEE Eng. Med. Biol. Soc. IEEE Eng. Med. Biol. Soc. 
+Annu. Conf.; 2014. p. 4872-4875.
+[22]. Sanes JN, Donoghue JP, Thangaraj V, Edelman RR, Warach S. Shared neural substrates 
+controlling hand movements in human motor cortex [see comments]. Science. 1995; 268:1775–
+1777. [PubMed: 7792606] 
+[23]. Schieber MH, Hibbard LS. How somatotopic is the motor cortex hand area? Science. 1993; 
+261:489–492. [PubMed: 8332915] 
+[24]. Chao ZC, Nagasaka Y, Fujii N. Long-Term Asynchronous Decoding of Arm Motion Using 
+Electrocorticographic Signals in Monkeys. Front. Neuroengineering. Mar.2010 3
+[25]. Schieber MH. Constraints on somatotopic organization in the primary motor cortex. J. 
+Neurophysiol. Nov.2001 86(no. 5):2125–2143. [PubMed: 11698506] 
+[26]. Siero JCW, Hermes D, Hoogduin H, Luijten PR, Ramsey NF, Petridou N. BOLD matches 
+neuronal activity at the mm scale: A combined 7 T fMRI and ECoG study in human sensorimotor 
+cortex. NeuroImage. Nov.2014 101:177–184. [PubMed: 25026157] 
+[27]. Miller KJ, Zanos S, Fetz EE, den Nijs M, Ojemann JG. Decoupling the cortical power spectrum 
+reveals real-time representation of individual finger movements in humans. J. Neurosci. Off. J. 
+Soc. Neurosci. Mar.2009 29(no. 10):3132–3137.
+[28]. Johannes MS, Bigelow JD, Burck JM, Harshbarger SD, Kozlowski MV, Van Doren T. An 
+overview of the developmental process for the modular prosthetic limb. Johns Hopkins APL 
+Tech. Dig. 2011; 30(no. 3):207–216.
+[29]. Duncan JS, Papademetris X, Yang J, Jackowski M, Zeng X, Staib LH. Geometric strategies for 
+neuroanatomic analysis from MRI. NeuroImage. 2004; 23(Suppl 1):S34–45. [PubMed: 
+15501099] 
+[30]. Kokotilo KJ, Eng JJ, Curt A. Reorganization and Preservation of Motor Control of the Brain in 
+Spinal Cord Injury: A Systematic Review. J. Neurotrauma. Nov.2009 26(no. 11):2113–2126. 
+[PubMed: 19604097] 
+[31]. Miller KJ, Schalk G, Fetz EE, den Nijs M, Ojemann JG, Rao RPN. Cortical activity during motor 
+execution, motor imagery, and imagery-based online feedback. Proc. Natl. Acad. Sci. Feb.2010 :
+200913697.
+[32]. Christensen MS, Lundbye-Jensen J, Geertsen SS, Petersen TH, Paulson OB, Nielsen JB. 
+Premotor cortex modulates somatosensory cortex during voluntary movements without 
+proprioceptive feedback. Nat. Neurosci. Apr.2007 10(no. 4):417–419. [PubMed: 17369825] 
+Hotson et al.
+Page 14
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ [33]. Porro CA, Francescato MP, Cettolo V, Diamond ME, Baraldi P, Zuiani C, Bazzocchi M, di 
+Prampero PE. Primary motor and sensory cortex activation during motor performance and motor 
+imagery: a functional magnetic resonance imaging study. J.Neurosci. 1996; 16:7688–7698. 
+[PubMed: 8922425] 
+[34]. Lacourse MG, Orr ELR, Cramer SC, Cohen MJ. Brain activation during execution and motor 
+imagery of novel and skilled sequential hand movements. NeuroImage. Sep.2005 27(no. 3):505–
+519. [PubMed: 16046149] 
+[35]. Felton EA, Wilson JA, Williams JC, Garell PC. Electrocorticographically controlled brain–
+computer interfaces using motor and sensory imagery in patients with temporary subdural 
+electrode implants. J. Neurosurg. Mar.2007 106(no. 3):495–500. [PubMed: 17367076] 
+[36]. Brainard DH. The Psychophysics Toolbox. Spat. Vis. Jan.1997 10(no. 4):433–436. [PubMed: 
+9176952] 
+[37]. Shoham D, Grinvald A. The cortical representation of the hand in macaque and human area S-I: 
+high resolution optical imaging. J. Neurosci. Sep.2001 21(no. 17):6820–6835. [PubMed: 
+11517270] 
+[38]. Hotz-Boendermaker S, Funk M, Summers P, Brugger P, Hepp-Reymond M-C, Curt A, Kollias 
+SS. Preservation of motor programs in paraplegics as demonstrated by attempted and imagined 
+foot movements. NeuroImage. Jan.2008 39(no. 1):383–394. [PubMed: 17919932] 
+[39]. Cramer SC, Lastra L, Lacourse MG, Cohen MJ. Brain motor system function after chronic, 
+complete spinal cord injury. Brain. Dec.2005 128(no. 12):2941–2950. [PubMed: 16246866] 
+[40]. Guo Y, Hastie T, Tibshirani R. Regularized linear discriminant analysis and its application in 
+microarrays. Biostatistics. Jan.2007 8(no. 1):86–100. [PubMed: 16603682] 
+[41]. McMullen D, Hotson G, Katyal K, Wester B, Fifer M, McGee T, Harris A, Johannes M, 
+Vogelstein RJ, Ravitz A, Anderson W, Thakor N, Crone N. Demonstration of a semi-autonomous 
+hybrid brain-machine interface using human intracranial EEG, eye tracking, and computer vision 
+to control a robotic upper limb prosthetic. IEEE Trans. Neural Syst. Rehabil. Eng. 2014 Early 
+Access Online. 
+[42]. Yanagisawa T, Hirata M, Saitoh Y, Goto T, Kishima H, Fukuma R, Yokoi H, Kamitani Y, 
+Yoshimine T. Real-time control of a prosthetic hand using human electrocorticography signals. J. 
+Neurosurg. Jun.2011 114(no. 6):1715–1722. [PubMed: 21314273] 
+[43]. Wang W, Collinger JL, Degenhart AD, Tyler-Kabara EC, Schwartz AB, Moran DW, Weber DJ, 
+Wodlinger B, Vinjamuri RK, Ashmore RC, Kelly JW, Boninger ML. An electrocorticographic 
+brain interface in an individual with tetraplegia. PLoS ONE. Feb.2013 8(no. 2):e55344. 
+[PubMed: 23405137] 
+[44]. Mercier C, Reilly KT, Vargas CD, Aballea A, Sirigu A. Mapping phantom movement 
+representations in the motor cortex of amputees. Brain. Aug.2006 129(no. 8):2202–2210. 
+[PubMed: 16844715] 
+[45]. Reilly KT, Mercier C, Schieber MH, Sirigu A. Persistent hand motor commands in the amputees’ 
+brain. Brain. Aug.2006 129(no. 8):2211–2223. [PubMed: 16799174] 
+[46]. Ersland L, Rosén G, Lundervold A, Smievoll AI, Tillung T, akan Sundberg H. Phantom limb 
+imaginary fingertapping causes primary motor cortex activation: an fMRI study. Neuroreport. 
+1996; 8(no. 1):207–210. others. [PubMed: 9051782] 
+[47]. Alkadhi H, Brugger P, Boendermaker SH, Crelier G, Curt A, Hepp-Reymond M-C, Kollias SS. 
+What Disconnection Tells about Motor Imagery: Evidence from Paraplegic Patients. Cereb. 
+Cortex. Feb.2005 15(no. 2):131–140. [PubMed: 15238440] 
+[48]. Nelson AJ, Chen R. Digit somatotopy within cortical areas of the postcentral gyrus in humans. 
+Cereb. Cortex. Oct.2008 18(no. 10):2341–2351. [PubMed: 18245039] 
+[49]. Powell TP, Mountcastle VB. Some aspects of the functional organization of the cortex of the 
+postcentral gyrus of the monkey: a correlation of findings obtained in a single unit analysis with 
+cytoarchitecture. Bull. Johns Hopkins Hosp. Sep.1959 105:133–162. [PubMed: 14434571] 
+[50]. Crapse TB, Sommer MA. Corollary discharge circuits in the primate brain. Curr. Opin. 
+Neurobiol. Dec.2008 18(no. 6):552–557. [PubMed: 18848626] 
+Hotson et al.
+Page 15
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ [51]. Gritsenko V, Krouchev NI, Kalaska JF. Afferent input, efference copy, signal noise, and biases in 
+perception of joint angle during active versus passive elbow movements. J. Neurophysiol. Sep.
+2007 98(no. 3):1140–1154. [PubMed: 17615137] 
+[52]. Sun FT, Morrell MJ, Wharen RE. Responsive cortical stimulation for the treatment of epilepsy. 
+Neurother. J. Am. Soc. Exp. Neurother. 2008; 5(no. 1):68–74.
+[53]. Ganguly K, Carmena JM. Emergence of a stable cortical map for neuroprosthetic control. PLoS 
+Biol. Jul.2009 7(no. 7):e1000153. [PubMed: 19621062] 
+[54]. Lebedev MA, Carmena JM, O’Doherty JE, Zacksenhouse M, Henriquez CS, Principe JC, 
+Nicolelis MAL. Cortical Ensemble Adaptation to Represent Velocity of an Artificial Actuator 
+Controlled by a Brain-Machine Interface. J. Neurosci. May; 2005 25(no. 19):4681–4693. 
+[PubMed: 15888644] 
+[55]. Rouse AG, Williams JJ, Wheeler JJ, Moran DW. Cortical Adaptation to a Chronic Micro-
+Electrocorticographic Brain Computer Interface. J. Neurosci. Jan.2013 33(no. 4):1326–1330. 
+[PubMed: 23345208] 
+[56]. Muelling K, Venkatraman A, Valois J-S, Downey J, Weiss J, Javdani S, Hebert M, Schwartz AB, 
+Collinger JL, Bagnell JA. Autonomy Infused Teleoperation with Application to BCI 
+Manipulation. ArXiv Prepr. 2015 ArXiv150305451. 
+Hotson et al.
+Page 16
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 1. 
+Flow diagram of the online BMI processing. Signals are rereferenced, high gamma is 
+extracted and smoothed, and then a hierarchical classifier is used to determine if/which 
+fingers should be moved.
+Hotson et al.
+Page 17
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 2. 
+Electrodes used for online BMI. Starred electrodes were selected for online BMI control. 
+Sulci are accentuated in the inset for improved visibility, with the central sulcus highlighted 
+in green. Post-hoc analysis showed the electrodes with gold stars contributed the most to 
+decoding accuracy on the training set. Light blue electrodes showed significant activation 
+during vibrotactile stimulation, and red electrodes were active during the motor task. The 
+electrodes that were not available for the offline analysis are filled black. Purple outlines the 
+interhemispheric fissure and red outlines the previously resected superior frontal gyrus.
+Hotson et al.
+Page 18
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 3. 
+Classification accuracies over time for movement and finger classification. Classifications 
+were aggregated in 250 ms time bins, and accuracies were averaged across trials. The black 
+dashed line depicts the average proportion of predictions that a window contained movement 
+(i.e., versus rest). The solid black vertical line depicts movement onset.
+Hotson et al.
+Page 19
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 4. 
+Confusion matrices for finger classifications. The left column of matrices shows results for 
+all five fingers, the right column shows results with pinky and ring fingers combined. The 
+top row depicts the confusion matrices at the onset of the peak movement classification time, 
+middle shows the average over the 1.5 seconds of peak movement detection time, and the 
+bottom is any time within seven seconds of cue onset.
+Hotson et al.
+Page 20
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 5. 
+Average normalized MPL finger position of all five fingers during online BMI control (left), 
+and with ring and pinky commands aggregated (orange, right). Solid lines depict the average 
+position of the cued finger as a proportion of maximum flexion, where 1 corresponds to fully 
+flexed and 0 corresponds to fully extended. The corresponding dashed lines show the 
+average position of all the other fingers during the cued finger’s trials.
+Hotson et al.
+Page 21
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 6. 
+Spectral activation during offline index finger tapping (top) and passive index finger 
+vibration (bottom) for the two BMI electrodes that contributed most to performance with the 
+training data. For finger tapping (top row) the solid black line marks the onset (t=0) of any 
+hand movement detected by the CyberGlove. The red curve is the average trace of the index 
+finger sensors on the CyberGlove. For finger vibration (bottom row), the black line marks 
+onset of the vibratory stimulus. Activation significantly exceeded baseline levels 160 ms and 
+48 ms before movement onset during the motor task (top row), and 48 ms after the onset of 
+vibrotactile stimulation (bottom row).
+Hotson et al.
+Page 22
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 7. 
+Electrodes most consistently selected during the ten folds of cross-validation for the offline 
+motor and sensory task classifications. Green denotes the central sulcus with the left side of 
+every image being anterior and right being posterior. Cross-validated regularization was 
+performed on the training data during classification at every time step. Size of the red circle 
+corresponds to the frequency with which electrodes were selected during regularization. The 
+first pane shows the electrodes selected for the movement task in a 352 ms decoding window 
+ending 80 ms after movement onset (t=80 in Figure 8), yielding 65% accuracy. The middle 
+pane is for the same window ending at 512 ms, yielding 87% accuracy. The right pane is for 
+vibratory stimulation, with the 352 ms window ending at 400 ms after vibration onset, and 
+an accuracy of 96.8%.
+Hotson et al.
+Page 23
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Figure 8. 
+Finger classification accuracy over time using CyberGlove and ECoG recordings during the 
+motor task, and ECoG during vibrotactile stimulation. Motor task recordings are aligned to 
+the onset of any movement by the subject’s hand (solid line), and vibrotactile stimulation is 
+aligned to onset of the vibratory motor (solid line). The red, green, and blue dashed lines 
+denote when decoding accuracy exceeded chance levels using motor task high gamma, 
+vibrotactile stimulation high gamma, and motor task CyberGlove data. All decoding is 
+causal, i.e. classification accuracy at time t is dependent only on samples collected at time t 
+and earlier. Shading represents the 95% confidence interval of the mean.
+Hotson et al.
+Page 24
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+ Author Manuscript
+Author Manuscript
+Author Manuscript
+Author Manuscript
+Hotson et al.
+Page 25
+Table 1
+Experimental Overview
+Experiment
+Purpose
+Vibrotactile Stimulation
+Control for sensory feedback
+Finger Tapping
+Two sessions: one to provide training data for our
+decoder, and one as an independent dataset for
+offline analysis
+Online BMI Testing
+Online test of the decoder built on finger tapping data
+J Neural Eng. Author manuscript; available in PMC 2017 April 01.

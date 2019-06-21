@@ -1,0 +1,859 @@
+ Journal of Neural Engineering
+PAPER
+Real-time classification of auditory sentences using evoked cortical
+activity in humans
+To cite this article: David A Moses et al 2018 J. Neural Eng. 15 036005
+ 
+View the article online for updates and enhancements.
+This content was downloaded from IP address 138.26.31.3 on 11/05/2018 at 11:20
+ 1
+© 2018 IOP Publishing Ltd Printed in the UK
+1. Introduction
+Recent work has characterized the specific functional roles of 
+the human superior temporal gyrus (STG) and neighboring 
+brain areas in speech perception and language understanding 
+[1–6]. While subjects are listening to spoken speech, neural 
+activity in this region can be used to decode and reconstruct 
+speech information, including spectrotemporal acoustic prop-
+erties [7–9] and phoneme sequences [10]. Previous work has 
+implemented real-time systems capable of mapping sensorim-
+otor activations using spectral decomposition of neural signals 
+[11], using transcribed stimuli to generate neural encoding 
+models (as opposed to decoding models) of segmental speech 
+(e.g. phonemes) [12], decoding isolated phonemes from brain 
+activity [13], and detecting speech production onsets and off-
+sets from cortical responses [14]. However, to the best of our 
+knowledge no published work has demonstrated real-time 
+classification of phoneme sequences or entire sentences from 
+neural signals, which would have practical applications in 
+speech neuroprostheses.
+Journal of Neural Engineering
+Real-time classification of auditory 
+sentences using evoked cortical activity  
+in humans
+David A Moses1,2,3 , Matthew K Leonard1,2 and Edward F Chang1,2,3,4
+1 Department of Neurological Surgery, UC San Francisco, CA, United States of America
+2 Center for Integrative Neuroscience, UC San Francisco, CA, United States of America
+3 Graduate Program in Bioengineering, UC Berkeley-UC San Francisco, CA, United States of America
+E-mail: David.Moses@ucsf.edu, Matthew.Leonard@ucsf.edu and ChangEd@neurosurg.ucsf.edu
+Received 25 October 2017, revised 18 January 2018
+Accepted for publication 30 January 2018
+Published 27 February 2018
+Abstract
+Objective. Recent research has characterized the anatomical and functional basis of 
+speech perception in the human auditory cortex. These advances have made it possible to 
+decode speech information from activity in brain regions like the superior temporal gyrus, 
+but no published work has demonstrated this ability in real-time, which is necessary for 
+neuroprosthetic brain–computer interfaces. Approach. Here, we introduce a real-time neural 
+speech recognition (rtNSR) software package, which was used to classify spoken input 
+from high-resolution electrocorticography signals in real-time. We tested the system with 
+two human subjects implanted with electrode arrays over the lateral brain surface. Subjects 
+listened to multiple repetitions of ten sentences, and rtNSR classified what was heard in 
+real-time from neural activity patterns using direct sentence-level and HMM-based phoneme-
+level classification schemes. Main results. We observed single-trial sentence classification 
+accuracies of 90% or higher for each subject with less than 7 minutes of training data, 
+demonstrating the ability of rtNSR to use cortical recordings to perform accurate real-time 
+speech decoding in a limited vocabulary setting. Significance. Further development and testing 
+of the package with different speech paradigms could influence the design of future speech 
+neuroprosthetic applications.
+Keywords: neural speech recognition, real-time speech classification, speech perception, 
+electrocorticography, high gamma, human auditory cortex
+S Supplementary material for this article is available online
+(Some figures may appear in colour only in the online journal)
+4 Author to whom any correspondence should be addressed.
+1741-2552/18/036005+9$33.00
+https://doi.org/10.1088/1741-2552/aaab6f
+J. Neural Eng. 15 (2018) 036005 (9pp)
+ D A Moses et al
+2
+In this work, we developed and tested a real-time neural 
+speech recognition (rtNSR) software package. As defined in 
+our previous work, we use the term neural speech recognition 
+to refer to performing speech decoding using neural responses 
+as features [10]. The rtNSR package contains real-time code 
+capable of presenting visual and acoustic stimuli, processing 
+acquired neural signals, training probabilistic models, per-
+forming classification and decoding, and storing data and 
+metadata. Our primary goal in this work was to perform an ini-
+tial assessment of the capabilities of rtNSR using a relatively 
+simple sentence prediction task. In this task, subjects listened 
+to multiple presentations of ten pre-recorded spoken sen-
+tences. During these stimulus presentations, cortical activity is 
+obtained in real-time via electrocorticography (ECoG) arrays 
+and used in one of two classification schemes to predict the 
+identity of the stimulus that the subject just heard. The results 
+of this study indicate that rtNSR is capable of accurately 
+decoding single-trial speech events in real-time, demonstrating 
+its viability as a platform for an assistive speech application.
+2. Methods
+2.1
+. Subjects
+The two subjects (A and B) who participated in this study were 
+human epilepsy patients undergoing treatment at the UCSF 
+Medical Center. To aid clinicians in localizing seizure foci, 
+two 128-channel ECoG arrays with 4 mm center-to-center 
+electrode spacing (PMT corp.) were surgically implanted 
+on the cortical surface of each subject. Both subjects had 
+unilateral coverage over the right hemisphere that included 
+the STG. MRI brain reconstructions with electrode loca-
+tions were generated for each subject using the open source 
+ 
+img_pipe package (see figure S1) [15].
+Both patients gave their informed consent to be a subject 
+for this research prior to surgery. The research protocol was 
+approved by the UCSF Committee on Human Research.
+2.2. Speech stimuli
+In each experimental task, the subject listened to multiple rep-
+etitions of ten phonetically transcribed speech stimuli from 
+the Texas Instruments/Massachusetts Institute of Technology 
+(TIMIT) dataset [16]. In each stimulus, a single speaker pro-
+duces a single sentence. We trimmed silence from each end of 
+each stimulus sound file prior to running the tasks. The TIMIT 
+label, sentence transcription, and duration of each stimulus are 
+provided in table 1.
+We converted each speech sound label specified in the pho-
+netic transcriptions to one of the 37 phonemic labels used in 
+this work. This set of phonemic labels, which is provided in 
+table 2, is comprised of 36 phonemes from the ARPABET and 
+ 
+/sp/, a silence phoneme used to label non-speech data points.
+2.3. Real-time processing setup
+An overview of the real-time stimulus prediction system 
+is depicted in figure 1. The capital letter labels in this 
+figure correspond to the data flow steps during each stimulus 
+presentation (each trial) in each task block. At the start of 
+each trial, a Linux workstation (64-bit Ubuntu 14.04, Intel 
+Core i7-4790K processor, 32 GB of RAM) implementing 
+rtNSR plays one of the stimuli to the subject (A and B). 
+Simultaneously, the implanted ECoG arrays record cortical 
+local field potentials at 256 cortical sites, which are processed 
+in the data acquisition (DAQ) rig (C). Within the DAQ rig, 
+the ECoG signals are amplified and quantized at 3051.76 Hz 
+using a pre-amplifier (PZ2, Tucker-Davis Technologies) and 
+preprocessed using a digital signal processor (RZ2, Tucker-
+Davis Technologies). Before the ECoG signals are prepro-
+cessed, they are stored on the rig along with the time-aligned 
+audio waveform. During preprocessing, the signals are notch 
+filtered at 60, 120, and 180 Hz to reduce line noise. Next, each 
+channel is band-passed at 70–150 Hz, squared, and smoothed 
+using a low-pass filter at 10 Hz to extract power in the high 
+gamma band. High gamma power was used because pre-
+vious research has shown that activity in this band strongly 
+correlates with multi-unit activity [17] and is associated with 
+important speech features [6, 7, 10]. These high gamma sig-
+nals are then decimated to 98.44 Hz and streamed to the Linux 
+workstation using a real-time interface card (PO8e, Tucker-
+Davis Technologies) where they are processed in rtNSR and 
+saved to disk for offline analyses (D and E). Further discus-
+sion of preprocessing considerations and feature extraction 
+are available in section 4.
+Within rtNSR, the signals acquired from the real-time 
+card are normalized by z-scoring the data for each channel 
+Table 1. Information about each stimulus.
+TIMIT label
+Sentence transcription
+Duration (s)
+fcaj0_si1479
+Have you got enough 
+blankets?
+1.108
+fcaj0_si1804
+It had gone like clockwork.
+1.540
+fdfb0_si1948
+He moistened his lips 
+uneasily.
+1.527
+fdxw0_si2141
+It was nobody’s fault.
+1.161
+fisb0_si2209
+‘A bullet’, she answered.
+1.508
+mbbr0_si2315
+Junior, what on earth’s the 
+matter with you?
+1.679
+mdlc2_si2244
+Nobody likes snakes.
+1.301
+mdls0_si998
+Yet they thrived on it.
+1.000
+mjdh0_si1984
+And what eyes they were.
+1.048
+mjmm0_si625
+A tiny handful never did 
+make the concert.
+2.106
+Table 2. The phonemic labels used in this work and their respective 
+categorizations.
+Category
+Phoneme
+Silence
+sp
+Stop
+b d g p t k
+Affricate
+jh
+Fricative
+f v s z sh th dh hh
+Nasal
+m n ng
+Approximant
+w y l r
+Monophthong
+iy aa ae eh ah uw ao ih uh er
+Diphthong
+ey ay ow oy
+J. Neural Eng. 15 (2018) 036005
+ D A Moses et al
+3
+using a 30 s sliding window. These z-score values are clipped 
+to lie within the range of [−2, 2] to mitigate signal artifacts 
+caused by epileptic activity, channel noise, or other factors. 
+If a trained model is available, then, immediately after the 
+stimulus presentation, signals from relevant channels are used 
+as features in this model to predict which stimulus was just 
+presented to the subject (detailed descriptions of the channel 
+selection and modeling procedures are given in section 2.6). 
+The stimulus prediction and updated running classification 
+accuracy measures are displayed on a monitor (F).
+2.4. rtNSR design
+Our rtNSR system is implemented in the Python program-
+ming language [18] and is designed for flexible and efficient 
+real-time neural signal modeling and speech decoding. Based 
+on the software pipelining implementation technique [19], 
+rtNSR uses multiple data processing elements that run in 
+parallel as individual processes. Typically, each of these pro-
+cesses obtains inputs from one or more separate processes (via 
+software pipes or shared memory buffers), performs a specific 
+task with or manipulation on the inputs, and sends outputs to 
+one or more other processes. Each process is defined as a sub-
+class of a parent real-time process class implementing general 
+methods for real-time processing (including data sharing and 
+process setup methods). rtNSR contains many of these single-
+purpose process classes, such as a process that reads streaming 
+data from the real-time interface card and a process that per-
+forms sliding window normalization. This highly modular-
+ized software architecture allows for individual steps in the 
+real-time processing workflow to be interchanged and rear-
+ranged with relative ease while leveraging the computational 
+efficiency associated with pipelining and parallelization. For 
+example, during real-time simulations performed offline for 
+debugging and system evaluation, we simply replaced the 
+real-time card reader process in the data processing workflow 
+with a process that loads and streams out pre-recorded neural 
+data. A block diagram depicting the rtNSR components and 
+data flow used during the real-time experiments is provided 
+in figure 2.
+2.5. Experimental task blocks
+For subject A, we collected a total of 300 stimulus presen-
+tations (30 for each stimulus) across a total of four task 
+blocks. For subject B, we collected a total of 250 stimulus 
+presentations (25 for each stimulus) across a total of three 
+task blocks. At the start of each block, a 1 s beep is played 
+to signal the start of the task. This sound triggers an audio 
+onset detector in the preprocessor to inject a start token into 
+an arbitrarily chosen recording channel. The sentences are 
+then presented with a constant onset-to-onset time interval. 
+As a result, rtNSR can easily keep track of which neural data 
+points are associated with each stimulus presentation (see 
+section 4 for further discussion on stimulus timing). Within 
+each block, we randomized the stimulus presentations while 
+ensuring that each stimulus was presented an equal number 
+of times.
+In each task block, the onset-to-onset interval was approxi-
+mately 2.57 s, the stimuli were presented aurally via loud-
+speakers, and the subject was not able to see the real-time 
+stimulus classifications. However, in the final block for sub-
+ject A, the onset-to-onset interval was approximately 5.14 s, 
+the stimuli were presented using headphones, and the subject 
+was instructed to view the real-time sentence classifications 
+and respond with either a ‘thumbs up’ or a ‘thumbs down’ 
+to indicate if the prediction matched what was heard through 
+the headphones (see supplementary video 1 (stacks.iop.org/
+JNE/15/036005/mmedia)). The extra time in the onset-to-
+onset interval for this block was not used during modeling and 
+was only included to allow the subject to respond before the 
+onset of a new sentence.
+Figure 1. A schematic depiction of the real-time stimulus prediction system with the letters A–F denoting the flow of information through 
+the system. A Linux workstation implementing rtNSR plays the stimuli to the subject during ECoG data collection (A and B). The raw 
+ECoG signals are amplified, preprocessed, and synchronized with the audio data in the data acquisition (DAQ) rig (C). The preprocessed 
+ECoG signals are streamed to the workstation through a real-time interface card (D). The rtNSR software acquires the signals from the 
+card, processes them, and uses them to perform sentence classification (E). Sentence predictions are displayed on a computer monitor (F). 
+The MRI brain reconstruction for subject A is shown here with electrode locations depicted as blue dots. Electrode coverage was similar for 
+subject B (see figure S1).
+J. Neural Eng. 15 (2018) 036005
+ D A Moses et al
+4
+2.6. Stimulus classification schemes
+Stimulus classification models were trained for each sub-
+ject using data collected during experimentation. Each time 
+a model was trained, the collected data were first analyzed 
+to identify which channels should be considered relevant to 
+speech perception processing [10]. A simple bad channel 
+detector was used to exclude any channels for which 75% or 
+more of the acquired data points had a z-score of 0.25 or less. 
+Afterwards, two data subsets were created: one subset com-
+prised of neural data sampled during sentence perception of 
+each stimulus presentation (30 time points per stimulus pre-
+sentation) and another similarly constructed subset containing 
+data points sampled during the silence after each sentence. 
+Two-tailed Welch’s t-tests were then performed for each 
+channel between the two data subsets. Channels that exhibited 
+a p-value less than 0.001 were considered relevant (signifi-
+cantly modulated by the presence of auditory speech stimuli) 
+and the remaining channels were excluded during modeling. 
+Applying these procedures to the data acquired before the 
+final testing block resulted in 79 and 122 relevant electrode 
+channels for subjects A and B, respectively (see figure S1).
+We used two types of real-time stimulus classification 
+schemes in our tasks: a ‘Direct’ classification scheme during 
+testing with subject A and an ‘HMM-based’ classification 
+scheme during testing with subject B. As described in sec-
+tion 2.4, we were able to slightly modify the experimentation 
+setup to simulate stored neural data as if it were being obtained 
+in real-time without altering the classification scheme func-
+tionality. This enabled us to compute results for each subject 
+using the classification scheme that was not used during real-
+time testing for that subject. After data collection and these 
+offline simulations, results using both schemes were available 
+for each subject. We used the scikit-learn Python package to 
+implement the models employed in both schemes [20].
+2.6.1
+. Direct classification scheme. In the direct classifi-
+cation scheme, each stimulus (sentence) was treated as one 
+of ten classes. The feature vectors used during classification 
+were each constructed by concatenating the z-scored high 
+gamma power values for each relevant channel at each time 
+point during a stimulus presentation. Because the stimuli var-
+ied in duration, some of the neural data obtained during the 
+Figure 2. A schematic depiction of the rtNSR implementation used during experimentation. The solid rectangles represent real-time 
+process classes and the arrows represent data that is passed between processes. The real-time interface card reader process reads neural 
+data streamed from the real-time interface card. These data are passed to the behavioral onset detector process, which detects a one-time 
+injected onset token that signifies the start of the task (see section 2.5). The neural data are then passed to the data normalizer process, 
+which performs sliding window normalization and magnitude clipping. The normalized neural data are passed to the sentence classifier 
+process where the data are used to perform sentence classification. This process outputs sentence probabilities to the progress and results 
+GUI process, which extracts the most likely sentence from each of these sentence probability vectors and displays each predicted sentence 
+on a monitor. When using the direct classification scheme, the online classification model trainer process also obtains the normalized neural 
+data, performs model training and relevant electrode selection in real-time, and passes trained models (with relevant electrode numbers) to 
+the sentence classification process (see section 2.6.1). Throughout the task, the subject stimulus GUI process controls auditory presentation 
+of the sentence stimuli to the subject.
+J. Neural Eng. 15 (2018) 036005
+ D A Moses et al
+5
+silence periods after a stimulus presentation were included in 
+the feature vector associated with that stimulus presentation. 
+The feature vector for each stimulus presentation contained 
+the neural data at each of the T  =  253 time points associated 
+with that presentation (which spans the 2.57 s time window 
+allotted for each presentation, as described in section 2.5). 
+For example, a stimulus presentation that began at time index 
+t would be associated with a feature vector containing the 
+neural data points for each relevant channel at time indices 
+{t, t + 1, . . . , t + T − 1} (with a length of T times the number 
+of relevant channels) and with a target label equal to the iden-
+tity of that stimulus.
+During model training, we use principal component anal-
+ysis (PCA) to reduce the dimensionality of the feature vec-
+tors to the minimum number of features required to explain 
+at least 99% of the variance. The resulting feature vectors 
+have lengths that are typically around 100 elements (less than 
+1% of the lengths of the original vectors). These new feature 
+vectors are used to train a linear discriminant analysis (LDA) 
+model implementing the least-squares solution with automatic 
+shrinkage using the Ledoit–Wolf lemma [21]. Once trained, 
+we used these combination PCA-LDA models to classify pre-
+viously-unseen neural responses into one of the ten stimulus 
+labels in real-time. Model training, which typically took 2–5 s, 
+was first performed in real-time using all available data for a 
+subject when at least two repetitions of each stimulus were 
+presented and subsequently performed prior to starting a new 
+task block and in real-time whenever ten stimulus presenta-
+tions had occurred since the most recent training.
+2.6.2. HMM-based classification scheme. In the HMM-
+based classification scheme, each stimulus is represented as a 
+hidden Markov model (HMM), where each hidden state qt is 
+the phoneme that occurs at time index t for that stimulus and 
+each observed state yt is the neural feature vector associated 
+with time index t. This classification scheme was inspired by 
+the phoneme decoding results described in [10].
+For a normal HMM, the joint probability would be
+p (q, y) = p (q0)
+T−2
+�
+t=0
+p (qt+1|qt)
+T−1
+�
+t=0
+p (yt|qt) ,
+ 
+(1)
+where q = {q0, . . . , qT−1}, y = {y0, . . . , yT−1}, and T  =  253 
+(as defined in section 2.6.1). However, because each presenta-
+tion of a stimulus uses the exact same audio waveform, the 
+values of q are already known for each stimulus from the pho-
+netic transcriptions of the stimuli. This simplifies the HMM 
+for each stimulus because the values of the hidden states 
+are known. In this scenario, Bayes’ theorem can be used to 
+express the conditional probability associated with each sim-
+plified HMM as
+p (y|q) = p (q, y)
+p (q)
+=
+T−1
+�
+t=0
+p (yt|qt) .
+ 
+(2)
+For each stimulus presentation, our HMM-based classifica-
+tion scheme uses (2) to estimate p (y|q) for each of the ten 
+competing simplified HMMs (one per stimulus) and predicts 
+the stimulus that yielded the largest p (y|q) value. This can be 
+formally expressed as
+ˆ
+s = argmax
+s∈S
+T−1
+�
+t=0
+p (yt|qt,s) = argmax
+s∈S
+T−1
+�
+t=0
+log p (yt|qt,s),
+ 
+(3)
+where ˆ
+s is the predicted stimulus, S is the set of possible 
+stimuli, and qt,s is the phoneme at time index t for stimulus s. 
+We use log probabilities as expressed in the latter part of (3) 
+for computational efficiency and numerical stability.
+Each feature vector yt contains the z-scored high gamma 
+power values for each relevant channel at the following time 
+indices: t + {0, 2, . . . , 38, 40}. This parameterization of the 
+feature vectors resembles the high gamma windows described 
+in previous research [10]. We used PCA-LDA modeling (as 
+described in section 2.6.1) to obtain the p (yt|qt) values at 
+each time point. Model training, which typically took 10–20 s, 
+was performed using all available data for a subject prior to 
+starting each new task block (classifications were not per-
+formed in the first block).
+2.7
+. Evaluation methods
+We primarily used classification accuracy (the percent of clas-
+sification attempts that resulted in correct classifications) to 
+evaluate rtNSR. We computed classification accuracies for 
+each task block and in a sliding window fashion across the 
+blocks to measure how the accuracy changed over time.
+Because duration was highly variable across sentences 
+and could have been used by the classification schemes for 
+improved sentence discrimination, we also assessed how var-
+ying T, the number of time points used during modeling of 
+each stimulus presentation (described in section 2.6), affected 
+classification accuracy. We performed offline testing with 
+21 different values for T that were (roughly) equally-spaced 
+within the range of [1, 253]. For both classification schemes, 
+ten-fold stratified cross-validation was used on all the avail-
+able data for each subject.
+To assess the speed of our real-time classification schemes, 
+we measured the amount of time each classification scheme 
+took to perform classifications during offline simulations. For 
+the direct classification scheme, we measured the amount of 
+time required to make each sentence prediction from a con-
+catenated neural feature vector, which was performed every 
+T  =  253 time points. For the HMM-based classification 
+scheme, we measured the amount of time required to compute 
+the phoneme likelihood values p (yt|qt) at each time point and 
+the amount of time required to perform a sentence classifica-
+tion using the associated phoneme likelihoods every T  =  253 
+time points.
+3. Results
+For subject A, we achieved stimulus prediction accuracies 
+of 90% with the direct classification scheme in real-time 
+and 98% with the HMM-based classification scheme during 
+offline simulation after training on 250 stimulus presentations 
+J. Neural Eng. 15 (2018) 036005
+ D A Moses et al
+6
+(approximately 11 minutes of training data). For subject B, 
+we achieved accuracies of 90% with the direct classification 
+scheme during offline simulation and 91% with the HMM-
+based classification scheme in real-time after training on 150 
+stimulus presentations (approximately 6.5 minutes of training 
+data). Confusion matrices for these results are provided in 
+figure S2. All observed classification accuracies are depicted 
+in figure 3. The real-time classification performance during 
+the final task block for subject A with the direct classification 
+scheme is demonstrated in supplementary video 1.
+Figure 4 depicts the effect that varying the number of time 
+points used during classification had on accuracy. When only 
+the first 89 time points (approximately 0.9 s) for each trial were 
+used, which is less than the number of time points associated 
+with the shortest sentence, the classification accuracies pla-
+teaued at 90% or higher. These results indicate that the clas-
+sification schemes are relying on more than just sentence length 
+when performing classifications and that highly accurate clas-
+sification can be performed using neural responses collected 
+during perception of the first two to three words of the sentences.
+During offline simulation of the HMM-based classifica-
+tion scheme with subject A, computing the phoneme likeli-
+hoods at each time point took on average 2.64 ms (σ = 0.61 
+ms, N = 12 650) and each sentence classification (using 
+the pre-computed phoneme likelihoods) took on average 
+0.07 ms (σ = 0.01 ms, N  =  50). During offline simula-
+tion of the direct classification scheme with subject B, each 
+sentence classification took on average 10.23 ms (σ = 3.99 ms, 
+N  =  100).
+4. Discussion
+In this work, we have introduced a real-time neural speech 
+recognition (rtNSR) software package and demonstrated its 
+ability to perform real-time, single-trial stimulus classification 
+using cortical responses evoked during speech perception. We 
+achieved high classification accuracies after short training 
+intervals using both direct (sentence-level) and HMM-based 
+(phoneme-level) classification schemes. The HMM-based 
+classification scheme exhibited the highest observed accuracy 
+in a single block (98% accuracy with subject A).
+We showed that neural activity collected during perception 
+of naturally spoken sentences could be used directly for clas-
+sification without including acoustic, phonetic, or any other 
+stimulus information (other than sentence identity) during 
+modeling (with the direct classification scheme). We also 
+showed that similar performance could be achieved with a 
+more sophisticated classification approach that involved mod-
+eling the neural representations of phonemes (with the HMM-
+based classification scheme). Additionally, we demonstrated 
+that the performance of our system did not rely on sentence 
+length, a trivial stimulus feature, since peak classification 
+accuracies were obtained using only a subset of time points 
+associated with each trial that was smaller than the duration 
+Figure 3. Stimulus classification accuracies for each subject, task block, and classification scheme. The colored curves depict, for each 
+stimulus presentation, the percentage of the ten most recent classification attempts (including the current attempt) that were correct. The 
+blue and red curves represent testing with the direct and HMM-based classification schemes, respectively. Results obtained from real-time 
+testing contain ‘RT’ in the label and those obtained from offline simulations contain ‘Simulated’ in the label. A colored x marker indicates 
+a trial that was incorrectly classified with the associated classification scheme. The task blocks are labeled (with ‘B’ followed by the block 
+number) and separated by vertical lines. The total duration of recorded data at the end of each block is given above these vertical lines 
+(rounded to the nearest second). Chance accuracy (10%) is depicted as a horizontal dashed line. These plots exhibit that rtNSR is able to 
+achieve high real-time classification accuracies after short training intervals.
+J. Neural Eng. 15 (2018) 036005
+ D A Moses et al
+7
+of the shortest sentence in the task. Finally, we showed that 
+rtNSR was able to perform real-time classifications quickly; 
+on average, the direct classification scheme only required 
+10 ms every 2.57 s (the stimulus time window duration) to 
+perform a classification and the HMM-based classification 
+scheme only required less than 3 ms every 10.16 ms (the sam-
+pling interval) to compute phoneme likelihoods at each time 
+point and a negligible amount of time to make a sentence pre-
+diction from the phoneme likelihoods.
+Our results serve as a proof-of-concept that rtNSR is 
+capable of performing speech classification from neural sig-
+nals in real-time. We built the rtNSR system to have a modular 
+architecture in which individual components can be improved 
+or replaced with task-specific and optimized implementations 
+for future applications. For example, the high gamma power 
+estimation algorithm implemented on the DAQ rig can be 
+replaced with digital filters in rtNSR that directly approximate 
+the high gamma analytic amplitude, a representation of high 
+gamma activity that has been used in previous speech-related 
+research [3, 7, 10]. Also, the sentence classification process 
+can be replaced by a process implementing a more sophis-
+ticated classification model, such as a recurrent neural net-
+work classifier. In addition, the software’s robust task design 
+and execution capabilities make it amenable to a variety of 
+task paradigms, including isolated word or continuous speech 
+production or perception tasks, visual stimulus presentation 
+tasks, and covert speech tasks. Through augmentation of the 
+system’s data acquisition and feature extraction functionality, 
+it can also be deployed in applications involving alternative 
+types of neural signal acquisition, such as via electroencepha-
+lography or microelectrode arrays.
+For an initial evaluation of our system, we used a rela-
+tively simple sentence classification task with only ten unique 
+stimuli. Although the observed classification accuracies were 
+very high in this example task, demonstrating our ability to 
+learn the relationship between auditory speech stimulus fea-
+tures and neural activity recorded with ECoG in real-time, 
+further testing is needed to determine how well the classifi-
+cation schemes scale as the number of stimuli increases. We 
+expect the HMM-based classification scheme to scale more 
+favorably than the direct classification scheme because it can 
+take advantage of shared phonemic content across the stimuli 
+and can predict stimuli that were not presented during training. 
+However, it is also possible that an increase in the variety of 
+coarticulation contexts and other sources of variability in the 
+stimuli will negatively affect accuracy if they are not explic-
+itly considered during modeling.
+We established that one trivial stimulus feature (duration) 
+did not drive classification performance, but there are other 
+potential features that may have impacted accuracy. In this 
+task, nine speakers produced the ten stimuli, resulting in a 
+large degree of variability in the speaker-dependent acoustic 
+properties of the stimuli that may have been leveraged by the 
+classification schemes. When analyzing the sentence con-
+fusions observed during classification (see figure S2), we 
+did not find evidence that speaker identity was driving our 
+Figure 4. The effects of varying the duration of each stimulus presentation used during classification. For each subject and classification 
+scheme, the corresponding colored dots or squares and dashed line depict the classification accuracies associated with the considered 
+stimulus durations. The transcriptions for each sentence are shown above the plot. The left boundary of each word is aligned to the time at 
+which that word begins within the sentence audio files. The light green rectangles and vertical lines indicate the full time span and offset 
+time, respectively, for each sentence. Chance accuracy (10%) is depicted as a horizontal dashed line. These accuracy curves indicate that 
+both classification schemes are able to leverage information in the neural signals during perception of the initial 0.75 s of each sentence to 
+accurately discriminate between sentences.
+J. Neural Eng. 15 (2018) 036005
+ D A Moses et al
+8
+classifiers in this task. However, it is possible that in experi-
+ments involving a larger set of sentences from relatively few 
+speakers the direct classification scheme would be more sus-
+ceptible to relying on speaker identity than the HMM-based 
+classification scheme, since the latter uses phoneme models 
+that do not incorporate stimulus identity information while 
+being trained to discriminate between phonemes. Future work 
+using a wider variety of stimuli with multiple speech samples 
+produced by each speaker could address the effects of this 
+type of information on classification performance.
+In future work, we plan to expand the HMM-based clas-
+sification scheme into a real-time continuous speech decoder 
+that uses language modeling and Viterbi decoding (similar to 
+a real-time version of the system described in [10]). The per-
+formance achieved in this work using phoneme modeling with 
+naturally spoken sentences (as opposed to isolated words or 
+syllables) is a promising proof-of-concept for potential con-
+tinuous decoding applications. Unlike our task, a real-time 
+continuous decoding application should not rely on explicit 
+stimulus timing, although precise transcriptions of the stimuli 
+would still be required for model training. The methods 
+described in this work could also be applied to real-time 
+experimental paradigms in overt and covert speech produc-
+tion tasks guided by existing offline speech decoding research 
+efforts [22–28].
+After further development of rtNSR, our goal is to deploy 
+the system as part of a speech prosthesis that restores commu-
+nicative capabilities to individuals diagnosed with locked-in 
+syndrome or other impairments. Locked-in patients typically 
+have little to no voluntary muscle control but retain cognition 
+and awareness [29–33]. Although methods exist to provide 
+basic communicative capabilities to locked-in patients [33–36] 
+and are associated with increases in patient-reported quality of 
+life [31, 32], these approaches often involve tedious and dif-
+ficult to learn procedures such as selecting characters one at a 
+time at rates less than ten characters per minute (typing rates 
+are typically more than 175 characters per minute in healthy 
+individuals). Development of a device capable of directly 
+interpreting intended speech from neural activity could result 
+in significant improvements to the speed and naturalness of 
+assistive speech technology and, as a result, the quality of 
+life for impaired patients. Existing brain-computer interface 
+(BCI) research has shown that ECoG signals can be success-
+fully used in real-time motor control applications [37, 38], 
+and the classification accuracies observed in this task using 
+ECoG are similar to or higher than those exhibited in these 
+approaches (although direct performance comparisons may 
+not be possible due to fundamental differences in task designs 
+and constraints). Our system’s modular real-time framework 
+allows for incorporation of feedback and subject adaptation, 
+important components in closed-loop BCIs that will most 
+likely be beneficial in future speech prostheses. Given the per-
+formance exhibited by rtNSR in this work and its capacity for 
+expansion, we are confident in its ability to serve as a platform 
+for the design and implementation of the proposed speech 
+prosthetic device.
+Acknowledgments
+All authors thank the various members of EFC’s lab for help 
+during data recording and the patients who volunteered to be 
+subjects in this work.
+This work was supported by the National Institutes of 
+Health National Research Service Award F32-DC013486 and 
+Grants R00-NS065120, DP2-OD00862 and R01-DC012379, 
+the Ester A and Joseph Klingenstein Foundation, and the 
+National Science Foundation Grant No. 1144247. The content 
+is solely the responsibility of the authors and does not neces-
+sarily represent the official views of the National Institutes of 
+Health.
+Author contributions
+DAM developed and tested the rtNSR system, performed all 
+data collection and analyses, and wrote the manuscript. MKL 
+provided project guidance. EFC led the research project. All 
+authors edited the manuscript.
+Conflict of interest
+The authors declare no conflicts of interest.
+ORCID iDs
+David A Moses  https://orcid.org/0000-0002-5786-5334
+References
+ [1] Boatman D F, Hall C B, Goldstein M H, Lesser R P and 
+Gordon B J 1997 Neuroperceptual differences in consonant 
+and vowel discrimination: as revealed by direct cortical 
+electrical interference Cortex 33 83–98
+ [2] Binder J R, Bellgowan J A F, Hammeke T A, Bellgowan P, 
+Springer J and Kaufman J N 2000 Human temporal lobe 
+activation by speech and nonspeech sounds Cerebral Cortex 
+10 512–28
+ [3] Canolty R T, Soltani M, Dalal S S, Edwards E, Dronkers N F, 
+Nagarajan S S, Kirsch H E, Barbaro N M and Knight R T 
+2007 Spatiotemporal dynamics of word processing in the 
+human brain Frontiers Neurosci. 1 185–96
+ [4] Hickok G and Poeppel D 2007 The cortical organization of 
+speech processing Nat. Rev. Neurosci. 8 393–402
+ [5] Rauschecker J P and Scott S K 2009 Maps and streams in 
+the auditory cortex: nonhuman primates illuminate human 
+speech processing Nat. Neurosci. 12 718–24
+ [6] Mesgarani N, Cheung C, Johnson K and Chang E E F 2014 
+Phonetic feature encoding in human superior temporal 
+gyrus Science 343 1006–10
+ [7] Pasley B N, David S V, Mesgarani N, Flinker A, Shamma S A, 
+Crone N E, Knight R T and Chang E F 2012 Reconstructing 
+speech from human auditory cortex PLoS Biol. 
+10 e1001251
+ [8] Yang M, Sheth S, Schevon C, Mckhann G II and Mesgarani N 
+2015 Speech reconstruction from human auditory cortex 
+with deep neural networks 16th Annual Conf. of the Inter. 
+Speech Communication Association pp 1121–5
+J. Neural Eng. 15 (2018) 036005
+ D A Moses et al
+9
+ [9] Leonard M K, Baud M O, Sjerps M J and Chang E F 2016 
+Perceptual restoration of masked speech in human cortex 
+Nat. Commun. 7 13619
+ 
+[10] Moses D A, Mesgarani N, Leonard M K and Chang E F 2016 
+Neural speech recognition: continuous phoneme decoding 
+using spatiotemporal representations of human cortical 
+activity J. Neural Eng. 13 056004
+ 
+[11] Cheung C and Chang E F 2012 Real-time, time-frequency 
+mapping of event-related cortical activation J. Neural Eng. 
+9 046018
+ 
+[12] Khalighinejad B, Nagamine T, Mehta A and Mesgarani N 
+2017 NAPLib: an open source toolbox for real-time and 
+offline neural acoustic processing IEEE Int. Conf. on 
+Acoustics, Speech and Signal Processing—Proc. pp 846–50
+ 
+[13] Leuthardt E C, Gaona C, Sharma M, Szrama N, Roland J, 
+Freudenberg Z, Solis J, Breshears J and Schalk G 2011 
+Using the electrocorticographic speech network to control 
+a braincomputer interface in humans J. Neural Eng. 
+8 036004
+ 
+[14] Kanas V G, Mporas I, Benz H L, Sgarbas K N, Bezerianos A 
+and Crone N E 2014 Real-time voice activity detection for 
+ECoG-based speech brain machine interfaces Int. Conf. on 
+Digital Signal Processing vol 2014 pp 862–5
+ 
+[15] Hamilton L S, Chang D L, Lee M B and Chang E F 2017 
+Semi-automated anatomical labeling and inter-subject 
+warping of high-density intracranial recording electrodes in 
+electrocorticography Frontiers Neuroinform. 11
+ 
+[16] Garofolo J, Lamel L, Fisher W, Fiscus J, Pallett D, Dahlgren N 
+and Zue V 1993 TIMIT acoustic-phonetic continuous speech 
+corpus Linguistic Data Consortium (Philadelphia) 33
+ 
+[17] Crone N E, Miglioretti D L, Gordon B and Lesser R P 1998 
+Functional mapping of human sensorimotor cortex with 
+electrocorticographic spectral analysis. II. Event-related 
+synchronization in the gamma band Brain 121 2301–15
+ 
+[18] Python Software Foundation 2010 Python language reference, 
+version 2.7
+ 
+[19] Lam M 1988 Software pipelining: an effective scheduling 
+technique for VLIW machines ACM SIGPLAN Not. 
+23 318–28
+ 
+[20] Pedregosa F et al 2011 Scikit-learn: machine learning in 
+Python Mach. Learn. Res. 12 2825–30
+ 
+[21] Ledoit O and Wolf M 2004 Honey, i shrunk the sample 
+covariance matrix J. Portfolio Manage. 30 110–9
+ 
+[22] Kellis S, Miller K, Thomson K, Brown R, House P and 
+Greger B 2010 Decoding spoken words using local field 
+potentials recorded from the cortical surface J. Neural Eng. 
+7 056007
+ 
+[23] Pei X, Barbour D L, Leuthardt E C and Schalk G 2011 
+Decoding vowels and consonants in spoken and imagined 
+words using electrocorticographic signals in humans J. 
+Neural Eng. 8 046028
+ 
+[24] Denby B, Schultz T, Honda K, Hueber T, Gilbert J M and 
+Brumberg J S 2010 Silent speech interfaces Speech 
+Commun. 52 270–87
+ 
+[25] Martin S, Brunner P, Holdgraf C, Heinze H-J, Crone N E, 
+Rieger J, Schalk G, Knight R T and Pasley B N 2014 
+Decoding spectrotemporal features of overt and covert 
+speech from the human cortex Frontiers Neuroeng. 7 14
+ 
+[26] Mugler E M, Patton J L, Flint R D, Wright Z A, Schuele S U, 
+Rosenow J, Shih J J, Krusienski D J and Slutzky M W 2014 
+Direct classification of all american english phonemes using 
+signals from functional speech motor cortex J. Neural Eng. 
+11 035015
+ 
+[27] Herff C, Heger D, de Pesters A, Telaar D, Brunner P, Schalk G 
+and Schultz T 2015 Brain-to-text: decoding spoken phrases 
+from phone representations in the brain Frontiers Neurosci. 
+9 1–11
+ 
+[28] Martin S, Brunner P, Iturrate I, Millán J D R, Schalk G, 
+Knight R T and Pasley B N 2016 Word pair classification 
+during imagined speech using direct brain recordings Sci. 
+Rep. 6 25803
+ 
+[29] American Congress of Rehabilitation Medicine 1995 
+Recommendations for use of uniform nomenclature 
+pertinent to patients with severe alterations in consciousness 
+Arch. Phys. Med. Rehabil. 76 205–9
+ 
+[30] Laureys S et al 2005 The locked-in syndrome: what is it like to 
+be conscious but paralyzed and voiceless? Prog. Brain Res. 
+150 495–511
+ 
+[31] Bruno M-A, Bernheim J L, Ledoux D, Pellas F, Demertzi A 
+and Laureys S 2011 A survey on self-assessed well-being 
+in a cohort of chronic locked-in syndrome patients: happy 
+majority, miserable minority BMJ Open 1 e000039
+ 
+[32] Rousseau M-C, Baumstarck K, Alessandrini M, Blandin V, 
+Billette de Villemeur T and Auquier P 2015 Quality of life 
+in patients with locked-in syndrome: evolution over a 6 yr 
+period Orphanet J. Rare Dis. 10 88
+ 
+[33] Vansteensel M J et al 2016 Fully implanted braincomputer 
+interface in a locked-in patient with ALS New Engl. J. Med. 
+375 NEJMoa1608085
+ 
+[34] Spüler M, Rosenstiel W and Bogdan M 2012 Online 
+adaptation of a c-VEP brain-computer interface(BCI) 
+based on error-related potentials and unsupervised learning 
+PLoS One 7 e51077
+ 
+[35] Sellers E W, Ryan D B and Hauser C K 2014 Noninvasive 
+brain-computer interface enables communication after 
+brainstem stroke Sci. Transl. Med. 6 257re7
+ 
+[36] Mainsah B O, Collins L M, Colwell K A, Sellers E W, 
+Ryan D B, Caves K and Throckmorton C S 2015 
+Increasing BCI communication rates with dynamic 
+stopping towards more practical use: an ALS study J. 
+Neural Eng. 12 016013
+ 
+[37] Leuthardt E C, Miller K J, Schalk G, Rao R P and 
+Ojemann J G 2006 Electrocorticography-based brain 
+computer interface—the seattle experience IEEE Trans. 
+Neural Syst. Rehabil. Eng. 14 194–8
+ 
+[38] Hotson G et al 2016 Individual finger control of a modular 
+prosthetic limb using high-density electrocorticography in a 
+human subject J. Neural Eng. 13 026017
+J. Neural Eng. 15 (2018) 036005

@@ -1,0 +1,1289 @@
+ Grader variability and the importance of reference
+standards for evaluating machine learning models for
+diabetic retinopathy
+Jonathan Krause1, Varun Gulshan1, Ehsan Rahimy2, Peter Karth3, Kasumi Widner1,
+Greg S. Corrado1, Lily Peng1�, Dale R. Webster1�
+1Google Research
+2Palo Alto Medical Foundation
+3Oregon Eye Consultants
+Abstract. Diabetic retinopathy (DR) and diabetic macular edema are common
+complications of diabetes which can lead to vision loss. The grading of DR is a
+fairly complex process that requires the detection of fi
+ne features such as microa-
+neurysms, intraretinal hemorrhages, and intraretinal microvascular abnormalities.
+Because of this, there can be a fair amount of grader variability. There are differ-
+ent methods of obtaining the reference standard and resolving disagreements be-
+tween graders, and while it is usually accepted that adjudication until full consen-
+sus will yield the best reference standard, the difference between various methods
+of resolving disagreements has not been examined extensively. In this study, we
+examine the variability in different methods of grading, defi
+nitions of reference
+standards, and their effects on building deep learning models for the detection of
+diabetic eye disease. We fi
+nd that a small set of adjudicated DR grades allows
+substantial improvements in algorithm performance. The resulting algorithm’s
+performance was on par with that of individual U.S. board-certifi
+ed ophthalmol-
+ogists and retinal specialists.
+1
+Introduction
+Diabetic retinopathy (DR) and diabetic macular edema (DME) are among the leading
+causes of vision loss worldwide. Several methods for assessing the severity of diabetic
+eye disease have been established, including the Early Treatment Diabetic Retinopathy
+Study Grading System [1], the Scottish Diabetic Retinopathy Grading System [2], and
+the International Clinical Diabetic Retinopathy (ICDR) disease severity scale [3]. The
+ICDR scale is one of the more commonly used clinical scales and consists of a 5-point
+grade for DR: no, mild, moderate, severe, and proliferative.
+The grading of DR is a fairly complex process that requires the identifi
+cation and
+quantifi
+cation of fi
+ne features such as microaneurysms (MAs), intraretinal hemorrhages,
+intraretinal microvascular abnormalities, and neovascularization. As a result, there can
+be a fair amount of grader variability, with intergrader kappa scores ranging from 0.40
+to 0.65 [1,4–7]. This is not surprising because grader variability is a well-known issue
+with human interpretation of imaging in other medical fi
+elds such as radiology [8] or
+pathology [9].
+� Equal contribution
+arXiv:1710.01711v3  [cs.CV]  3 Jul 2018
+ Several methods have been proposed for resolving disagreements between graders
+and obtaining a reference standard. One approach consists of taking the majority deci-
+sion from a group of 3 or more independent graders. Another consists of having a group
+of 2 or more graders work independently and then having a third generally more senior
+grader arbitrate disagreements, with that individual’s decision serving as the reference
+standard. Last, a group of 3 or more graders may fi
+rst grade independently and then
+collectively discuss disagreements until there is full consensus on the fi
+nal grade. The
+difference between various methods of resolving disagreements has not been examined
+extensively.
+Deep learning [10] is a family of machine learning techniques that allows computers
+to learn the most predictive features directly from images, given a large dataset of la-
+beled examples, without specifying rules or features explicitly. It has also been applied
+recently in medical imaging, producing highly accurate algorithms for a variety of clas-
+sifi
+cation tasks, including melanoma [11], breast cancer lymph node metastasis [12,13],
+and DR [14–16] Because the network is trained to predict labels that have been paired
+with the images, it is imperative that the labels accurately represent the state of disease
+found in the image, especially for the evaluation sets.
+In this study, we examine the variability in different methods of grading, defi
+ni-
+tions of reference standards, and their effects on building deep learning models for the
+detection of diabetic eye disease.
+2
+Methods
+2.1
+Development Dataset
+In this work, we built upon the datasets used by Gulshan et al. [14] for algorithm de-
+velopment and clinical validation. A summary of the various data sets and grading pro-
+tocols used for this study is shown in Figure S1. The development dataset used con-
+sists of images obtained from patients who presented for DR screening at EyePACS-
+affi
+liated clinics, 3 eye hospitals in India (Aravind Eye Hospital, Sankara Nethralaya,
+and Narayana Nethralaya), and the publicly available Messidor-2 dataset [17,18]1. Im-
+ages from the EyePACS clinics consisted of 45° retinal fundus images that were primary
+(or posterior pole-centered), nasal (disc-centered), and temporal fi
+eld of view. The rest
+of the data sources only had primary fi
+eld of view images. The images were captured us-
+ing the Centervue DRS, Optovue iCam, Canon CR1/DGi/CR2, and Topcon NW using
+45° fi
+elds of view. All images were de-identifi
+ed according to Health Insurance Porta-
+bility and Accountability Act Safe Harbor before transfer to study investigators. Ethics
+review and institutional review board exemption was obtained using Quorum Review
+Institutional Review Board.
+There were 3 types of grades used in the development dataset: grading by EyePACS
+graders, grading by ophthalmologists, and adjudicated consensus grading by retinal spe-
+cialists. Images were provided at full resolution for manual grading. The images pro-
+vided by EyePACS clinics were graded according to the EyePACS protocol [19]. In the
+1 We have released our adjudicated grades on the Messidor-2 dataset at https://www.
+kaggle.com/google-brain/messidor2-dr-grades.
+2
+ EyePACS protocol, all 3 images of an eye (primary, nasal, and temporal) were graded
+together and assigned a single grade. We assigned the grade provided for the entire eye
+as a grade for each image. Although the eye-level grade may not correspond exactly
+with the image-level grade, this method allowed for training on different fi
+elds of view,
+which helps the algorithm tolerate some deviation from the primary fi
+eld of view. The
+second source of grades was the development dataset used by Gulshan et al. [14], where
+each image was independently graded by ophthalmologists or trainees in their last year
+of residency. The third type of grades was obtained using our subspecialist grading and
+adjudication protocol on a small subset of images. Our subspecialist adjudication proto-
+col consisted of 3 fellowship-trained retina specialists undertaking independent grading
+of the dataset. Next, each of the 3 retina specialists reviewed the images with any level
+of disagreement in a combination of asynchronous and live adjudication sessions.
+For algorithm development, the development dataset was divided into groups: a
+“train” set and a “tune” set. The “train” set consisted of all the images that were not
+adjudicated and was used to train the model parameters. The “tune” set consisted of
+images with adjudicated consensus grades and was used to tune the algorithm hyperpa-
+rameters (e.g., input image resolution, learning rate) and make other modeling choices
+(e.g., network architectures). All of the images in the “tune” set were of the primary
+fi
+eld.
+2.2
+Clinical Validation Dataset
+The clinical validation dataset consisted of primary fi
+eld of view images that were ac-
+quired from EyePACS clinics (imaged between May and October 2015). These did not
+overlap with any images or patients used in the development dataset.
+The clinical validation set was graded using the same adjudication protocol as the
+tuning set (face-to-face adjudication by 3 retina specialists). In addition, the clinical
+validation set was graded by 3 ophthalmologists. These ophthalmologists were distinct
+from the retina specialists who adjudicated the set. After grading, all disagreements
+between the adjudicated consensus of retinal specialists and majority decision of the
+ophthalmologists were reviewed manually by a retinal specialist, who also assigned a
+likely reason for the discrepancy.
+2.3
+Algorithm Training
+Our deep learning algorithm for predicting DR and DME was built upon the archi-
+tecture used by Gulshan et al. [14]. We used a convolutional neural network [20] that
+predicted a 5-point DR grade, referable DME, and gradability of image. The input to
+the neural network was an image of a fundus, and through the use of many stages of
+computation, parameterized by millions of numbers, the network output a real-valued
+number between 0 and 1 for each prediction, indicating its confi
+dence.
+The parameters of a neural network were determined by training it on a dataset of
+fundus images. Repeatedly, the model was given an image with a known severity rating
+for DR, and the model predicted its confi
+dence in each severity level of DR, slowly
+adjusting its parameters over the course of the training process to become more accu-
+rate. The model was trained via distributed stochastic gradient descent and evaluated
+3
+ on a tuning dataset throughout the training process. The tuning dataset was used to
+determine model hyperparameters (parameters of the model architecture that cannot be
+trained with gradient descent). Finally, we created an “ensemble” of models, training 10
+individual models and combining their predictions, which improves performance and
+robustness.
+2.4
+Algorithmic Improvements
+We made a number of improvements to the core neural network, compared with the
+study by Gulshan et al. [14] First, we trained our model on a larger set of images ob-
+tained from EyePACS [21]. Because it would be prohibitively expensive to relabel all
+of these images with U.S.-licensed ophthalmologists (as done by Gulshan et al. [14],
+we also use labels determined by the EyePACS grading centers to train our DR clas-
+sifi
+er. To use both our ophthalmologist grading and the EyePACS grading effectively,
+we treated the labels from these 2 independent sources as separate prediction targets,
+training our model to predict both an EyePACS grade for DR and a grade determined
+by our own labeling procedure, if present.
+By using this larger training set, we performed a more extensive search for well-
+performing hyperparameters using a Gaussian process bandit algorithm [22] One sig-
+nifi
+cant change in model hyperparameters that resulted was an increase in the resolution
+of images the model used as input: The model used in this work has an input resolu-
+tion of 779 x 779 pixels, a large increase over the 299 x 299 pixels used by Gulshan
+et al. [14]. This has the effect of increasing the effective resolution of lesions. For ex-
+ample, an MA or small hard exudate may occupy only 1 pixel or less within a 299 x
+299 pixel image [23, 24], but at this higher resolution, it would occupy approximately
+6.8 pixels. The effective resolution of other lesions is similarly increased when using
+higher input resolution.
+Other signifi
+cant changes included changing model architecture from “Inception-
+v3” [25] to “Inception-v4” [26] and predicting a 5-class rating for DR (Gulshan et
+al. [14] only predicted binary referables). For other hyperparameter and training details,
+see Appendix Section A.
+2.5
+Evaluation
+One advantage of using machine learning-based systems for predicting DR is that they
+explicitly output a confi
+dence in the range (0e1) for each image. By applying a threshold
+to this confi
+dence to determine referability, an algorithm’s sensitivity and specifi
+city can
+be tuned for a particular use case; as the threshold is lowered, the algorithm becomes
+more sensitive, but less specifi
+c. Performance across many different thresholds is de-
+picted in a receiver operating curve and is summarized with the area under the curve
+(AUC). We used as our primary model evaluation metric for DR the AUC at differ-
+ent DR severity thresholds, for example, the AUC for predicting moderate and above
+DR. In addition, for some experiments on 5-class prediction we evaluated using the
+quadratic-weighted Cohen’s kappa [27].
+The algorithm’s sensitivity and specifi
+city when predicting a 5-class output cannot
+be tuned with a single threshold, though. Therefore, we used a cascade of thresholds,
+4
+ building on the model’s predicted confi
+dence in each of the severity levels for DR. First,
+a threshold was picked for proliferative DR: If the model’s predicted probability of an
+image corresponding to proliferative DR was above a specifi
+ed threshold, chosen to
+reach a target sensitivity on the tuning set, the image was classifi
+ed as proliferative DR.
+Next, another threshold was picked for the model’s predicted probability of severe DR
+and applied to all images not classifi
+ed as proliferative DR. A similar procedure was ap-
+plied for both moderate and mild DR. Finally, all remaining images whose probabilities
+did not pass any of the thresholds were classifi
+ed as no DR.
+3
+Results
+3.1
+Grading and Adjudication
+The baseline characteristics of the development and clinical validation datasets are de-
+scribed in Table 1. The training portion of the development set consisted of more than
+1.6 M fundus images from 238 610 unique individuals. The tune portion of the develop-
+ment set consisted of adjudicated consensus grades for 3737 images from 2643 unique
+individuals. The clinical validation set consisted of 1958 photos from 998 unique indi-
+viduals. Compared with the clinical validation set, the development set had a slightly
+higher proportion of abnormal images.
+A comparison of the grades generated by the majority decision from independent
+grading by the retinal specialists in the panel before the adjudication process versus
+the adjudicated reference standard is outlined in Table 2. Most grades remained within
+1 step of each level of severity. For DR, there were 27 instances (1.5% of images)
+where the difference was 2 steps, and none that were 3 or more. Adjudication more
+often yielded new grades with higher levels of severity. The weighted-kappa score for
+the grade determined by the majority decision of retinal specialists and by adjudication
+was 0.91 (Table 3).
+To better characterize the difference in each retinal specialist’s preadjudication grade
+and the adjudicated consensus for detecting moderate and above DR, we measured
+the sensitivity and specifi
+city of each specialist (Table 3). Although all 3 specialists
+were very specifi
+c ( 99%), sensitivity ranged from 74.4% to 82.1%, corresponding to
+weighted-kappa scores of 0.82 to 0.91. A calculation of the nonadjudicated majority de-
+cision of the panel of 3 retina specialists showed higher sensitivity (88.1%) than grades
+from individual specialists (Table 3), leaving 11.9% of further cases with moderate or
+above DR that required the adjudication process to detect. During independent grading,
+some retinal specialists used a different variation for grading referable DME in which
+they considered any hard exudate within the macular OCT box ( 2 disc diameters) as
+referable. This discrepancy was resolved during adjudication, and all images where
+referable DME was potentially present were reassessed to match the standard protocol
+(where hard exudates within 1 disc diameter was considered referable DME). For this
+reason, the independent grading of the retinal specialists for DME was not included in
+subsequent analyses.
+In addition to having retinal specialists grade and adjudicate the clinical validation
+datasets, we also had 3 U.S. board-certifi
+ed ophthalmologists grade the same set (Ta-
+5
+ ble 4). Quadratic-weighted kappa values were generally good (0.80 - 0.84), but some-
+what lower for ophthalmologists than for the retina specialists (Table 5). The majority
+decision of the ophthalmologists yielded a higher agreement (weighted kappa: 0.87)
+than individual ophthalmologists alone. A comparison of all graders (3 retinal special-
+ists and 3 ophthalmologists) showed that disagreements were more common in cases
+in which the adjudicated consensus yielded referable disease (Figure 1). An analysis
+combining the 3 retinal specialists and 3 ophthalmologists is given in Table S1.
+A summary of the causes of errors in the nonadjudicated grades generated from the
+majority decision of the ophthalmologists is presented in Table 6. The most common
+causes were missed MAs (36%), artifacts (20%), and disagreement regarding whether
+a lesion was an MA or a hemorrhage (16%). Thirty-six of 193 disagreements differed
+by at least 2 grades (e.g., no DR vs. moderate or moderate vs. proliferative). Of these,
+overgrading, cases in which the majority decision of the ophthalmologists was more
+severe than the fi
+nal adjudicated consensus grade, accounted for 14 (7.3%) of the dis-
+agreements, and undergrading accounted for 22 (11.4%) of the cases.
+3.2
+Model Results
+We compare the results of our model with the model used by Gulshan et al. [14] in Ta-
+ble 7, using the majority decision or adjudicated consensus of retinal specialist grades.
+For moderate or worse DR, we observed an improvement in AUC with increasing image
+resolution as well as with the other algorithmic improvements outlined in the “Methods”
+section for both methods of computing reference standard. However, this improvement
+in AUC was larger when using the adjudicated consensus as the reference standard
+(from 0.942 to 0.986 AUC). When predicting mild or worse DR (Fig 2), increasing
+image resolution showed only a slight gain (¡1%) when using majority decision as
+the reference standard, while when evaluating with adjudicated consensus grades we
+observed that increasing resolution improved the model’s AUC from 0.952 to 0.984.
+However, increasing resolution beyond approximately 450 x 450 pixel input seemed
+to have marginal performance gains. Another benefi
+t of evaluating with adjudicated
+consensus grades was in reduced metric variability, where we observed reduced metric
+variance (confi
+dence intervals) across input resolutions. This was particularly impor-
+tant when making changes to the algorithm because it made it easier to determine with
+confi
+dence if a change in the algorithm was actually an improvement.
+We illustrate the performance of our fi
+nal model using the adjudicated consensus
+as the reference standard in Table 8. On 5-class DR prediction, our model achieved a
+quadratic-weighted kappa of 0.84, which is on par with the performance of individual
+ophthalmologists and individual retinal specialists. There were 257 disagreements be-
+tween the adjudicated consensus and the model. Of the 56 (21.8%) disagreements that
+were 2 or more steps, 53 (20.6%) were the result of overgrading, that is, the model
+predicted a higher grade than the adjudicated consensus, and 3 (1.2%) resulted from
+undergrading.
+In addition to 5-point grading analysis for DR, we also demonstrate the model’s per-
+formance in binary classifi
+cation tasks. Figure 3 summarizes the model’s performance
+as well as that of the ophthalmologists and retinal specialists in detecting mild or worse
+DR, moderate or worse DR, severe or worse DR, and proliferative DR. For all of these
+6
+ classifi
+cation tasks, the algorithm’s performance was approximately on par with that of
+individual ophthalmologists and retinal specialists. For mild or worse DR, the algorithm
+had a sensitivity of 0.970, specifi
+city of 0.917, and AUC of 0.986.
+4
+Discussion
+Deep learning has garnered attention recently because of its ability to create highly
+accurate algorithms from large datasets of labeled data without feature engineering.
+However, great care must be taken to evaluate these algorithms against as high-quality
+“ground truth” labels as possible. Previous work [14] used majority decision to generate
+ground truth, without an adjudication process. The present work suggests that an adju-
+dication process yielding a consensus grade from multiple retina specialists provides a
+more rigorous reference standard for algorithm development, especially for the iden-
+tifi
+cation of artifacts and missed MAs, ultimately leading to superior algorithms and
+improved detection of disease.
+The adjudication sessions of the 3 retina specialists yielded considerable insights
+into the grading process. First, image artifacts, especially those resembling typical
+pathology such as MAs, were a common source of disagreement. These disagreements
+were consistent across many images, because artifacts are often caused by consistent
+lens artifacts or dust spots. The adjudication process was critical in correcting these
+errors. Likewise, when true pathology was present, a frequent cause of grader disagree-
+ment was in differentiating an MA from an intraretinal hemorrhage, which in the ab-
+sence of other fi
+ndings, represented the difference between labeling an image as mild
+or moderate DR. In addition, there was signifi
+cant subjective variance in the precise
+defi
+nition of the boundaries between grades at the outset of the adjudication process.
+Although traditional grading defi
+nitions are fi
+xed, it became very clear that there are
+gray areas where these defi
+nitions are not suffi
+cient to make an unambiguous call on
+DR severity, for example, on whether a macula-centered image with numerous hemor-
+rhages was more likely to represent moderate or severe DR. Once all 3 retina specialists
+converged on a more precise set of defi
+nitions, staying within but also refi
+ning the tradi-
+tional defi
+nitions, many of these initial disagreements were resolved. On conclusion of
+the adjudication process, each of the retina specialists indicated that the precision used
+in the adjudication process was above that typically used in everyday clinical practice.
+A comparison of the performance of algorithm and manual grading also yielded
+interesting insights. First, although manual grading by ophthalmologists led to an ap-
+proximately even ratio of overgrading (7.3%) and undergrading (11.4%), the grading
+by the algorithm had a higher ratio of overgrading (20.36%) than undergrading (1.2%).
+This can be attributed to the decision to operate the algorithm at a very high-sensitivity
+set point, which would be desirable for a screening algorithm to maximize the detection
+of referable DR. However, a combination of the algorithm for initial screening coupled
+with manual review of the resulting positive images would likely yield a system that is
+both highly sensitive and specifi
+c, which may help limit the number of diabetic patients
+being referred who do not actually have referable disease.
+It is also worth noting that although full-resolution images were used for grading
+and adjudication, training models using an input resolution greater than 450 x 450 pixels
+7
+ did not yield a signifi
+cant boost in model performance. This suggests neural networks
+may not require as high of a resolution input image to detect DR lesions as humans do.
+However, this is an observation made in the setting of a specifi
+c grading scale (ICDR)
+using only single nonstereoscopic 45° color fundus photographs. This observation may
+not generalize if other fi
+ner grading scales are used, such as Early Treatment Diabetic
+Retinopathy Study, if the input images are different (stereoscopic, ultrawide-fi
+eld), or
+if the ground truth incorporated signals from other clinical data, such as other types of
+retinal imaging like OCT or fluorescein angiography.
+There are several limitations to this study that may represent further avenues for
+research. One key limitation is that we used hard exudates as a proxy for DME, which
+generally requires stereoscopic images or OCT to properly diagnose and characterize.
+Including OCT imaging in the process of determining ground truth for DME will be
+valuable in future studies.
+In addition, we used only 3 retinal specialists to establish ground truth and 3 U.S.
+Board-Certifi
+ed ophthalmologists as a comparison group. However, the kappa scores,
+sensitivity, and specifi
+city of the graders in this study are in line with, if not slightly bet-
+ter than, what has been reported in other studies [6,7,28,29] but we found a wider range
+for sensitivity, especially when it comes to detecting mild disease. For example, using
+adjudication as the ground truth, the 3 retinal specialists in Abr`
+amoff et al. [29] had
+preadjudication sensitivities of 71% to 91% and specifi
+cities of 95% to 100% for call-
+ing referable DR (defi
+ned as moderate or worse DR or referable DME). Likewise, our
+retinal specialists had preadjudication sensitivities of 74% to 82% and specifi
+cities of
+more than 99% for moderate or worse DR. Gangaputra et al. [6] reported sensitivities of
+53% and 84% and specifi
+cities of 97% and 96% for clinical grading versus reading cen-
+ter grading for detecting mild or worse DR. The retinal specialists and ophthalmologists
+in our study had sensitivities between 70% and 80% and specifi
+cities more than 97%.
+Examining the differences between adjudication and reading center grading or between
+different adjudication groups would be valuable next steps in investigating variability
+in grading. We also did not study the variability in grading for optometrists or other
+graders trained to evaluate DR images, which is another area for further exploration.
+Other areas of future work include measuring the impact of using adjudicated con-
+sensus grades in the training portion of the development dataset on model performance
+and studying the algorithm’s performance on other clinical validation datasets. Al-
+though images in the development and clinical validation datasets of our study were
+taken in nonoverlapping time intervals from the EyePACS population, additional valida-
+tion on more diverse datasets in terms of cameras, geographies, and patient population
+would further characterize the algorithm’s generalizability.
+Despite these limitations, we believe this work provide a basis for further research
+and begins to lay the groundwork for standards in this fi
+eld. For example, although ad-
+judication yields a more reliable ground truth, it requires signifi
+cant time and resources
+to perform. We demonstrate that by using existing grades and adjudicating a small sub-
+set (0.22%) of the training image grades for the “tune” set, we were able to signifi
+cantly
+improve model performance without adjudicating the entire training corpus of images.
+Leveraging these techniques, our resulting model’s performance was approximately on
+par with that of individual ophthalmologists and retinal specialists.
+8
+ In conclusion, we believe that proper determination of ground truth is a critical
+aspect of the development of clinically useful machine learning algorithms for use in
+detection of or screening for retinal disease. We have shown that our process of live
+adjudication by multiple subspecialists yielding a consensus grade provides improved
+algorithmic accuracy and led to improved screening models.
+5
+Acknowledgements
+From Google Research: Yun Liu, Derek Wu, Katy Blumer, Philip Nelson
+From EyePACS: Jorge Cuadros
+References
+1. Early Treatment Diabetic Retinopathy Study Research Group et al.
+Grading diabetic
+retinopathy from stereoscopic color fundus photographsan extension of the modifi
+ed airlie
+house classifi
+cation: Etdrs report number 10. Ophthalmology, 98(5):786–806, 1991. 1
+2. Diabetic retinopathy screening services in scotland: A training handbook July 2003: page
+17. http://www.ndrs-wp.scot.nhs.uk/?page_id=1609. Accessed: June 21,
+2017. 1
+3. American academy of ophthalmology. international clinical diabetic retinopathy disease
+severity scale, detailed table. http://www.icoph.org/dynamic/attachments/
+resources/diabetic-retinopathy-detail.pdf. Accessed: Oct 14, 2016. 1
+4. Ingrid U Scott, Neil M Bressler, Susan B Bressler, David J Browning, Clement K Chan,
+Ronald P Danis, Matthew D Davis, Craig Kollman, Haijing Qin, Diabetic Retinopathy Clin-
+ical Research Network Study Group, et al. Agreement between clinician and reading center
+gradings of diabetic retinopathy severity level at baseline in a phase 2 study of intravitreal
+bevacizumab for diabetic macular edema. Retina (Philadelphia, Pa.), 28(1):36, 2008. 1
+5. Helen K Li, Larry D Hubbard, Ronald P Danis, Adol Esquivel, Jose F Florez-Arango,
+Nicola J Ferrier, and Elizabeth A Krupinski. Digital versus fi
+lm fundus photography for
+research grading of diabetic retinopathy severity. Invest Ophthalmol Vis Sci, 51(11):5846–
+5852, 2010. 1
+6. Sapna Gangaputra, James F Lovato, Larry Hubbard, Matthew D Davis, Barbara A Esser,
+Walter T Ambrosius, Emily Y Chew, Craig Greven, Letitia H Perdue, Wai T Wong, et al.
+Comparison of standardized clinical classifi
+cation with fundus photograph grading for the
+assessment of diabetic retinopathy and diabetic macular edema severity. Retina (Philadel-
+phia, Pa.), 33(7), 2013. 1, 8
+7. Paisan Ruamviboonsuk, Khemawan Teerasuwanajak, Montip Tiensuwan, and Kanokwan
+Yuttitham. Interobserver agreement in the interpretation of single-fi
+eld digital fundus im-
+ages for diabetic retinopathy screening. Ophthalmology, 113(5):826–832, 2006. 1, 8
+8. Joann G Elmore, Carolyn K Wells, Carol H Lee, Debra H Howard, and Alvan R Fein-
+stein. Variability in radiologists’ interpretations of mammograms. New England Journal
+of Medicine, 331(22):1493–1499, 1994. 1
+9. Joann G Elmore, Gary M Longton, Patricia A Carney, Berta M Geller, Tracy Onega,
+Anna NA Tosteson, Heidi D Nelson, Margaret S Pepe, Kimberly H Allison, Stuart J Schnitt,
+et al.
+Diagnostic concordance among pathologists interpreting breast biopsy specimens.
+Jama, 313(11):1122–1132, 2015. 1
+10. Yann LeCun, Yoshua Bengio, and Geoffrey Hinton. Deep learning. Nature, 521(7553):436–
+444, 2015. 2
+9
+ 11. Andre Esteva, Brett Kuprel, Roberto A Novoa, Justin Ko, Susan M Swetter, Helen M Blau,
+and Sebastian Thrun.
+Dermatologist-level classifi
+cation of skin cancer with deep neural
+networks. Nature, 542(7639):115–118, 2017. 2
+12. Yun Liu, Krishna Gadepalli, Mohammad Norouzi, George E Dahl, Timo Kohlberger, Alek-
+sey Boyko, Subhashini Venugopalan, Aleksei Timofeev, Philip Q Nelson, Greg S Cor-
+rado, et al. Detecting cancer metastases on gigapixel pathology images. arXiv preprint
+arXiv:1703.02442, 2017. 2
+13. Babak Ehteshami Bejnordi, Mitko Veta, Paul Johannes van Diest, Bram van Ginneken, Nico
+Karssemeijer, Geert Litjens, Jeroen AWM van der Laak, Meyke Hermsen, Quirine F Manson,
+Maschenka Balkenhol, et al. Diagnostic assessment of deep learning algorithms for detection
+of lymph node metastases in women with breast cancer. Jama, 318(22):2199–2210, 2017. 2
+14. Varun Gulshan, Lily Peng, Marc Coram, Martin C Stumpe, Derek Wu, Arunachalam
+Narayanaswamy, Subhashini Venugopalan, Kasumi Widner, Tom Madams, Jorge Cuadros,
+et al. Development and validation of a deep learning algorithm for detection of diabetic
+retinopathy in retinal fundus photographs. Jama, 316(22):2402–2410, 2016. 2, 3, 4, 6, 7, 12,
+16
+15. Rishab Gargeya and Theodore Leng. Automated identifi
+cation of diabetic retinopathy using
+deep learning. Ophthalmology, 2017. 2
+16. Daniel Shu Wei Ting, Carol Yim-Lui Cheung, Gilbert Lim, Gavin Siew Wei Tan, Nguyen D
+Quang, Alfred Gan, Haslina Hamzah, Renata Garcia-Franco, Ian Yew San Yeo, Shu Yen
+Lee, et al. Development and validation of a deep learning system for diabetic retinopathy
+and related eye diseases using retinal images from multiethnic populations with diabetes.
+Jama, 318(22):2211–2223, 2017. 2
+17. Etienne Decenci`
+ere, Xiwei Zhang, Guy Cazuguel, Bruno La¨
+y, B´
+eatrice Cochener, Caroline
+Trone, Philippe Gain, Richard Ordonez, Pascale Massin, Ali Erginay, et al. Feedback on a
+publicly distributed image database: the messidor database. Image Analysis & Stereology,
+33(3):231–234, 2014. 2
+18. Gw´
+enol´
+e Quellec, Mathieu Lamard, Pierre Marie Josselin, Guy Cazuguel, B´
+eatrice Coch-
+ener, and Christian Roux. Optimal wavelet transform for the detection of microaneurysms
+in retina photographs. IEEE Transactions on Medical Imaging, 27(9):1230–1241, 2008. 2
+19. Eyepacs
+digital
+retinal
+image
+grading
+protocol
+narrative.
+https:
+//www.eyepacs.org/consultant/Clinical/grading/
+EyePACS-DIGITAL-RETINAL-IMAGE-GRADING.pdf. Accessed: June 21, 2017. 2
+20. Yann LeCun, L´
+eon Bottou, Yoshua Bengio, and Patrick Haffner. Gradient-based learning
+applied to document recognition. Proceedings of the IEEE, 86(11):2278–2324, 1998. 3
+21. Jorge Cuadros and George Bresnick. Eyepacs: an adaptable telemedicine system for diabetic
+retinopathy screening. Journal of diabetes science and technology, 3(3):509–516, 2009. 4
+22. Daniel Golovin, Benjamin Solnik, Subhodeep Moitra, Greg Kochanski, John Karro, and
+D Sculley.
+Google vizier: A service for black-box optimization.
+In Proceedings of the
+23rd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining,
+pages 1487–1495. ACM, 2017. 4
+23. H Kolb, E Fernandez, and R Nelson.
+Facts and fi
+gures concerning the human retina–
+webvision: The organization of the retina and visual system. 1995. 4
+24. Peter H Scanlon, Ahmed Sallam, and Peter van Wijngaarden. A practical manual of diabetic
+retinopathy management. John Wiley & Sons, 2017. 4
+25. Christian Szegedy, Vincent Vanhoucke, Sergey Ioffe, Jon Shlens, and Zbigniew Wojna. Re-
+thinking the inception architecture for computer vision. In Proceedings of the IEEE Confer-
+ence on Computer Vision and Pattern Recognition, pages 2818–2826, 2016. 4
+26. Christian Szegedy, Sergey Ioffe, Vincent Vanhoucke, and Alexander A Alemi. Inception-v4,
+inception-resnet and the impact of residual connections on learning. In AAAI, volume 4,
+page 12, 2017. 4
+10
+ 27. Jacob Cohen. A coeffi
+cient of agreement for nominal scales. Educational and psychological
+measurement, 20(1):37–46, 1960. 4
+28. ME Gonzalez, C Gonzalez, MP Stern, B Arredondo, and S Martinez. Concordance in diag-
+nosis of diabetic retinopathy by fundus photography between retina specialists and a stan-
+dardized reading center. mexico city diabetes study retinopathy group. Archives of medical
+research, 26(2):127–131, 1995. 8
+29. Michael D Abr`
+amoff, James C Folk, Dennis P Han, Jonathan D Walker, David F Williams,
+Stephen R Russell, Pascale Massin, Beatrice Cochener, Philippe Gain, Li Tang, et al. Au-
+tomated analysis of retinal images for detection of referable diabetic retinopathy. JAMA
+ophthalmology, 131(3):351–357, 2013. 8
+11
+ A
+Model Hyperparameters
+For our implementation of Gulshan et al. [14], we used the following hyperparameters:
+– Inception-v3 architecture. This is very slightly different from Gulshan et al., who
+used an architecture just pre-dating Inception-v3.
+– Input image resolution: 299 × 299
+– Learning rate: 0.001
+– Batch size: 32
+– Weight decay: 4 · 10−5
+– An Adam optimizer with β1 = 0.9, β2 = 0.999, and � = 0.1. This is a difference
+from Gulshan et al., who used RMSProp.
+– Data augmentation:
+• Random horizontal reflections
+• Random brightness changes (with a max delta of 0.125) [see the TensorFlow
+function tf.image.random_brightness]
+• Random saturation changes between 0.5 and 1.5 [see tf.image.random_saturation]
+• Random hue changes between -0.2 and 0.2 [see tf.image.random_hue]
+• Random contrast changes between 0.5 and 1.5 [see tf.image.random_constrast]
+• The above is done in that order. Note that Gulshan et al. applied the random
+brightness, saturation, hue, and contrast changes in a random order.
+– Early stopping based on tuning set DR Moderate AUC, which happened within the
+fi
+rst 60,000 steps.
+– Model evaluations performed using a running average of parameters, with a decay
+factor of 0.9999.
+In our full model we used the following hyperparameters:
+– Inception-v4 architecture
+– Input image resolution: 779 × 779
+– Learning rate: 0.0014339
+– Batch size: 24
+– Weight decay: 1.15 · 10−5
+– An Adam optimizer with β1 = 0.9, β2 = 0.999, and � = 0.1.
+– Data augmentation:
+• Random vertical and horizontal reflections
+• Random brightness changes (with a max delta of 0.5247078)
+• Random saturation changes between 0.3824261 and 1.4029386
+• Random hue changes between -0.1267652 and 0.1267652
+• Random contrast changes between 0.3493415 and 1.3461331
+• The above is done in that order.
+– Each model in a 10-way ensembled was trained for 250,000 steps.
+– Model evaluations performed using a running average of parameters, with a decay
+factor of 0.9999.
+12
+ Tables and Figures
+Development
+Clinical Validation
+Train
+Tune
+EyePACS-2
+Images (#)
+1,665,151
+3,737
+1,958
+Patient Demographics
+Unique Individuals (#)
+238,610
+2,643
+999
+Age (Average ± Stdev)
+53.5 ± 11.6
+54.3 ± 11.1
+54.9 ± 10.9
+Female / Total patients
+where gender was known
+140,183/230,556 (60.8%)
+1,101/1,767 (62.3%)
+603/999 (60.5%)
+Image Quality Distribution
+Fully gradable / Total images
+where image quality was
+assessed
+1,343,726/1,529,771 (87.8%) 3,547/3,737 (94.9%) 1,813/1,958 (92.6%)
+Development
+Validation
+Train
+Tune
+EyePACS-2
+Disease Severity
+Distribution
+#
+%
+#
+%
+#
+%
+Total images where DR
+was assessed
+1,662,646
+100.0%
+3,547
+100.0%
+1,813
+100.0%
+No diabetic retinopathy
+1,164,368
+70.0%
+2,417
+68.1%
+1,478
+81.5%
+Mild
+152,938
+9.2%
+458
+12.9%
+125
+6.9%
+Moderate
+249,138
+15.0%
+497
+14.0%
+144
+7.9%
+Severe
+50,640
+3.0%
+106
+3.0%
+50
+2.8%
+Proliferative
+45,562
+2.7%
+69
+1.9%
+16
+0.9%
+Total images where DME
+was assessed
+252,544
+100.0%
+3,547
+100.0%
+1,813
+100.0%
+Referable diabetic macular
+edema
+28,807
+11.4%
+281
+7.9%
+79
+4.4%
+Table 1. Summary of image characteristics and available demographic information in the devel-
+opment and clinical validation datasets. The adjudicated reference standard was used for comput-
+ing the DR and DME distributions on the “Tune” and “EyePACS-2” datasets, and the majority
+reference standard was used for the “Train” dataset. For DR, the majority was taken over both the
+EyePACS partner grade, and the grading done by our ophthalmologists (using whichever grades
+are available). For DME, the majority is taken over grades from our ophthalmologists. For Image
+quality distributions, the EyePACS partner grade was used for the “Train” dataset and an adju-
+dicated image quality standard was used for the “Tune” and “EyePACS-2” datasets. The “Tune”
+dataset and “Validation” dataset differ in their defi
+nition of DME used during adjudication: the
+“Tune” dataset used a standard of hard exudates within 2 disc diameter (DD) of the fovea (to
+approximate the macular OCT box), whereas the “Validation” dataset used a standard of hard
+exudates within 1 DD of the fovea.
+13
+ Majority decision of retinal specialist grading
+before adjudication
+No Mild Moderate Severe Proliferative
+Adjudicated
+Consensus
+No
+1,469
+4
+5
+0
+0
+Mild
+58
+62
+5
+0
+0
+Moderate
+22
+3
+118
+1
+0
+Severe
+0
+0
+13
+36
+1
+Proliferative
+0
+0
+0
+1
+15
+Table 2. Comparison of retinal specialist grades before and after adjudication on the validation
+dataset. Confusion matrix for diabetic retinopathy between the grade determined by majority
+decision and adjudicated consensus.
+DR
+Sensitivity
+Specifi
+city
+Quadratic-
+weighted kappa
+Retina Specialist A
+74.6%
+99.1%
+0.82
+Retina Specialist B
+74.4%
+99.3%
+0.80
+Retina Specialist C
+82.1%
+99.3%
+0.91
+Majority Decision
+(Retinal Specialists)
+88.1%
+99.4%
+0.91
+Table 3. Agreement between each retina specialist and the adjudicated reference standard on the
+validation dataset. Retina specialists correspond to those who contributed to the fi
+nal adjudicated
+reference standard. Sensitivity and specifi
+city metrics reported are for moderate or worse DR.
+Agreement between the preadjudication 5-point DR grade and the fi
+nal adjudicated grade is also
+measured by the quadratic-weighted kappa.
+14
+ Majority of ophthalmologist grading
+No Mild Moderate Severe Proliferative
+Adjudicated
+Consensus
+No
+1,432
+32
+10
+0
+1
+Mild
+67
+38
+19
+1
+0
+Moderate
+20
+14
+94
+14
+2
+Severe
+0
+0
+9
+41
+0
+Proliferative
+0
+0
+1
+2
+13
+Majority of ophthalmologist
+grading
+Not Referable Referable DME
+Adjudicated
+Consensus
+Not Referable
+1,710
+17
+Referable DME
+13
+65
+Table 4. Comparison of ophthalmologist grades versus adjudicated grades from retina specialists
+on the validation dataset. Confusion matrix for diabetic retinopathy and DME between the grade
+determined by majority decision of the ophthalmologists and the adjudicated consensus of retinal
+specialists.
+DR
+DME
+Sensitivity
+Specifi
+city
+Quadratic-
+weighted kappa
+Sensitivity
+Specifi
+city
+Ophthalmologist A
+75.2%
+99.1%
+0.84
+81.5%
+98.7%
+Ophthalmologist B
+74.9%
+97.9%
+0.80
+62.7%
+98.6%
+Ophthalmologist C
+76.4%
+97.5%
+0.82
+86.4%
+99.1%
+Majority Decision
+(Ophthalmologists)
+83.8%
+98.1%
+0.87
+83.3%
+99.0%
+Table 5. Agreement between ophthalmologists’ grades with the adjudicated reference standard
+on the validation dataset. Sensitivity and specifi
+city metrics are for moderate or worse DR and
+referable DME for each grader. Agreement between the adjudicated grade and the 5-point scale
+is also measured by the quadratic-weighted kappa.
+15
+ Adjudication Consensus Grade (Retina Specialists) minus
+Majority Decision Grade (Ophthalmologists)
+-4
+-2
+-1
+1
+2
+Total
+Artifact vs not
+5
+28
+1
+5
+39
+Extent of Lesions
+1
+16
+9
+26
+Hemorrhage vs MA
+1
+13
+13
+3
+30
+Hemorrhage vs not
+4
+4
+11
+19
+IRMA vs not
+1
+1
+Missed hemorrhage
+2
+2
+Missed MA
+6
+63
+69
+Missed NVD/NVE
+2
+1
+3
+PRP vs not
+1
+1
+1
+3
+Other
+1
+1
+Total
+1
+13
+65
+92
+22
+193
+Table 6. Reasons for difference between adjudication of retinal specialist and majority decision
+from ophthalmologist graders. Disagreements between the adjudicated consensus and majority
+decision were examined and characterized by a retinal specialist. Positive numbers denote that
+the adjudication grade was more than the majority decision of ophthalmologist grade, and vice-
+versa for negative numbers.
+Original Model Original Model,
+High Resolution Our Full Model
+Majority decision of
+retinal specialists ground truth
+0.952
+0.978
+0.986
+Adjudicated consensus
+ground truth
+0.942
+0.960
+0.986
+Table 7. Differences in the Final Area under the Curve Observed for Algorithms Trained in the
+Image Resolution Algorithm Selection Experiments for Moderate or Worse Diabetic Retinopathy.
+Majority decision was based on the grades of the 3 retinal specialists. “Original Model” refers
+to the model and training data of Gulshan et al. [14] “Original Model, High Resolution” uses
+higher resolution input images (779 x 779 pixels), and “Our Full Model” incorporates all changes
+described in the “Algorithmic Improvements” section in the main text.
+16
+ Algorithm Grade
+No Mild Moderate Severe Proliferative
+Adjudicated
+Consensus
+No
+1,356
+74
+44
+1
+3
+Mild
+7
+43
+74
+0
+1
+Moderate
+3
+3
+98
+36
+4
+Severe
+0
+0
+2
+47
+1
+Proliferative
+0
+0
+0
+4
+12
+Algorithm Grade
+Not Referable Referable DME
+Adjudicated
+Consensus
+Not Referable
+1,637
+97
+Referable DME
+4
+75
+DR
+DME
+Sensitivity
+Specifi
+city
+Quadratic-
+weighted kappa
+Sensitivity
+Specifi
+city
+Algorithm
+97.1%
+92.3%
+0.84
+94.9%
+94.4%
+Table 8. Comparison of algorithm grade versus adjudicated grades from retina specialists. Con-
+fusion matrix for DR and DME where the grade is determined by the algorithm or adjudicated
+consensus of the retinal specialists. Sensitivity and specifi
+city metrics reported are for moderate
+or worse DR and referable DME.
+17
+ 0%
+20%
+40%
+60%
+80%
+100%
+Agreement with Adjudicated Grade
+0%
+20%
+40%
+60%
+80%
+100%
+Fraction of Images
+No or Mild Diabetic Retinopathy (n=1603)
+0%
+20%
+40%
+60%
+80%
+100%
+Agreement with Adjudicated Grade
+0%
+20%
+40%
+60%
+80%
+100%
+Fraction of Images
+Moderate or Worse Diabetic Retinopathy (n=210)
+0%
+20%
+40%
+60%
+80%
+100%
+Agreement with Adjudicated Grade
+0%
+20%
+40%
+60%
+80%
+100%
+Fraction of Images
+No DME (n=1734)
+0%
+20%
+40%
+60%
+80%
+100%
+Agreement with Adjudicated Grade
+0%
+20%
+40%
+60%
+80%
+100%
+Fraction of Images
+Referrable Diabetic Macular Edema (n=79)
+Fig. 1.
+Grader agreement based on the adjudicated consensus grade for referable diabetic
+retinopathy (DR) and diabetic macular edema (DME). Independent grading of all 3 retinal spe-
+cialists and all 3 ophthalmologists are included in this analysis.
+Fig. 2. Image resolution input to model versus area under the curve (AUC) for mild and above
+DR. Left: Using majority decision of retinal specialists as the reference standard. Right: Using the
+adjudicated consensus grade of retinal specialists as a reference standard. Shaded areas represent
+a 95% confi
+dence interval as measured via bootstrapping.
+18
+ 0
+20
+40
+60
+80
+100
+1 - Specificity, %
+0
+20
+40
+60
+80
+100
+Sensitivity, %
+Mild or Worse Diabetic Retinopathy, AUC: 0.986
+0
+2
+4
+6
+8
+10
+30
+40
+50
+60
+70
+80
+90
+100
+0
+20
+40
+60
+80
+100
+1 - Specificity, %
+0
+20
+40
+60
+80
+100
+Sensitivity, %
+Moderate or Worse Diabetic Retinopathy, AUC: 0.986
+0
+2
+4
+6
+8
+10
+30
+40
+50
+60
+70
+80
+90
+100
+0
+20
+40
+60
+80
+100
+1 - Specificity, %
+0
+20
+40
+60
+80
+100
+Sensitivity, %
+Severe or Worse Diabetic Retinopathy, AUC: 0.995
+0
+2
+4
+6
+8
+10
+30
+40
+50
+60
+70
+80
+90
+100
+0
+20
+40
+60
+80
+100
+1 - Specificity, %
+0
+20
+40
+60
+80
+100
+Sensitivity, %
+Proliferative Diabetic Retinopathy, AUC: 0.998
+0
+2
+4
+6
+8
+10
+30
+40
+50
+60
+70
+80
+90
+100
+Fig. 3. Comparison of the algorithm, ophthalmologists, and retinal specialists using the adjudi-
+cated reference standard at various DR severity thresholds. The algorithm’s performance is the
+blue curve. The 3 retina specialists are represented in shades of orange/red, and the 3 ophthal-
+mologists are in shades of blue. N = 1813 fully gradable images.
+19
+ Majority of retinal specialist
+and ophthalmologist grading
+No Mild Moderate Severe Proliferative
+Adjudicated
+Consensus
+No
+1,472
+3
+3
+0
+0
+Mild
+65
+55
+5
+0
+0
+Moderate
+26
+6
+109
+3
+0
+Severe
+0
+0
+10
+40
+0
+Proliferative
+0
+0
+1
+2
+13
+Majority of retinal specialist
+and ophthalmologist grading
+Not Referable Referable DME
+Adjudicated
+Consensus
+Not Referable
+1,695
+2
+Referable DME
+23
+93
+Table S1. Comparison of combined retina specialist and ophthalmologist grades versus adju-
+dicated grades from retina specialists. Confusion matrix for DR and DME where the grade is
+determined by either the majority decision of all six retina specialists and ophthalmologists or is
+the adjudicated consensus of the retinal specialists.
+20
+ Fig. S1. Diagram of the different image sources and grading protocols used for development
+and clinical validation. The algorithm was trained on the development set only, which consisted
+of a train set to train the model parameters and the tune set to tune the models performance
+(hyperparameter tuning and picking checkpoints).
+21
+ Fig. S2. STARD diagram for DR.
+22
+ Fig. S3. STARD diagram for DME.
+23

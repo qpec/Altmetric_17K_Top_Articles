@@ -1,0 +1,972 @@
+ Correlating Mammographic and Pathologic Findings in Clinical
+Decision Support Using Natural Language Processing and
+Data Mining Methods
+Tejal A. Patel, MD1,2,3; Mamta Puppala, MS4,5; Richard O. Ogunti, MBBS4,5; Joe E. Ensor, PhD1,2; Tiancheng He, PhD4,5;
+Jitesh B. Shewale, BDS, MPH6; Donna P. Ankerst, PhD7,8; Virginia G. Kaklamani, MD, DSc9; Angel A. Rodriguez, MD1,2,3;
+Stephen T. C. Wong, PhD2,4,5,10,11; and Jenny C. Chang, MD1,2,3
+BACKGROUND: A key challenge to mining electronic health records for mammography research is the preponderance of unstruc-
+tured narrative text, which strikingly limits usable output. The imaging characteristics of breast cancer subtypes have been described
+previously, but without standardization of parameters for data mining. METHODS: The authors searched the enterprise-wide data
+warehouse at the Houston Methodist Hospital, the Methodist Environment for Translational Enhancement and Outcomes Research
+(METEOR), for patients with Breast Imaging Reporting and Data System (BI-RADS) category 5 mammogram readings performed be-
+tween January 2006 and May 2015 and an available pathology report. The authors developed natural language processing (NLP)
+software algorithms to automatically extract mammographic and pathologic findings from free text mammogram and pathology
+reports. The correlation between mammographic imaging features and breast cancer subtype was analyzed using one-way analysis
+of variance and the Fisher exact test. RESULTS: The NLP algorithm was able to obtain key characteristics for 543 patients who met
+the inclusion criteria. Patients with estrogen receptor-positive tumors were more likely to have spiculated margins (P 5.0008), and
+those with tumors that overexpressed human epidermal growth factor receptor 2 (HER2) were more likely to have heterogeneous
+and pleomorphic calcifications (P 5.0078 and P 5.0002, respectively). CONCLUSIONS: Mammographic imaging characteristics,
+obtained from an automated text search and the extraction of mammogram reports using NLP techniques, correlated with pathologic
+breast cancer subtype. The results of the current study validate previously reported trends assessed by manual data collection.
+Furthermore, NLP provides an automated means with which to scale up data extraction and analysis for clinical decision support.
+Cancer 2017;123:114-21. V
+C 2016 American Cancer Society.
+KEYWORDS: data mining, imaging characteristics, mammographic to pathologic correlation, natural language processing, subtypes
+of breast cancer.
+INTRODUCTION
+Breast cancer continues to be one of the leading causes of cancer death among women in the United States.1 Advances
+have been made in the identification of prognostic and predictive markers for breast cancer treatment. Biomarker expres-
+sion data are stored in the patient’s electronic health record (EHR). Established molecular markers, including the estrogen
+receptor (ER), progesterone receptor (PR), and human epidermal growth factor receptor 2 (HER2), are currently used to
+help guide treatment with targeted therapies such as antiestrogen and anti-HER2 therapies.2,3
+Mammography is the first step in the screening and diagnosis of breast cancer. Abnormal mammographic findings
+such as a mass, abnormal calcifications, architectural distortion, and asymmetric density can lead to a cancer diagnosis.
+The use of mammography data for translational research primarily is hindered by variations in mammographic reporting
+and the preponderance of unstructured narrative text, which limit data collection and interpretation.
+The American College of Radiology developed the Breast Imaging Reporting and Data System (BI-RADS) lexicon to
+standardize mammographic reporting to facilitate cancer risk communication and biopsy decision making.4 The BI-RADS
+Corresponding authors: Jenny C. Chang, MD, Houston Methodist Cancer Center, 6445 Main St, OPC 24, Houston, TX 77030; Fax: (713) 793-1642; jcchang@
+houstonmethodist.org; and Stephen T. C. Wong, PhD, Department of Systems Medicine and Bioengineering, Houston Methodist Research Institute, 6670 Bertner
+Ave, Houston, TX 77030; Fax: (713) 441-7189; stwong@houstonmethodist.org
+1Houston Methodist Cancer Center, Houston, Texas; 2Cancer Research Program, Houston Methodist Research Institute, Houston, Texas; 3Department of Medicine,
+Weill Cornell Medicine, New York, New York; 4Department of Informatics Development, Houston Methodist Hospital, Houston, Texas; 5Department of Systems
+Medicine and Bioengineering, Houston Methodist Research Institute, Houston, Texas; 6Department of Epidemiology, Human Genetics & Environmental Sciences,
+University of Texas School of Public Health, Houston, Texas; 7Department of Urology, University of Texas Health Science Center at San Antonio, San Antonio, Tex-
+as; 8Department of Mathematics, Technical University of Munich, Garching, Germany; 9Division of Hematology Oncology CTRC, University of Texas Health Science
+Center San Antonio, San Antonio, Texas; 10Department of Radiology, Neurology, and Neuroscience, Weill Cornell Medicine, New York, New York; 11Department of
+Pathology and Laboratory Medicine, Weill Cornell Medicine, New York, New York.
+DOI: 10.1002/cncr.30245, Received: February 4, 2016; Revised: July 1, 2016; Accepted: July 13, 2016, Published online August 29, 2016 in Wiley Online Library
+(wileyonlinelibrary.com)
+114
+Cancer
+January 1, 2017
+Original Article
+ lexicon includes 43 descriptors and classifies mammograms
+into 1 of 7 assessment categories.4 Despite the BI-RADS
+recommendations, substantial interobserver variability in the
+application of the BI-RADS lexicon remains, including
+inappropriate term usage and missing data.5-9 In addition,
+the majority of data are not collected in a structured format
+as defined by Digital Imaging and Communications in
+Medicine (DICOM) structured reporting,10 and still are
+reported as free text in accessible media such as mammo-
+graphic reporting systems or radiology information systems.
+Traditional mammographic imaging research has used
+manual abstraction to convert information from the free text
+report into structured data. Manual abstraction is not feasi-
+ble for large sample sizes due to limitations of time as well as
+expense. In the era of EHR systems, big data, and machine
+learning algorithms, natural language processing (NLP) has
+emerged as a possible solution with which to overcome the
+limitations of manual data abstraction and creates great
+opportunities in data mining of breast imaging to facilitate
+outcomes research and precision medicine. NLP is a compo-
+nent of artificial intelligence and uses algorithms to process
+data patterns to make information accessible.11 Public
+domain and commercial NLP systems have been tested
+extensively in research and clinical settings.11-18 The study
+institution uses the PowerScribe radiology dictation system
+(Nuance Communications Inc, Burlington, Mass), which
+does not allow for structured reports. Because commercial
+NLP systems are not readily available for academic and affili-
+ated hospitals implementing breast cancer decision support
+systems, we developed an NLP-based tool, the Methodist
+Hospital text teaser (MOTTE). MOTTE is able to extract
+data reliably from millions of free text mammogram reports
+archived in our enterprise clinical data warehouse.19
+Several retrospective studies and meta-analyses have
+described
+the
+associations
+between
+specific
+tumor
+subtypes and mammographic features by using manual
+record entry.20-27 The purpose of the current study was to
+investigate the usefulness of data mining and NLP in
+defining the set of mammographic features correlated
+with the molecular subtypes of breast cancer in women
+with BI-RADS category 5 mammogram reports.
+MATERIALS AND METHODS
+Data Source and Study Design
+The current study was approved by the Institutional
+Review Board of the Houston Methodist Hospital, where
+all study patients underwent mammography and biopsy.
+Clinical data were sourced from the Methodist Envi-
+ronment for Translational Enhancement and Outcomes
+Research (METEOR) data warehouse.19 METEOR is an
+enterprise-wide clinical data warehouse and analytics envi-
+ronment that integrates an existing business data ware-
+house with internal and external research databases and
+national registries to support clinical research and
+outcomes studies for improving the cost-effectiveness of
+patient care. METEOR evaluates data queries and has the
+ability to process clinical free text documents and perform
+advanced analytics and visualization reporting. The
+METEOR data warehouse contains records dating back
+to January 1, 2006 from approximately 2 million unique
+patients with visit encounter and clinical records. In par-
+ticular, the METEOR data warehouse contains 135,280
+unique patient mammogram reports dating from January
+1, 2006 to May 30, 2015. Breast biopsy and pathologic
+data also were obtained from METEOR.
+MOTTE, the online structured query language
+processing tool with NLP capability, was used to identify
+patients with BI-RADS category 5 mammograms who
+underwent breast biopsy within 3 months of their abnor-
+mal mammogram report date between January 2006 and
+May 2015. A Java-based NLP tool was then developed
+and used to parse out the sentences from the reports to ex-
+clude the note section. A total of 717 patients with BI-
+RADS category 5 mammograms were identified. Without
+a formal chart review of all the records, there may have
+been additional BI-RADS category 5 mammograms that
+were not included. Next, patients with invasive cancer
+were identified among this pool of 717 patients using our
+MOTTE NLP tool and applying major keywords for in-
+vasive carcinoma and subtype information (ER, PR, and
+HER2 status) from the pathology textual reports. Of the
+717 patients, 543 patients were found to have invasive dis-
+ease and were included in the current study. MOTTE was
+used to extract clinical data (age, race, height, weight,
+body mass index [BMI], and personal and family history
+of breast cancer) from the METEOR data warehouse. For
+patients who had undergone surgery within 3 months of
+the date of their abnormal mammogram, pathologic
+information (tumor stage and ER, PR, and HER2 status)
+was extracted by applying NLP to the biopsy and surgical
+pathology
+reports.
+Mammographic
+findings
+were
+extracted using statistical database queries; International
+Classification of Diseases, Ninth Revision (ICD 9) codes;
+and MOTTE, which included clinical symptoms such as
+palpable lump, skin changes, and nipple discharge as
+well as breast density as a categorical variable and
+the presence of a mass, calcifications, architectural dis-
+tortion, asymmetric density, and calcification character-
+istics as categorical variables.
+Natural Language Processing/Patel et al
+Cancer
+January 1, 2017
+115
+ MOTTE NLP Analysis
+To facilitate NLP analysis, text reports were preprocessed
+by determining the general structure of each of the radiol-
+ogy or pathology reports. NLP was then applied to search
+and retrieve established clinical parameters. MOTTE’s
+NLP algorithm contains 5 processing steps including
+tokenization, stemming, stop words removal, vector space
+modeling, and similarity calculation, as detailed in our
+previous publication.19 Tokenization turns each clinical
+text report into a stream of tokens. We used a Bayesian
+model and defined token “t” as a string of alphanumeric
+characters surrounded by white space. The second step
+adopted was stemming. A word in a different grammatical
+form was converted into the word’s ground form using
+the stem class model to remove the phase affixes and other
+lexical components and then refreshed as the new token.
+For example, we converted the
+words diagnosing,
+diagnoses, and diagnosed into diagnose. The third step
+involved removing stop words. Stop words do not carry
+any useful information for the text report analysis and
+usually are conjunctions, pronouns, or prepositions such
+as the, this, and which. We defined the list of stop words
+based on prior publications.18
+The next processing step adopted was the modeling
+of all tokens in a high-dimensional vector space. We
+defined each token as a dimension of the vector space and
+the frequency of each token occurring in each sentence as
+the position along the axis in the vector space. Hence,
+each token has different axis positions for different senten-
+ces. The similarity between the requested clinical informa-
+tion and the sentence was measured in terms of distances
+in this vector space.
+Similarity calculation was the final step in the
+METEOR’s MOTTE tool. We set up a series of clinical
+information key points according to the requirements of
+physicians and researchers and then calculated the similar-
+ity between the key points and each sentence. We used the
+Jaccard similarity coefficient to compare the similarity
+and diversity of sample sets,16 with the highest Jaccard
+similarity coefficient among all sentences selected as the
+return value. For example, one of our clinical information
+items was complex cystic mass and in the free text report,
+the sentence “there is a new complex cystic mass with in-
+ternal septations” contained the highest Jaccard similarity
+coefficient, indicating a positive finding.
+The free text radiology and pathology reports of the
+543 patients with invasive cancer were reviewed and pre-
+defined parameters were extracted by applying NLP
+MOTTE techniques. We used the approach described
+by Buckley et al,28 including creating a bucket list of
+keywords of interest and negation, merging addendum
+pathology reports, and ordering of diagnosis based on the
+level of significance (invasive ductal carcinoma, invasive
+lobular carcinoma>ductal carcinoma in situ [DCIS]>
+atypical lobular hyperplasia>atypical ductal hyperpla-
+sia>benign).28 Invasive carcinoma was identified using
+the following major keywords: //Carcinoma invasive
+carcinoma, tubular carcinoma, invasive, invasive ductal car-
+cinoma, invasive lobular carcinoma, infiltrating, infiltrating
+ductal carcinoma, infiltrating lobular carcinoma, infiltrat-
+ing tubular carcinoma, adenocarcinoma, necrotic carcino-
+ma, and infiltrative. In addition, variations in the above
+keywords (arising majorly from misspellings) were includ-
+ed in the bucket list of keywords. Multiple pathology
+reports from the same individual were reported as an ad-
+dendum to the initial report. The MOTTE program
+merged all the addendums with the initial report and then
+processed this single report. In cases in which >1 stage of
+disease was reported in the merged reports, the MOTTE
+program selected the higher stage. MOTTE was not pro-
+grammed to distinguish between multiple excisions on
+the same side or bilateral excisions. Resulting data were
+verified and validated (99% accuracy) by assessing a ran-
+dom 10% of records29 against a gold standard of manual
+chart review, which was completed by the clinical coau-
+thors and took approximately 50 to 70 hours. Further-
+more, manual review also was performed for the 174
+patients not included in the current study and confirmed
+the NLP findings. NLP accurately identified 174 charts as
+having incomplete information (HER2 status) for sub-
+type determination or benign biopsy findings.
+Molecular Subtype Categories
+Patients were divided into 3 established breast cancer
+prognostic groups based on tumor biomarker expression.
+Tumors with ER expression >1% by immunohistochem-
+istry (IHC) and negative HER2 expression by IHC and/
+or fluorescence in situ hybridization were categorized as
+ER positive (ER1). Tumors with HER2 overexpression,
+defined as IHC 3 1 or fluorescence in situ hybridization
+amplified as per the American Society of Clinical Oncolo-
+gy/College of American Pathologists guidelines,3 were
+categorized as HER2 positive (HER21) regardless of
+ER or PR expression. Tumors with negative ER, PR,
+and HER2 expression were categorized as triple-negative
+breast cancer (TNBC).
+Statistical Analysis
+Breast cancer subtypes were correlated with demographic
+and mammographic features. Differences in categorical
+Original Article
+116
+Cancer
+January 1, 2017
+ and continuous factors among the breast cancer subtypes
+were analyzed using the Fisher exact test and one-way
+analysis of variance, respectively. The Tukey-Kramer
+method was used for post hoc pairwise comparisons of
+continuous factors. All offline statistical analyses were
+performed using SAS statistical software (version 9.4;
+SAS Institute Inc, Cary, NC) at a 5% significance level
+(2-sided).
+RESULTS
+Study Population
+A total of 717 patients with BI-RADS category 5 mam-
+mograms were identified. The MOTTE NLP algorithm
+was applied to mammogram and pathology reports using
+major keywords for invasive carcinoma and to extract
+information regarding the breast cancer subtype (ER, PR,
+and HER2 status). Of the 717 patients, 543 (75.7%) had
+invasive carcinoma and breast cancer subtype available.
+MOTTE-generated data from these patients were used to
+determine the correlation of demographic, clinical, and
+mammographic characteristics with breast cancer subtype.
+Table 1 shows the frequency of individual BI-RADS
+lexicon in the reports. Manual review (ER, PR, and
+HER2 status; BMI; and breast density) was performed for
+a subset of the 543 patients (10%) to confirm NLP accu-
+racy. Characteristics of the study population are shown in
+Table 2. Sixty patients with DCIS and therefore unknown
+HER2 status (HER2 testing is not performed for patients
+with DCIS at the study institution), 35 patients with
+benign breast biopsies, 4 patients with atypia, and 75
+patients who did not have available pathology reports
+were excluded from the study. The mean age of the
+patients was 60.9 years (range, 59.7-62 years). With
+regard to the breast cancer subtype, 70.7%, 15.8%, and
+13.4% of patients, respectively, had ER 1 breast cancer,
+HER2 1 breast cancer, and TNBC.
+Differences in Demographic Factors
+Among the Breast Cancer Subtypes
+Age at diagnosis was significantly different among patients
+with the 3 subtypes (P 5 .03) (Table 3). The mean age at
+diagnosis was lowest in the patients with HER2 1 disease
+and highest among those with ER 1 disease.
+Data regarding BMI were available for 73.5% of the
+patients. The mean BMI was 28.9 (range, 28.4-29.5), in-
+dicating that the majority of patients were overweight.
+BMI was not found to be significantly different among
+the 3 subtypes; however, the group of patients with
+TNBC had the highest mean BMI (P 5 .08) (Table 3).
+The majority of patients were white (67%), followed
+by African American (17%), Asian (4.7%), and Hispanic
+(1.3%) (Table 2). The percentage of patients with TNBC
+tended to be higher in the African American group
+than in the other racial groups, but this difference was not
+statistically significant (P 5 .06) (Table 4).
+Approximately 62% of patients were postmenopausal
+(Table 2). The distribution of breast cancer subtypes did
+not appear to differ significantly according to menopausal
+status (P 5 .0640) (Table 3). However, postmenopausal
+women were more likely to have the ER 1 and TNBC
+breast cancer subtypes and less likely to have the HER2 1
+subtype compared with premenopausal women.
+Only 6.8% of patients had a previous history of
+breast cancer (Table 2). Approximately 70% of patients
+had no family history of breast cancer, which is consistent
+with historical numbers. Personal and family histories
+of breast cancer were not associated with breast cancer
+subtype (Table 3).
+Differences in Clinical Characteristics
+Among the Breast Cancer Subtypes
+Approximately 44% of patients presented with a palpable
+lump, and patients with HER21 and TNBC tumors were
+twice as likely to present with a palpable lump compared
+with patients with ER 1 tumors (P<.0001) (Table 3)
+(Fig. 1). Skin changes were present in <25% of the
+patients. Skin changes were twice as likely to be present in
+TABLE 1. Frequency of Individual BI-RADS Lexicon
+Mammographic Findings N 5 717
+Frequency
+Abnormal findings
+Yes: 99.3%
+No: 0.7%
+Mass
+Yes: 93.6%
+No: 6.4%
+Spiculated margins
+Yes: 39.6%
+No: 60.4%
+Calcifications
+Yes: 69.5%
+No: 30.5%
+Heterogeneous morphology
+Yes: 9.8%
+No: 90.2%
+Pleomorphic morphology
+Yes: 20.0%
+No: 80.0%
+Linear morphology
+Yes: 5.2%
+No: 94.8%
+Linear distribution
+Yes: 0.6%
+No: 99.4%
+Segmental distribution
+Yes: 3.2%
+No: 96.8%
+Clustered distribution
+Yes: 20.2%
+No: 79.8%
+Architectural distribution
+Yes: 16.6%
+No: 83.4%
+Axillary lymphadenopathy
+Yes: 36.5%
+No: 63.5%
+Abbreviation: BI-RADS, Breast Imaging Reporting and Data System.
+Natural Language Processing/Patel et al
+Cancer
+January 1, 2017
+117
+ patients with the HER21 subtype compared with those
+with the ER 1 and TNBC subtypes (P<.0001) (Table 3)
+(Fig. 1). Nipple discharge was observed infrequently
+(1.1%), thereby prohibiting significant differences among
+the subtypes.
+Differences in Mammographic Features Among
+the Breast Cancer Subtypes
+Breast density was > 25% in 91.6% of patients (Table 2).
+The most common breast density was fibroglandular (den-
+sity of 25%-50%), followed by heterogeneous density
+(density of 51%-75%). Breast density did not appear to dif-
+fer significantly among the subtypes (P 5 .5917) (Table 3).
+Nearly all patients (97.8%) had a mass present on
+their mammogram. The presence of a mass on mammog-
+raphy was not significantly different among the subtypes.
+Nearly one-half of patients had spiculated margins, and
+those with the ER 1 subtype were 1.5 times as likely to
+have spiculated margins compared with patients with the
+HER2 1 and TNBC subtypes (P 5 .0008) (Table 3)
+(Fig. 2). Approximately 68% of patients had calcifications
+present in their tumors. Calcifications were more likely
+to be present in patients with the HER2 1 subtype
+compared
+with
+those
+with
+the
+ER 1 and
+TNBC
+subtypes (P 5 .05) (Table 3). With regard to calcification
+morphology, the occurrence of heterogeneous, linear, and
+pleomorphic calcifications was significantly higher in
+patients with the HER2 1 subtype compared with those
+with the ER 1 and TNBC subtypes (P 5 .008, .004, and
+.0002, respectively) (Table 3) (Fig. 2). Linearly distribut-
+ed calcifications were observed in a negligible number of
+patients. Segmentally distributed and clustered calcifica-
+tions demonstrated a trend toward increased occurrence
+in patients with the HER2 1 subtype (P 5 .16 and .17,
+respectively) (Table 3).
+Architectural distortion and axillary lymphadenopa-
+thy were noted in 18.6% and 37.2% of patients, respec-
+tively (Table 2). Although not statistically significant,
+architectural distortion was more likely to be associated
+with the ER 1 subtype (P 5 .12) (Table 3). Axillary
+lymphadenopathy was more likely to be associated with
+the HER2 1 and TNBC subtypes compared with the
+ER 1 subtype (P<.0001) (Table 3) (Fig. 1).
+Differences in Pathologic Stage Among
+the Breast Cancer Subtypes
+Data regarding pathologic stage were available for 257
+patients who underwent surgery within 3 months of
+biopsy. Patients who received neoadjuvant chemotherapy
+before surgery were not included in the staging analysis.
+Pathologic disease stage did not appear to differ signifi-
+cantly among the subtypes (Table 3).
+DISCUSSION
+We have developed an NLP tool that automatically and
+accurately extracts mammographic findings from a large
+TABLE 2. Patient Characteristics
+Characteristic
+Total No.
+of Patients
+Mean age at diagnosis
+(range), y
+543
+60.9 (59.7-62.0)
+Race
+537
+White: 360 (67.0%)
+African American: 92 (17.0%)
+Hispanic: 7 (1.3%)
+Asian: 25 (4.7%)
+Other: 53 (9.9%)a
+Mean BMI (range)
+399
+28.9 (28.3-29.5)
+Menopausal status
+543
+Premenopausal: 204 (37.6%)
+Postmenopausal: 339 (62.4%)
+Previous history of
+breast cancer
+543
+Yes: 37 (6.8%)
+No: 506 (94.0%)
+Family history of
+breast cancer
+543
+Yes: 163 (30.0%)
+No: 380 (70.0%)
+Pathologic stage
+of disease (AJCC
+version 7)
+257
+I: 140 (54.0%)
+II: 92 (36.0%)
+III: 20 (7.7%)
+IV: 2 (0.7%)
+Breast cancer subtype
+543
+ER1: 384 (70.7%)
+HER21: 84 (15.8%)
+TNBC: 73 (13.4%)
+Clinical characteristics
+543
+Presence of palpable
+lump: 238 (44.0%)
+Presence of skin changes:
+120 (22.0%)
+Presence of nipple
+discharge: 9 (1.7%)
+Breast density
+466
+Fatty: 39 (8.4%)
+Fibroglandular: 236 (50.6%)
+Heterogeneously dense:
+176 (37.8%)
+Extremely dense: 15 (3.2%)
+Mammographic features
+543
+Presence of a mass:
+531 (97.8%)
+Presence of spiculated
+margins: 258 (47.5%)
+Presence of calcifications:
+370 (68.0%)
+Presence of architectural
+distortion: 101 (18.6%)
+Calcification morphology
+543
+Heterogeneous: 61 (11.2%)
+Pleomorphic: 110 (20.3%)
+Linear: 24 (4.4%)
+Calcification distribution
+543
+Segmental: 15 (2.8%)
+Clustered: 107 (19.7%)
+Linear: 2 (0.4%)
+Axillary lymphadenopathy
+543
+Yes: 202 (37.2%)
+No: 341 (62.7%)
+Abbreviations: 1 , positive; BMI, body mass index; ER, estrogen receptor;
+HER2, human epidermal growth factor receptor 2; TNBC, triple-negative
+breast cancer.
+a One American Indian; otherwise not specified.
+Original Article
+118
+Cancer
+January 1, 2017
+ number of free text reports. A previous study using
+the METEOR database as well as MOTTE found an
+acceptable range of accuracy (96.4%).19 Various NLP
+techniques have been used to extract clinically useful
+information from mammography reports. However, to
+the best of our knowledge, the current study is the first to
+use NLP to characterize mammographic characteristics
+according to breast cancer subtype such that the correla-
+tion can be used to aid more robust clinical decisions.
+Previous studies have conducted manual chart
+reviews to describe the correlation between mammo-
+graphic findings and biomarkers.22,23,30 In the current
+TABLE 3. Demographic, Clinical, and Mammographic Characteristics and Pathologic Stage According to
+Molecular Subtype
+ER 1 N 5 384
+HER2 1 N 5 86
+TNBC N 5 73
+P
+Demographic characteristics
+Age at diagnosis, y
+61.8
+57.6
+59.9
+.0312
+BMI
+29.1a
+27.3b
+29.6c
+.0844
+Menopausal status
+.0640
+Postmenopausal
+73.2%
+12.9%
+13.9%
+Premenopausal
+66.6%
+20.5%
+12.7%
+Family history of breast cancer
+31%
+22.1%
+34.3%
+.1829
+Personal history of breast cancer
+6.8%
+7.0%
+6.9%
+.9976
+Clinical characteristics
+Palpable lump
+35.4%
+62.8%
+65.8%
+<.0001
+Skin changes
+18.0%
+41.7%
+20.6%
+<.0001
+Nipple discharge
+0.8%
+2.3%
+1.4%
+.3061
+Mammographic characteristics
+Breast densityd
+.5917
+Fatty
+71.8%
+12.8%
+15.3%
+Fibroglandular
+71.6%
+15.3%
+13.1%
+Heterogeneously dense
+66.4%
+18.1%
+15.3%
+Extremely dense
+86.7%
+0.0%
+13.3%
+Mass
+98.4%
+95.4%
+97.3%
+.1539
+Spiculated margins
+52.6%
+36.1%
+34.3%
+.0008
+Calcifications Calcification morphology
+66.4%
+79.1%
+64.4%
+.0501
+Heterogeneous
+10.7%
+19.8%
+4.1%
+.0078
+Pleomorphic
+16.7%
+37.2%
+19.2%
+.0002
+Linear Calcification distribution
+3.4%
+11.6%
+1.4%
+.0040
+Linear
+0.5%
+0.0%
+0.0
+1.0000
+Segmental
+2.34%
+5.84%
+1.37%
+.1633
+Clustered
+19.5%
+25.6%
+13.7%
+.1702
+Architectural distortion
+20.8%
+14.0%
+12.3%
+.1224
+Axillary lymphadenopathy
+29.7%
+58.1%
+52.1%
+<.0001
+Pathologic stage (AJCC version 7)e
+All stages
+.1712
+I
+56.8%
+36.4%
+47.1%
+II
+34.4%
+45.5%
+41.2%
+III
+6.88%
+18.2%
+5.9%
+IV
+0.5%
+0.0%
+5.88%
+Abbreviations: 1 , positive; BMI, body mass index; ER, estrogen receptor; HER2, human epidermal growth factor receptor 2; TNBC, triple-negative breast
+cancer.
+a Information was available for 287 patients.
+b Information was available for 62 patients.
+c Information was available for 50 patients.
+d Information was available for 466 patients.
+e Information was available for 257 patients.
+TABLE 4. Race Distribution Among Molecular Subtypes
+Asian N 5 25
+African American N 5 92
+White N 5 360
+Hispanic N 5 7
+Othera N 5 53
+Total
+ER1
+72%
+60%
+72%
+86%
+74%
+378
+HER21
+20%
+15%
+16%
+14%
+19%
+86
+TNBC
+8%
+25%
+12%
+0%
+7.5%
+73
+Abbreviations: 1 , positive; ER, estrogen receptor; HER2, human epidermal growth factor receptor 2; TNBC, triple-negative breast cancer.
+a One American Indian; otherwise not specified.
+Natural Language Processing/Patel et al
+Cancer
+January 1, 2017
+119
+ study, NLP was used to confirm and validate previously
+reported correlations. Specifically, we found that patients
+with the ER 1 subtype were more likely to present with
+spiculated margins than those with the HER21 and
+TNBC subtypes. Spiculated margins are believed to be sec-
+ondary to the intense stromal reaction and fibroblastic pro-
+liferation observed in ER 1 tumors. Spiculated margins are
+less common in TNBCs, which demonstrate a more infil-
+trative tumor growth. Patients with HER21 tumors were
+more likely to present with heterogeneous, linear, and pleo-
+morphic calcifications. Calcification is postulated to be sec-
+ondary to rapid growth and central necrosis.
+The strength of the current study was the large vol-
+ume of free text reports from a relevant patient population
+captured in the enterprise data warehouse of the study in-
+stitution and the use of NLP and data mining for auto-
+mated data extraction, collection, and correlation. The
+NLP algorithm of MOTTE surpasses the manual method
+for information extraction in terms of consistency, time,
+cost, and data preparation. NLP may provide an accurate
+automated system with which to create large-scale data re-
+positories of breast imaging findings and malignancies for
+use in data mining in breast imaging. Secondary studies
+are planned to apply our NLP algorithm to define distinct
+characteristics of BI-RADS category 4 mammograms.
+Such studies would help to refine biopsy recommenda-
+tions, thereby decreasing health care costs and morbidity.
+The current study was limited by the fact that it was
+conducted at a single institution to assess the performance
+of a single NLP algorithm. As a result, some of the
+descriptors in the BI-RADS lexicon, especially those de-
+scribing the distribution of calcifications, were not fre-
+quently used. The use of BI-RADS terminology will
+improve the ease of use and accuracy of the NLP applica-
+tion. Another limitation was that the MOTTE program
+was not coded to distinguish between multiple excisions
+on the same side and bilateral excisions. Our future plan is
+to modify the evaluations to allow the MOTTE program
+to differentially extract excisional location (left side vs
+right side). Finally, our sample size was determined by the
+population of patients who underwent biopsy at the study
+institution, which may have potentially introduced an
+ascertainment bias into the analysis.
+Conclusions
+The current retrospective review of mammographic charac-
+teristics based on information extracted from diagnostic
+reports using the MOTTE NLP algorithm demonstrated
+that mammographic features can be used to distinguish
+breast cancer subtypes. NLP algorithms can narrow the gap
+between the unstructured clinical reports and the detailed
+information extraction needed for data mining and deci-
+sion support tools. Future studies to apply MOTTE to cre-
+ate a predictive model to drive evidence-based biopsy
+decision making in clinical practice currently are underway.
+FUNDING SUPPORT
+Supported in part by the John S. Dunn Research Foundation
+(to Tiancheng He and Stephen T. C. Wong).
+Figure 1. Clinical findings found to be significantly correlated
+with breast cancer subtype. Axillary lymphadenopathy was
+more likely to be associated with the human epidermal
+growth
+factor
+receptor
+2-positive
+(HER21)
+and
+triple-
+negative breast cancer (TNBC) subtypes. A palpable lump
+was
+more
+likely
+to
+be
+noted
+with
+the
+TNBC
+and
+HER2 1 subtypes
+compared
+with
+the
+estrogen
+receptor-
+positive (ER1) subtype. Skin changes were more likely to be
+observed among patients with the HER2 1 subtype compared
+with those with the ER 1 and TNBC subtypes.
+Figure 2. Mammographic findings found to be significantly
+correlated with breast cancer subtype. Heterogeneous, linear,
+and pleomorphic calcifications were more likely to be ob-
+served with the human epidermal growth factor receptor 2-
+positive
+(HER21)
+subtype
+compared
+with
+the
+estrogen
+receptor-positive (ER1) and triple-negative breast cancer
+(TNBC) subtypes. Spiculated margins occurred more fre-
+quently in patients with the ER 1 subtype compared with
+those with the HER2 1 and TNBC subtypes.
+Original Article
+120
+Cancer
+January 1, 2017
+ CONFLICT OF INTEREST DISCLOSURES
+The authors made no disclosures.
+AUTHOR CONTRIBUTIONS
+Tejal A. Patel: Responsible for conceptualization, methodology,
+data curation, writing-original draft, writing-review and editing,
+visualization, and project administration. Mamta Puppala: Respon-
+sible for mapping concepts to computers, methodology, database
+query, algorithm design and implementation, validation, investiga-
+tion, resources, and writing-review and editing. Richard O. Ogunti:
+Responsible for mapping concepts to computers, methodology,
+software testing, validation, investigation, resources, and writing-
+review and editing. Joe E. Ensor: Responsible for methodology,
+formal analysis, data curation, writing-review and editing, and visu-
+alization. Tian Cheng He: Responsible for algorithm design and
+implementation, validation, investigation, and database resources.
+Jitesh B. Shewale: Responsible for validation, investigation, and
+writing-review and editing and assisted in manual data collection.
+Donna P. Ankerst: Responsible for methodology, formal analysis,
+and writing-review and editing. Virginia G. Kaklamani: Responsi-
+ble for conceptualization, methodology, and writing-review and
+editing. Angel A. Rodriguez: Responsible for conceptualization,
+methodology, and writing-review and editing. Stephen T. C.
+Wong: Responsible for conceptualization, methodology, software
+design, validation, investigation, database resources, writing-review
+and editing, and supervision. Jenny C. Chang: Responsible for con-
+ceptualization, methodology, writing-original draft, writing-review
+and editing, visualization, supervision, and project administration.
+All authors read and approved the final article.
+REFERENCES
+1. Siegel RL, Miller KD, Jemal A. Cancer statistics, 2015. CA Cancer J
+Clin. 2015;65:5-29.
+2. Hammond ME, Hayes DF, Dowsett M, et al; American Society of
+Clinical Oncology; College of American Pathologists. American So-
+ciety of Clinical Oncology/College of American Pathologists guide-
+line recommendations for immunohistochemical testing of estrogen
+and progesterone receptors in breast cancer (unabridged version).
+Arch Pathol Lab Med. 2010;134:e48-e72.
+3. Wolff AC, Hammond ME, Hicks DG, et al; American Society of
+Clinical Oncology; College of American Pathologists. Recommenda-
+tions for human epidermal growth factor receptor 2 testing in breast
+cancer: American Society of Clinical Oncology/College of American
+Pathologists clinical practice guideline update. J Clin Oncol. 2013;
+31:3997-4013.
+4. Liberman L, Menell JH. Breast imaging reporting and data system
+(BI-RADS). Radiol Clin North Am. 2002;40:409-430, v.
+5. Beam CA, Layde PM, Sullivan DC. Variability in the interpretation
+of screening mammograms by US radiologists. Findings from a
+national sample. Arch Intern Med. 1996;156:209-213.
+6. Domingo L, Hofvind S, Hubbard RA, et al. Cross-national compari-
+son of screening mammography accuracy measures in U.S., Norway,
+and Spain. Eur Radiol. 2015;26:2520-2528.
+7. Elmore JG, Wells CK, Lee CH, Howard DH, Feinstein AR. Vari-
+ability in radiologists’ interpretations of mammograms. N Engl J
+Med. 1994;331:1493-1499.
+8. Kerlikowske K, Grady D, Barclay J, et al. Variability and accuracy
+in mammographic interpretation using the American College of
+Radiology Breast Imaging Reporting and Data System. J Natl Cancer
+Inst. 1998;90:1801-1809.
+9. Redondo A, Comas M, Macia F, et al. Inter- and intraradiologist
+variability in the BI-RADS assessment and breast density categories
+for screening mammograms. Br J Radiol. 2012;85:1465-1470.
+10. Margolies LR, Pandey G, Horowitz ER, Mendelson DS. Breast im-
+aging in the era of big data: structured reporting and data mining.
+AJR Am J Roentgenol. 2016;206:259-264.
+11. Lacson R, Khorasani R. Natural language processing for radiology
+(part 2). J Am Coll Radiol. 2011;8:583-584.
+12. Bozkurt S, Lipson JA, Senol U, Rubin DL. Automatic abstraction of
+imaging observations with their characteristics from mammography
+reports. J Am Med Inform Assoc. 2015;22:e81-e92.
+13. Bozkurt S, Rubin D. Automated detection of ambiguity in BI-
+RADS assessment categories in mammography reports. Stud Health
+Technol Inform. 2014;197:35-39.
+14. Gao H, Aiello Bowles EJ, Carrell D, Buist DS. Using natural lan-
+guage processing to extract mammographic findings. J Biomed In-
+form. 2015;54:77-84.
+15. Moore CR, Farrag A, Ashkin E. Using natural language processing
+to extract abnormal results from cancer screening reports [published
+online ahead of print July 14, 2014]. J Patient Saf.
+16. Ohno-Machado L, Nadkarni P, Johnson K. Natural language proc-
+essing: algorithms and tools to extract computable information from
+EHRs and from the biomedical literature. J Am Med Inform Assoc.
+2013;20:805.
+17. Sippo DA, Warden GI, Andriole KP, et al. Automated extraction of
+BI-RADS final assessment categories from radiology reports with
+natural language processing. J Digit Imaging. 2013;26:989-994.
+18. Thomas AA, Zheng C, Jung H, et al. Extracting data from electron-
+ic medical records: validation of a natural language processing pro-
+gram to assess prostate biopsy results. World J Urol. 2014;32:99-103.
+19. Puppala M, He T, Chen S, et al. METEOR: an enterprise health in-
+formatics environment to support evidence-based medicine. IEEE
+Trans Biomed Eng. 2015;62:2776-2786.
+20. An YY, Kim SH, Kang BJ, Park CS, Jung NY, Kim JY. Breast can-
+cer in very young women (<30 years): correlation of imaging fea-
+tures with clinicopathological features and immunohistochemical
+subtypes. Eur J Radiol. 2015;84:1894-1902.
+21. Boisserie-Lacroix M, Macgrogan G, Debled M, et al. Triple-negative
+breast cancers: associations between imaging and pathological find-
+ings for triple-negative tumors compared with hormone receptor-
+positive/human epidermal growth factor receptor-2-negative breast
+cancers. Oncologist. 2013;18:802-811.
+22. Dogan BE, Turnbull LW. Imaging of triple-negative breast cancer.
+Ann Oncol. 2012;23(suppl 6):vi23-vi29.
+23. Elias SG, Adams A, Wisner DJ, et al. Imaging features of HER2
+overexpression in breast cancer: a systematic review and meta-analy-
+sis. Cancer Epidemiol Biomarkers Prev. 2014;23:1464-1483.
+24. Gao B, Zhang H, Zhang SD, et al. Mammographic and clinicopath-
+ological features of triple-negative breast cancer. Br J Radiol. 2014;
+87:20130496.
+25. Kojima Y, Tsunoda H. Mammography and ultrasound features of
+triple-negative breast cancer. Breast Cancer. 2011;18:146-151.
+26. Tsau HS, Yen AM, Fann JC, et al. Mammographic tumour appear-
+ance and triple-negative breast cancer associated with long-term
+prognosis of breast cancer death: a Swedish Cohort Study. Cancer
+Epidemiol. 2015;39:200-208.
+27. Yang WT, Dryden M, Broglio K, et al. Mammographic features of
+triple receptor-negative primary breast cancers in young premeno-
+pausal women. Breast Cancer Res Treat. 2008;111:405-410.
+28. Buckley JM, Coopey SB, Sharko J, et al. The feasibility of using nat-
+ural language processing to extract clinical information from breast
+pathology reports. J Pathol Inform. 2012;3:23.
+29. Sohn S, Torii M, Li D, Wagholikar K, Wu S, Liu H. A hybrid ap-
+proach to sentiment sentence classification in suicide notes. Biomed
+Inform Insights. 2012;5(suppl 1):43-50.
+30. Boisserie-Lacroix M, Bullier B, Hurtevent-Labrot G, Ferron S, Lippa
+N, Mac Grogan G. Correlation between imaging and prognostic fac-
+tors: molecular classification of breast cancers. Diagn Interv Imaging.
+2014;95:227-233.
+Natural Language Processing/Patel et al
+Cancer
+January 1, 2017
+121
